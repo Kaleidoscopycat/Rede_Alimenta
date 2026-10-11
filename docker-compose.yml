@@ -1,0 +1,89 @@
+# Rede Alimenta IA — ambiente reprodutível: postgres + migrate (Alembic) + api + frontend (+ seed sob demanda).
+# Uso (detalhes no README, seção "Docker"):
+#   cp .env.example .env   # preencha POSTGRES_PASSWORD (apenas letras, números, '-' e '_')
+#   docker compose up -d postgres migrate                 # banco + migrações (reprodutível)
+#   docker compose --profile seed run --rm seed           # carga: ONGs PUBLIC + dados SIMULATED (precisa de ./data local)
+#   docker compose up -d                                  # api + frontend
+# Nenhum segredo está nas imagens nem neste arquivo: tudo vem do .env (fora do Git).
+name: rede-alimenta
+
+x-api-env: &api-env
+  DATABASE_URL: postgresql+psycopg://${APP_USER:-rede_alimenta}:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@postgres:5432/${APP_DB:-rede_alimenta}
+  APP_TIMEZONE: ${APP_TIMEZONE:-America/Sao_Paulo}
+
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    <<: *hardening
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]   # necessário para o entrypoint do postgres ajustar o volume
+    environment:
+      POSTGRES_DB: ${APP_DB:-rede_alimenta}
+      POSTGRES_USER: ${APP_USER:-rede_alimenta}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    # sem 'ports': o banco NÃO é exposto ao host (apenas à rede interna do Compose)
+
+  migrate:
+    build: {context: ., dockerfile: docker/Dockerfile.api}
+    image: rede-alimenta-api:local
+    <<: *hardening
+    command: ["alembic", "upgrade", "head"]
+    environment: *api-env
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+
+  api:
+    build: {context: ., dockerfile: docker/Dockerfile.api}
+    image: rede-alimenta-api:local
+    <<: *hardening
+    environment: *api-env
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    ports:
+      - "127.0.0.1:${API_HOST_PORT:-8000}:8000"
+    restart: unless-stopped
+
+  frontend:
+    build: {context: ., dockerfile: docker/Dockerfile.frontend}
+    image: rede-alimenta-frontend:local
+    <<: *hardening
+    environment:
+      API_BASE_URL: http://api:8000
+    depends_on:
+      api: {condition: service_healthy}
+    ports:
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-8501}:8501"
+    restart: unless-stopped
+
+  # Carga de dados (comando documentado, sem editar código): ONGs/territórios PUBLIC + dados SIMULATED do simulador.
+  seed:
+    profiles: ["seed"]
+    image: rede-alimenta-api:local
+    build: {context: ., dockerfile: docker/Dockerfile.api}
+    <<: *hardening
+    command: ["python", "-m", "scripts.bootstrap_db", "--sim-tag", "${SIM_TAG:-main}", "--report", "/tmp/import_report.json"]
+    environment: *api-env
+    volumes:
+      - ./data/gold:/app/data/gold:ro
+      - ./data/metadata:/app/data/metadata:ro
+      - ./data/simulated:/app/data/simulated:ro
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+
+volumes:
+  pgdata:

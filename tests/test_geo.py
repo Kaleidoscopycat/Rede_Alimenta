@@ -1,5 +1,5 @@
 import numpy as np
-from pipelines.geo import haversine_km, in_brazil, geo_quality_from_distance, estimated_travel_hours
+from pipelines.geo import haversine_km, estimated_travel_hours
 
 
 def test_haversine_sp_rj_conhecido():

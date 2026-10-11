@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from pipelines.geo import EARTH_RADIUS_KM, estimated_travel_hours
+from pipelines.geo import EARTH_RADIUS_KM
 from .params import Params
 from .timeutil import DAY, advance_business, dow, next_open_start
 

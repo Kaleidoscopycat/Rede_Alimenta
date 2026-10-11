@@ -1,0 +1,46 @@
+{
+  "escopo": "código Python do projeto e dependências declaradas; não mede produção",
+  "antes": {
+    "bandit": {
+      "achados": 13,
+      "LOW": 13,
+      "MEDIUM": 0,
+      "HIGH": 0
+    },
+    "pip_audit": {
+      "dependencias": 102,
+      "vulnerabilidades": 0
+    },
+    "gitleaks_historico": 0,
+    "trivy_secret_misconfig_dockerfiles": 0
+  },
+  "depois": {
+    "bandit": {
+      "achados": 0,
+      "LOW": 0,
+      "MEDIUM": 0,
+      "HIGH": 0,
+      "nosec_justificados": 7
+    },
+    "pip_audit": {
+      "dependencias": 100,
+      "vulnerabilidades": 0
+    },
+    "gitleaks_historico": 0,
+    "gitleaks_arvore": 0,
+    "trivy_secret_misconfig_dockerfiles": 0,
+    "ruff": "All checks passed!"
+  },
+  "mitigadas": {
+    "corrigidas_no_codigo": 7,
+    "suprimidas_com_justificativa": 6,
+    "detalhe": "security/reports/SUPRESSOES.md"
+  },
+  "nao_executado": [
+    "Trivy vulnerabilidades de dependências (fs)",
+    "Trivy vulnerabilidades de imagem",
+    "Trivy config nos Compose (executa no CI)",
+    "pipeline do GitHub Actions"
+  ],
+  "tipagem": "mypy não adotado (INTERNAL ERROR)"
+}

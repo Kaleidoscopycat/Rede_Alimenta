@@ -114,7 +114,8 @@ INDICATORS = [("populacao_2026", "populacao_2026", "habitantes", "2026", "ibge_p
 
 def import_municipalities(session: Session) -> dict[str, int]:
     t = pd.read_parquet(ROOT / "data" / "gold" / "territory.parquet")
-    assert (t["data_origin"] == "PUBLIC").all(), "territory deve ser PUBLIC"
+    if not (t["data_origin"] == "PUBLIC").all():
+        raise ValueError("territory deve ser PUBLIC")
     if session.scalar(select(m.Municipality.ibge_code).limit(1)) is not None:
         return {"municipalities": 0, "indicators": 0}
     vid = _version_id(session, "ibge_municipios")
@@ -152,7 +153,8 @@ def import_organizations(session: Session) -> dict[str, int]:
         return {"organizations": 0, "locations": 0}
     man = _manifest()
     o = pd.read_parquet(ROOT / "data" / "gold" / "organizations.parquet")
-    assert (o["data_origin"] == "PUBLIC").all(), "organizations deve ser PUBLIC (dados reais)"
+    if not (o["data_origin"] == "PUBLIC").all():
+        raise ValueError("organizations deve ser PUBLIC (dados reais)")
     verified = {sid: _ts(man["sources"][sid]["ingested_at"]) for sid in ORG_SOURCE_URL}
     orgs, locs = [], []
     for r in o.itertuples(index=False):
@@ -211,6 +213,24 @@ def import_simulated(session: Session, tag: str = "main", with_lots: bool = True
         out["org_profiles"] = _bulk(session, m.OrganizationProfile, rows)
     else:
         out["org_profiles"] = 0
+    # --- veículos de coleta (SIMULADOS; frota do simulador, só ONGs com tem_frota) — usados pela roteirização (Fase 2 Parte 2)
+    if session.scalar(select(m.Vehicle.id).where(m.Vehicle.dataset_version == dataset_version).limit(1)) is None:
+        muni = {r.ibge_code: (r.lat, r.lon) for r in session.execute(select(m.Municipality.ibge_code, m.Municipality.lat, m.Municipality.lon))}
+        vrows, sem_base = [], 0
+        for r in fleet[fleet["tem_frota"].astype(bool)].itertuples(index=False):
+            if r.ong_id not in org_ids:
+                continue
+            base_mun = int(r.base_municipio_ibge)
+            lat, lon = muni.get(base_mun, (None, None))
+            if lat is None or lon is None:
+                sem_base += 1  # base sem coordenada conhecida: nunca inventada; o veículo não é importado
+                continue
+            vrows.append(dict(id=uuid.uuid5(NS, f"{dataset_version}|vehicle|{r.ong_id}"), organization_id=org_ids[r.ong_id], vehicle_type=str(r.tipo_veiculo), capacity_kg=float(r.capacidade_kg),
+                              refrigerated=bool(r.refrigerado), base_municipio_ibge=base_mun, base_lat=float(lat), base_lon=float(lon), location_precision="MUNICIPALITY_CENTROID", **_trace(r)))
+        out["vehicles"] = _bulk(session, m.Vehicle, vrows)
+        out["vehicles_sem_base_conhecida"] = sem_base
+    else:
+        out["vehicles"] = 0
     # --- doadores (SIMULADOS)
     donor_ids: dict[str, uuid.UUID] = {}
     if session.scalar(select(m.Donor.id).where(m.Donor.dataset_version == dataset_version).limit(1)) is None:

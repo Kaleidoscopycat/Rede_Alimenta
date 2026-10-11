@@ -9,6 +9,7 @@ A IA estrutura e sinaliza; NÃO afirma que um alimento está próprio ou impróp
 from __future__ import annotations
 
 import datetime as dt
+import logging
 import re
 import unicodedata
 from typing import Any
@@ -123,8 +124,8 @@ def parse_validity(text: str, ref: dt.date, category: str | None = None) -> dict
                     pd_ = dateparser.parse(mm.group(0), languages=["pt"], settings={"DATE_ORDER": "DMY", "PREFER_DATES_FROM": "future", "RELATIVE_BASE": dt.datetime(ref.year, ref.month, ref.day)})
                     if pd_:
                         cands.append((pd_.date(), 0.85, mm.group(0)))
-                except Exception:  # noqa: BLE001 - fallback opcional
-                    pass
+                except Exception:  # noqa: BLE001 - fallback opcional: a falha é registrada e o campo segue como ausente (bloqueio seguro)
+                    logging.getLogger(__name__).debug("fallback dateparser falhou para %r", mm.group(0), exc_info=True)
         if cands:
             if len({c[0] for c in cands}) > 1:
                 flags.append("multiplas_datas")

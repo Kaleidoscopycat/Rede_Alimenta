@@ -6,12 +6,20 @@ Autenticação: cole o TOKEN do seu usuário na barra lateral (nada é gravado n
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 from typing import Any
 
-import pandas as pd
-import streamlit as st
+# Portabilidade (Windows/Linux/Docker): o Streamlit/`python scripts/x.py` só põem a pasta do script em sys.path; a raiz do projeto
+# precisa estar lá para `from app...`/`from database...`. Sem depender de PYTHONPATH nem de `python -m`. Não duplica a entrada.
+_ROOT = str(Path(__file__).resolve().parent.parent)
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
 
-from app.api_client import ApiClient, ApiError
+import pandas as pd  # noqa: E402
+import streamlit as st  # noqa: E402
+
+from app.api_client import ApiClient, ApiError  # noqa: E402
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://127.0.0.1:8000")
 CATEGORIAS = ["HORT_FOLHOSAS", "HORT_RAIZES", "HORT_FRUTOS", "FRUTAS", "PANIFICADOS", "CARNES_PESCADOS", "LATICINIOS_OVOS", "REFEICOES_PRONTAS", "GRAOS_CEREAIS", "INDUSTRIALIZADOS", "BEBIDAS"]
@@ -21,6 +29,7 @@ AVISO_SIM = ("⚠️ **Dados simulados com limitações conhecidas.** Capacidade
              "**não são clientes** da plataforma.")
 AVISO_PARSER = "ℹ️ Parser treinado em **texto simulado**; limiar de confiança calibrado sobre texto simulado; **sem conjunto MANUALLY_LABELED** (o rascunho de IA não é rotulagem manual)."
 AVISO_AUTH = "🔐 Autenticação mínima: token estático por usuário; sem TLS nem limite de requisições nesta fase."
+AVISO_LICENCA = "dados públicos usados para fins acadêmicos; licença de reutilização não confirmada"
 PEND = "PENDING_CONFIRMATION"
 
 
@@ -38,6 +47,7 @@ def show_error(e: ApiError) -> None:
 
 def banner() -> None:
     st.warning(AVISO_SIM)
+    st.caption(f"📄 Fonte dos registros de ONGs, municípios e indicadores: bases públicas (atribuição às fontes em docs/data/DATA_LICENSES.md). **{AVISO_LICENCA.capitalize()}.**")
     st.caption(AVISO_PARSER)
     st.caption(AVISO_AUTH)
 

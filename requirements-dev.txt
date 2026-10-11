@@ -1,0 +1,11 @@
+# Desenvolvimento, testes e segurança (não vão para as imagens de produção).
+-r requirements-api.txt
+-r requirements-frontend.txt
+requests==2.34.2          # pipelines de ingestão (Fase 1)
+matplotlib==3.10.9        # EDA (Fase 1)
+pytest==9.1.1
+pgserver==0.1.4           # só para PostgreSQL local SEM Docker (scripts/pg_local.sh); opcional
+ruff==0.17.0
+bandit==1.9.4
+# mypy NÃO adotado: 2.4.0 falha com INTERNAL ERROR neste código (ver docs/FASE2_P2_RELATORIO_FINAL.md)
+pip_audit==2.10.1

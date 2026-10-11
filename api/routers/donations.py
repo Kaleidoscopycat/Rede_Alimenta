@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from api import donation_rules as rules
 from api.auth import audit, forbid, get_db, require_roles
-from api.parsing import AVISO_PARSER, build_parse_response
+from api.parsing import build_parse_response
 from api.schemas_v2 import ConfirmIn, DonationIn, DonationOut, ParseIn, ParseOut
 from api.state import STATE
 from core.settings import TZ
@@ -158,7 +158,7 @@ def confirm(donation_id: uuid.UUID, body: ConfirmIn, request: Request, db: Sessi
     try:
         changed = rules.apply_donor_decisions(fields, over, list(body.accept_fields), user.id, now, today, STATE.cat_perecibilidade)
     except ValueError as e:
-        raise HTTPException(422, str(e))
+        raise HTTPException(422, str(e)) from None
     if contem is not None:
         d.contem_alergenico = contem
         changed.append("contem_alergenico")

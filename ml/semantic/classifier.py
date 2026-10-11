@@ -5,7 +5,6 @@ domínio huggingface.co está bloqueado neste ambiente; ver docs. A IA estrutura
 from __future__ import annotations
 
 import datetime as dt
-import hashlib
 import re
 from pathlib import Path
 from typing import Any
@@ -16,9 +15,8 @@ import pandas as pd
 import yaml
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import f1_score
 
-from simulation.params import TAXONOMY_FILE, GENERATOR_VERSION
+from simulation.params import TAXONOMY_FILE
 from .validity import parse_validity, strip
 
 TAX = yaml.safe_load(TAXONOMY_FILE.read_text(encoding="utf-8"))["categories"]

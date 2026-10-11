@@ -21,7 +21,8 @@ from database.session import get_sessionmaker, session_scope
 
 log = logging.getLogger("api.auth")
 bearer = HTTPBearer(auto_error=False, description="Token de usuário (Authorization: Bearer <token>)")
-TOKEN_PREFIX = "rai_"
+# Supressão justificada em security/reports/SUPRESSOES.md (B105)
+TOKEN_PREFIX = "rai_"  # nosec B105  # noqa: S105
 
 
 def new_token() -> str:
@@ -88,4 +89,4 @@ def new_uuid(s: str) -> uuid.UUID:
     try:
         return uuid.UUID(s)
     except ValueError:
-        raise HTTPException(422, "identificador inválido")
+        raise HTTPException(422, "identificador inválido") from None

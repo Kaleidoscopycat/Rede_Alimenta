@@ -18,9 +18,9 @@ def test_migration_head_e_tabelas(p2_db):
     esperadas = {"donors", "donor_locations", "organizations", "organization_locations", "food_categories", "public_data_sources", "public_dataset_versions", "public_indicators",
                  "donations", "donation_items", "matches", "match_events", "ml_predictions", "audit_logs", "users", "organization_profiles", "capacity_reservations", "alembic_version"}
     assert esperadas <= tabelas
-    assert not ({"vehicles", "routes", "route_stops"} & tabelas), "roteirização é da Parte 2"
+    assert {"vehicles", "routes", "route_stops"} <= tabelas, "roteirização: migration 0002 (Fase 2 Parte 2)"
     with get_engine().connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0001"
+        assert c.execute(text("select version_num from alembic_version")).scalar() == "0002"
 
 
 def test_organizacoes_reais_com_rastreabilidade(p2_db):

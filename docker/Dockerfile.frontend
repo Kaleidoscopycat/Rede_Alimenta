@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1
+# Interface Streamlit (Fase 2 Parte 1). Fala SOMENTE com a API por HTTP: sem banco, sem dados e sem segredos na imagem.
+FROM python:3.10-slim AS builder
+ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+COPY requirements-frontend.txt /tmp/requirements-frontend.txt
+RUN pip install -r /tmp/requirements-frontend.txt
+
+FROM python:3.10-slim AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH" \
+    HOME=/home/app \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false \
+    STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_SERVER_ADDRESS=0.0.0.0 \
+    STREAMLIT_SERVER_PORT=8501
+RUN groupadd --system --gid 10001 app \
+ && useradd --system --uid 10001 --gid app --create-home --home-dir /home/app --shell /usr/sbin/nologin app
+WORKDIR /app
+COPY --from=builder /opt/venv /opt/venv
+COPY --chown=app:app app ./app
+USER app
+EXPOSE 8501
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
+  CMD ["python", "-c", "import sys,urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=4).status == 200 else 1)"]
+CMD ["streamlit", "run", "app/streamlit_app.py"]

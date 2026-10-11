@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1
+# API FastAPI (e scripts de migração/carga). Imagem enxuta em 2 estágios; usuário não-root; SEM dados brutos/simulados e SEM segredos na imagem.
+# Os dados (data/gold, data/simulated, data/metadata) são montados em tempo de execução só pelo serviço `seed` do Compose.
+FROM python:3.10-slim AS builder
+ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+COPY requirements-api.txt /tmp/requirements-api.txt
+RUN pip install -r /tmp/requirements-api.txt
+
+FROM python:3.10-slim AS runtime
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH"
+RUN groupadd --system --gid 10001 app \
+ && useradd --system --uid 10001 --gid app --home-dir /app --shell /usr/sbin/nologin app
+WORKDIR /app
+COPY --from=builder /opt/venv /opt/venv
+# somente o necessário para executar API, migrações e carga (sem tests/, docs/, data/, eda/, pipelines de ingestão)
+COPY --chown=app:app alembic.ini ./alembic.ini
+COPY --chown=app:app core ./core
+COPY --chown=app:app database ./database
+COPY --chown=app:app api ./api
+COPY --chown=app:app match ./match
+COPY --chown=app:app routing ./routing
+COPY --chown=app:app ml/__init__.py ml/dataset.py ./ml/
+COPY --chown=app:app ml/semantic ./ml/semantic
+COPY --chown=app:app ml/artifacts ./ml/artifacts
+COPY --chown=app:app simulation/__init__.py simulation/params.py ./simulation/
+COPY --chown=app:app simulation/config ./simulation/config
+COPY --chown=app:app simulation/params ./simulation/params
+COPY --chown=app:app pipelines/__init__.py pipelines/geo.py ./pipelines/
+COPY --chown=app:app scripts/bootstrap_db.py scripts/create_user.py ./scripts/
+USER app
+EXPOSE 8000
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
+  CMD ["python", "-c", "import sys,urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status == 200 else 1)"]
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

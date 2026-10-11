@@ -2,6 +2,14 @@
 É medida de ambiente local (PostgreSQL embutido, 1 processo): NÃO representa produção. Uso: python -m scripts.measure_latency [N]"""
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+
+# Portabilidade: permite `python scripts/x.py` de qualquer pasta, sem PYTHONPATH (a raiz do projeto entra em sys.path uma única vez).
+_ROOT = str(_Path(__file__).resolve().parent.parent)
+if _ROOT not in _sys.path:
+    _sys.path.insert(0, _ROOT)
+
 import datetime as dt
 import json
 import sys
@@ -12,7 +20,6 @@ import numpy as np
 from sqlalchemy import select
 
 from api.state import AppState
-from core.settings import TZ
 from database import models as m
 from database.session import session_scope
 from match.eligibility import DonationCtx
@@ -23,7 +30,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def main(n: int = 200) -> None:
     st = AppState()
     st.load()
-    assert st.engine is not None, st.error
+    if st.engine is None:
+        raise SystemExit(f"motor de match não carregou: {st.error}")
     rng = np.random.default_rng(20261008)
     with session_scope() as s:
         rows = s.execute(select(m.DonorLocation.lat, m.DonorLocation.lon, m.DonorLocation.location_precision, m.Donor.municipio_ibge).join(m.Donor, m.Donor.id == m.DonorLocation.donor_id)

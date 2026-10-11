@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 from sklearn.neighbors import BallTree
 
-from ml.dataset import BOOL_FEATURES, CAT_FEATURES, FEATURES, NUM_FEATURES
+from ml.dataset import FEATURES
 from pipelines.geo import EARTH_RADIUS_KM, estimated_travel_hours
 from ml.semantic.classifier import CAT_PER
 
@@ -74,7 +74,6 @@ class Ranker:
     # ------------------------------------------------------------------ features
     def _features(self, lote: dict, idx: np.ndarray, dist: np.ndarray) -> pd.DataFrame:
         o = self.orgs.iloc[idx].reset_index(drop=True)
-        n = len(o)
         speed = np.where(dist <= 15, SPEED_SHORT, SPEED_LONG)
         t = estimated_travel_hours(dist, DETOUR, speed, SERVICE_MIN)
         cat = lote["categoria"]

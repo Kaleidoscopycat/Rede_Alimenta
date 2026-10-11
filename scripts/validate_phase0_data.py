@@ -11,7 +11,11 @@
 Uso: python3 scripts/validate_phase0_data.py
 """
 from __future__ import annotations
-import hashlib, json, math, sys, unicodedata
+import hashlib
+import json
+import math
+import sys
+import unicodedata
 from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path

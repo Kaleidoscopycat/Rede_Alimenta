@@ -1,0 +1,679 @@
+{
+  "rotulo": "SIMULAÇÃO: doadores, lotes, frota e janelas SIMULADOS; ONGs e municípios são registros públicos reais; distâncias/tempos são estimativas (linha reta × desvio ÷ velocidade), não rota viária. NÃO representa desempenho no mundo real.",
+  "scenario": "municipios_vizinhos",
+  "instancias": 30,
+  "seed": 20261011,
+  "tentativas": 64,
+  "dataset_version": "0.2.0+477ed37e+20261003",
+  "algoritmo_versao": "routing-1.0.0",
+  "parametros": {
+    "detour": 1.35,
+    "speed_short_kmh": 22.0,
+    "speed_long_kmh": 55.0,
+    "unload_min": 30,
+    "safety_margin_h": 2.0,
+    "horizon_h": 12.0,
+    "solver_time_limit_s": 2,
+    "paradas_por_instancia": 8,
+    "raio_km_vizinhos": 40.0,
+    "saida": "08:00",
+    "validade_h": 48.0
+  },
+  "medias": {
+    "baseline": {
+      "km": 82.83,
+      "minutos": 260.47,
+      "lotes": 1.8,
+      "kg": 127.13
+    },
+    "solver": {
+      "km": 95.38,
+      "minutos": 267.83,
+      "lotes": 2.07,
+      "kg": 133.93
+    }
+  },
+  "contagens": {
+    "mesmo_numero_de_lotes": 23,
+    "solver_menos_km_com_mesmos_lotes": 4,
+    "solver_mais_km_com_mesmos_lotes": 0,
+    "solver_entrega_mais_lotes": 7,
+    "solver_entrega_menos_lotes": 0,
+    "todas_viaveis": true,
+    "solver_nunca_pior_no_objetivo": true
+  },
+  "segundos": 60.3,
+  "instancias_detalhe": [
+    {
+      "org": "ONG-beb8b3f1a5f2",
+      "paradas_ofertadas": 8,
+      "elegiveis": 3,
+      "baseline": {
+        "km": 61.843,
+        "minutos": 304,
+        "lotes": 1,
+        "kg": 41.0
+      },
+      "solver": {
+        "km": 61.843,
+        "minutos": 304,
+        "lotes": 1,
+        "kg": 41.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-171c8e8d98ba",
+      "paradas_ofertadas": 8,
+      "elegiveis": 2,
+      "baseline": {
+        "km": 104.209,
+        "minutos": 326,
+        "lotes": 2,
+        "kg": 43.0
+      },
+      "solver": {
+        "km": 104.209,
+        "minutos": 326,
+        "lotes": 2,
+        "kg": 43.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-4bde8ea80978",
+      "paradas_ofertadas": 8,
+      "elegiveis": 5,
+      "baseline": {
+        "km": 105.508,
+        "minutos": 238,
+        "lotes": 2,
+        "kg": 123.0
+      },
+      "solver": {
+        "km": 112.363,
+        "minutos": 303,
+        "lotes": 3,
+        "kg": 114.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-039cf3393667",
+      "paradas_ofertadas": 8,
+      "elegiveis": 7,
+      "baseline": {
+        "km": 113.0,
+        "minutos": 391,
+        "lotes": 3,
+        "kg": 280.0
+      },
+      "solver": {
+        "km": 182.573,
+        "minutos": 437,
+        "lotes": 5,
+        "kg": 394.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-8a96b285653b",
+      "paradas_ofertadas": 8,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 57.999,
+        "minutos": 137,
+        "lotes": 1,
+        "kg": 50.0
+      },
+      "solver": {
+        "km": 57.999,
+        "minutos": 137,
+        "lotes": 1,
+        "kg": 50.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-b1dfec51c73b",
+      "paradas_ofertadas": 6,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 48.62,
+        "minutos": 124,
+        "lotes": 1,
+        "kg": 20.0
+      },
+      "solver": {
+        "km": 48.62,
+        "minutos": 124,
+        "lotes": 1,
+        "kg": 20.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-15fabcc8ec8e",
+      "paradas_ofertadas": 8,
+      "elegiveis": 6,
+      "baseline": {
+        "km": 104.561,
+        "minutos": 243,
+        "lotes": 3,
+        "kg": 382.0
+      },
+      "solver": {
+        "km": 170.111,
+        "minutos": 339,
+        "lotes": 4,
+        "kg": 403.9
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-b34ce3b063a0",
+      "paradas_ofertadas": 8,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 47.083,
+        "minutos": 186,
+        "lotes": 1,
+        "kg": 47.4
+      },
+      "solver": {
+        "km": 47.083,
+        "minutos": 186,
+        "lotes": 1,
+        "kg": 47.4
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-63d5ddc3b48f",
+      "paradas_ofertadas": 8,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 80.799,
+        "minutos": 350,
+        "lotes": 1,
+        "kg": 20.5
+      },
+      "solver": {
+        "km": 80.799,
+        "minutos": 350,
+        "lotes": 1,
+        "kg": 20.5
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-05a37e402017",
+      "paradas_ofertadas": 8,
+      "elegiveis": 5,
+      "baseline": {
+        "km": 146.007,
+        "minutos": 343,
+        "lotes": 3,
+        "kg": 486.0
+      },
+      "solver": {
+        "km": 143.874,
+        "minutos": 328,
+        "lotes": 3,
+        "kg": 486.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-c7c5ae4e1b8a",
+      "paradas_ofertadas": 8,
+      "elegiveis": 3,
+      "baseline": {
+        "km": 28.244,
+        "minutos": 133,
+        "lotes": 1,
+        "kg": 44.0
+      },
+      "solver": {
+        "km": 28.244,
+        "minutos": 133,
+        "lotes": 1,
+        "kg": 44.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-7da5311ffdf4",
+      "paradas_ofertadas": 8,
+      "elegiveis": 2,
+      "baseline": {
+        "km": 55.246,
+        "minutos": 286,
+        "lotes": 1,
+        "kg": 40.0
+      },
+      "solver": {
+        "km": 55.246,
+        "minutos": 286,
+        "lotes": 1,
+        "kg": 40.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-d0f1fbe40347",
+      "paradas_ofertadas": 5,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 52.988,
+        "minutos": 214,
+        "lotes": 1,
+        "kg": 40.0
+      },
+      "solver": {
+        "km": 52.988,
+        "minutos": 214,
+        "lotes": 1,
+        "kg": 40.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-ff0f9f9a5298",
+      "paradas_ofertadas": 4,
+      "elegiveis": 2,
+      "baseline": {
+        "km": 82.478,
+        "minutos": 310,
+        "lotes": 1,
+        "kg": 31.5
+      },
+      "solver": {
+        "km": 174.795,
+        "minutos": 310,
+        "lotes": 2,
+        "kg": 182.5
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-baa97f1a0786",
+      "paradas_ofertadas": 8,
+      "elegiveis": 7,
+      "baseline": {
+        "km": 58.021,
+        "minutos": 274,
+        "lotes": 3,
+        "kg": 110.0
+      },
+      "solver": {
+        "km": 58.021,
+        "minutos": 274,
+        "lotes": 3,
+        "kg": 110.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-8edb44118fc3",
+      "paradas_ofertadas": 7,
+      "elegiveis": 3,
+      "baseline": {
+        "km": 101.396,
+        "minutos": 272,
+        "lotes": 3,
+        "kg": 117.5
+      },
+      "solver": {
+        "km": 101.396,
+        "minutos": 272,
+        "lotes": 3,
+        "kg": 117.5
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-da0d122c09b0",
+      "paradas_ofertadas": 5,
+      "elegiveis": 2,
+      "baseline": {
+        "km": 149.934,
+        "minutos": 230,
+        "lotes": 2,
+        "kg": 138.0
+      },
+      "solver": {
+        "km": 149.934,
+        "minutos": 230,
+        "lotes": 2,
+        "kg": 138.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-7d20b4b04f00",
+      "paradas_ofertadas": 8,
+      "elegiveis": 2,
+      "baseline": {
+        "km": 74.666,
+        "minutos": 353,
+        "lotes": 2,
+        "kg": 126.0
+      },
+      "solver": {
+        "km": 74.666,
+        "minutos": 353,
+        "lotes": 2,
+        "kg": 126.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-6427be8dbda9",
+      "paradas_ofertadas": 8,
+      "elegiveis": 4,
+      "baseline": {
+        "km": 106.541,
+        "minutos": 219,
+        "lotes": 2,
+        "kg": 128.8
+      },
+      "solver": {
+        "km": 93.528,
+        "minutos": 207,
+        "lotes": 2,
+        "kg": 85.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-114b2d3ba97a",
+      "paradas_ofertadas": 8,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 16.497,
+        "minutos": 116,
+        "lotes": 1,
+        "kg": 18.0
+      },
+      "solver": {
+        "km": 16.497,
+        "minutos": 116,
+        "lotes": 1,
+        "kg": 18.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-ac749fac4500",
+      "paradas_ofertadas": 6,
+      "elegiveis": 3,
+      "baseline": {
+        "km": 41.187,
+        "minutos": 86,
+        "lotes": 1,
+        "kg": 93.0
+      },
+      "solver": {
+        "km": 138.669,
+        "minutos": 213,
+        "lotes": 2,
+        "kg": 136.8
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-e61f132fe98a",
+      "paradas_ofertadas": 7,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 43.299,
+        "minutos": 120,
+        "lotes": 1,
+        "kg": 36.0
+      },
+      "solver": {
+        "km": 43.299,
+        "minutos": 120,
+        "lotes": 1,
+        "kg": 36.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-e742f7b16838",
+      "paradas_ofertadas": 8,
+      "elegiveis": 4,
+      "baseline": {
+        "km": 93.356,
+        "minutos": 372,
+        "lotes": 3,
+        "kg": 254.0
+      },
+      "solver": {
+        "km": 82.162,
+        "minutos": 345,
+        "lotes": 3,
+        "kg": 335.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-15e119b82f60",
+      "paradas_ofertadas": 8,
+      "elegiveis": 6,
+      "baseline": {
+        "km": 121.942,
+        "minutos": 436,
+        "lotes": 3,
+        "kg": 148.9
+      },
+      "solver": {
+        "km": 177.949,
+        "minutos": 361,
+        "lotes": 4,
+        "kg": 131.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-e7702d87f9f2",
+      "paradas_ofertadas": 7,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 96.508,
+        "minutos": 171,
+        "lotes": 1,
+        "kg": 108.0
+      },
+      "solver": {
+        "km": 96.508,
+        "minutos": 171,
+        "lotes": 1,
+        "kg": 108.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-cea143b355fe",
+      "paradas_ofertadas": 8,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 36.093,
+        "minutos": 210,
+        "lotes": 1,
+        "kg": 47.4
+      },
+      "solver": {
+        "km": 36.093,
+        "minutos": 210,
+        "lotes": 1,
+        "kg": 47.4
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-68528644355d",
+      "paradas_ofertadas": 8,
+      "elegiveis": 5,
+      "baseline": {
+        "km": 140.256,
+        "minutos": 416,
+        "lotes": 3,
+        "kg": 149.0
+      },
+      "solver": {
+        "km": 132.57,
+        "minutos": 443,
+        "lotes": 3,
+        "kg": 115.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-93fc2f2d22d3",
+      "paradas_ofertadas": 5,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 89.177,
+        "minutos": 284,
+        "lotes": 1,
+        "kg": 25.0
+      },
+      "solver": {
+        "km": 89.177,
+        "minutos": 284,
+        "lotes": 1,
+        "kg": 25.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-ae626940336b",
+      "paradas_ofertadas": 8,
+      "elegiveis": 7,
+      "baseline": {
+        "km": 151.135,
+        "minutos": 373,
+        "lotes": 4,
+        "kg": 648.0
+      },
+      "solver": {
+        "km": 173.746,
+        "minutos": 362,
+        "lotes": 5,
+        "kg": 545.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    },
+    {
+      "org": "ONG-3275fdd33d40",
+      "paradas_ofertadas": 8,
+      "elegiveis": 1,
+      "baseline": {
+        "km": 76.417,
+        "minutos": 297,
+        "lotes": 1,
+        "kg": 18.0
+      },
+      "solver": {
+        "km": 76.417,
+        "minutos": 297,
+        "lotes": 1,
+        "kg": 18.0
+      },
+      "viavel_baseline": true,
+      "viavel_solver": true,
+      "solver_objetivo_menor_ou_igual": true,
+      "solver_voltou_ao_baseline": false
+    }
+  ],
+  "gerado_em": "2026-10-11T04:34:04.305632+00:00"
+}

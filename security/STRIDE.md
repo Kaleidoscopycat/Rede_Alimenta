@@ -1,6 +1,6 @@
-# Modelagem de ameaças STRIDE — Rede Alimenta IA (Fase 1 / Checkpoint 1)
+# Modelagem de ameaças STRIDE — Rede Alimenta IA (Fase 1 → Fase 2 Parte 2 / Checkpoint 2)
 
-**Escopo:** fluxo DOADOR → ONG (a distribuição ONG → beneficiário está fora de escopo). **Estado:** MVP local; ainda não há autenticação, banco de dados, nuvem nem CI/CD. Este documento classifica o que **já está mitigado no código**, o que é **risco aceito nesta fase** e o que **fica para fases futuras** (DevSecOps).
+**Escopo:** fluxo DOADOR → ONG (a distribuição ONG → beneficiário está fora de escopo). **Estado (Fase 1):** MVP local; ainda não havia autenticação, banco de dados, nuvem nem CI/CD. **Atualizado na Fase 2 Parte 2** (§11 e §12): API autenticada, PostgreSQL, interface, rotas de coleta, contêineres e CI/CD (workflow escrito, **ainda não executado no GitHub**; imagens **ainda não construídas** no ambiente de desenvolvimento). Os status das §2–§10 são os da Fase 1, exceto onde a nota *(atualizado)* indica o contrário. Este documento classifica o que **já está mitigado no código**, o que é **risco aceito nesta fase** e o que **fica para fases futuras** (DevSecOps).
 
 **Escalas:** Impacto e Probabilidade em Baixo / Médio / Alto, avaliadas qualitativamente pela equipe (não medidas). **Status:** `IMPLEMENTADO` (existe no repositório e é testado), `PARCIAL`, `PENDENTE`.
 
@@ -21,7 +21,7 @@ Fronteiras: (F1) cliente ↔ API; (F2) pipelines ↔ fontes públicas na interne
 
 | ID | STRIDE | Ameaça | Impacto | Prob. | Mitigação | Status | Fase |
 |---|---|---|---|---|---|---|---|
-| A1 | S | Cliente se passa por doador/ONG; endpoints abertos | Médio | Alta | Nesta fase não há login. Fase 2: autenticação (OIDC/JWT), papéis doador/ONG/admin, chaves por cliente | PENDENTE (risco aceito no MVP local) | 2 |
+| A1 | S | Cliente se passa por doador/ONG; endpoints abertos | Médio | Alta | Nesta fase não há login. Fase 2: autenticação (OIDC/JWT), papéis doador/ONG/admin, chaves por cliente | **(atualizado)** autenticação por token implementada na Fase 2 Parte 1 — ver P2-1…P2-4; OIDC/JWT segue PENDENTE (P2-3) | 2 |
 | A2 | T | Payload adulterado ou com campos extras (mass assignment) | Médio | Média | Pydantic com `extra="forbid"`, faixas e tipos estritos, enum de categorias, janelas validadas (`tests/test_api.py::test_entradas_invalidas`) | IMPLEMENTADO | 1 |
 | A3 | R | Sem trilha de auditoria de quem pediu qual recomendação | Médio | Média | Log estruturado com `model_version`/`data_version`; Fase 2: log de auditoria imutável com identidade e correlation-id | PARCIAL | 2 |
 | A4 | I | Mensagens de erro vazam detalhes internos / caminhos / stack | Médio | Média | Handler global devolve `"erro interno"` genérico; detalhe só no log (`api/main.py`) | IMPLEMENTADO | 1 |
@@ -89,9 +89,9 @@ Fronteiras: (F1) cliente ↔ API; (F2) pipelines ↔ fontes públicas na interne
 
 | ID | STRIDE | Ameaça | Impacto | Prob. | Mitigação planejada | Status | Fase |
 |---|---|---|---|---|---|---|---|
-| I1 | T | Pipeline de CI/CD comprometido | Alto | Baixa | Ações fixadas por hash, permissões mínimas, revisão obrigatória | PENDENTE | 2 |
-| I2 | E | Contêiner executa como root, imagem desatualizada | Alto | Média | Usuário não-root, imagem mínima, scan (Trivy), SBOM | PENDENTE | 3 |
-| I3 | I | Segredos de produção expostos | Alto | Média | Gerenciador de segredos, rotação, scan de segredos no CI | PENDENTE | 3 |
+| I1 | T | Pipeline de CI/CD comprometido | Alto | Baixa | Ações fixadas por hash, permissões mínimas, revisão obrigatória | **PARCIAL (atualizado)** — ações fixadas por SHA e `permissions: contents: read` IMPLEMENTADOS em `.github/workflows/ci.yml` (validado com actionlint); **workflow não executado no GitHub**; revisão obrigatória/proteção de branch PENDENTES (configuração do repositório) | 2 |
+| I2 | E | Contêiner executa como root, imagem desatualizada | Alto | Média | Usuário não-root, imagem mínima, scan (Trivy), SBOM | **PARCIAL (atualizado)** — usuário não-root (uid 10001), base `python:3.10-slim`, `cap_drop: ALL` e `no-new-privileges` escritos; Bandit/Trivy no CI; **imagem não construída nem escaneada (Trivy) localmente**; SBOM PENDENTE | 3 |
+| I3 | I | Segredos de produção expostos | Alto | Média | Gerenciador de segredos, rotação, scan de segredos no CI | **PARCIAL (atualizado)** — sem segredos em imagem/repositório (`.env.example` sem credenciais, `.dockerignore`, gitleaks no CI e gitleaks local limpo, senha do Postgres do CI gerada na execução); gerenciador de segredos/rotação PENDENTES | 3 |
 | I4 | D | Sem observabilidade/alertas | Médio | Média | Métricas, logs centralizados, alertas, SLO | PENDENTE | 3 |
 | I5 | T/I | Configuração de nuvem permissiva | Alto | Média | IaC com verificação (tfsec/Checkov), princípio do menor privilégio | PENDENTE | 3 |
 
@@ -124,4 +124,59 @@ Atualiza A1/A3 (autenticação mínima e auditoria, **implementadas**). A7/A10 p
 | P2-10 | T | Doação vencida/sem validade vira match | Alto | Média | Regras R-VAL-1/2 e revalidação no match; match só após confirmação humana | IMPLEMENTADO | `test_p2_parser_api.py`, `test_validade_vence_antes_do_match` |
 | P2-11 | I | Sugerir que alimento é próprio para consumo | Alto | Baixa | Avisos em toda resposta de parse/match: a plataforma não atesta segurança do alimento | IMPLEMENTADO | `test_scores_separados_e_final_ponderado` |
 | P2-12 | I | Entidade pública tratada como cliente | Médio | Média | `platform_status = PUBLIC_RECORD`; regra `E_NAO_CADASTRADA` para doações reais | IMPLEMENTADO | `test_registro_publico_so_nao_cadastrada_para_doacao_real` |
-| P2-13 | I | Dependências novas (SQLAlchemy, Alembic, psycopg, Streamlit, scipy) | Médio | Média | Versões fixadas em `requirements.txt`; **varredura de dependências/SAST (Bandit/Trivy) fica para a Parte 2** | PENDENTE | — |
+| P2-13 | I | Dependências novas (SQLAlchemy, Alembic, psycopg, Streamlit, scipy) | Médio | Média | Versões fixadas em `requirements.txt`; **varredura de dependências/SAST (Bandit/Trivy) fica para a Parte 2** | **PARCIAL (atualizado na Parte 2)** — pip-audit (0 vulnerabilidades em 100 dependências) e Bandit (0 achados) executados localmente, com relatórios antes/depois em `security/reports/`; **Trivy de dependências/imagem NÃO executado localmente (pendente no CI)** | — |
+
+## 12. Fase 2 · Parte 2 — rotas de coleta, contêineres, CI/CD, administração e deploy
+
+**Severidade** é qualitativa (Impacto × Probabilidade), avaliada pela equipe. **Status:** `IMPLEMENTADO` (existe no repositório e foi verificado como indicado), `PARCIAL`, `PENDENTE`. Itens verificados só por inspeção ou emulação dizem isso na coluna Verificação.
+
+### 12.1 Risco registrado na validação da Parte 1 — divulgação de informação (PENDENTE)
+
+| ID | STRIDE | Ameaça | Impacto | Prob. | Severidade | Mitigação planejada | Status | Verificação |
+|---|---|---|---|---|---|---|---|---|
+| **P2B-1** | **I** | **Divulgação de informação:** a API (e, por consequência, a interface) entrega a qualquer perfil autenticado os **scores internos da IA** (`ML_SCORE`, `BUSINESS_RULE_SCORE`, `DISTANCE_SCORE`, `FINAL_SCORE`), os componentes das regras, os pesos, as contagens de elegibilidade e o **ranking completo de ONGs**. O **doador** recebe o ranking inteiro (inclusive `org_id` das ONGs não escolhidas). A **ONG** recebe, além da sua candidatura, a sua **posição** e `current_position` no ranking, o que revela a classificação relativa frente às outras ONGs. | Médio–Alto (permite *gaming* do ranking, expõe critérios internos e a competição entre ONGs; hoje sobre dados SIMULADOS, mas o desenho vale para dados reais) | Alta (qualquer conta autenticada) | **ALTA** | **Fase 3 Parte 1, seção 3:** esquemas de resposta **por perfil aplicados na API** (e não só na tela): doador vê apenas a ONG proposta/aceita e a explicação em linguagem simples; ONG vê apenas a própria proposta sem scores internos nem posição; scores/ranking completos só para ADMIN/auditoria. **NÃO implementado nesta parte, por decisão da equipe.** | **PENDENTE** | Comportamento atual reproduzido por sonda e fixado em `tests/test_p2b_divulgacao_scores_pendente.py` (2 testes `xfail(strict=True)` descrevendo o comportamento desejado; viram XPASS quando a mitigação entrar). |
+
+### 12.2 Rotas de coleta (`routing/`, `api/routers/routes.py`) — F1/F5
+
+| ID | STRIDE | Ameaça | Sev. | Mitigação | Status | Verificação |
+|---|---|---|---|---|---|---|
+| P2B-2 | E | ONG planeja ou lê rota de outra ONG (IDOR); doador acessa rotas | Alta | Só `ORG`/`ADMIN`; `ORG` limitada às doações **aceitas pela própria ONG** e a veículos da própria ONG; GET devolve 403 para rota de outra ONG | IMPLEMENTADO | `tests/test_p2b_routes_api.py` (403/401) |
+| P2B-3 | T | Payload adulterado (campos extras, listas enormes, margens absurdas) | Média | `extra="forbid"`, 1–12 doações, `safety_margin_h` 0–48 h, UUIDs validados | IMPLEMENTADO | `test_validacao_de_entrada` |
+| P2B-4 | T | Rota que viola capacidade, janela, validade ou refrigeração (risco de segurança alimentar) | Alta | Verificador independente (`routing.core.evaluate`) reprova qualquer rota inviável; solver cai para o baseline se reprovado; lotes que não cabem ficam em `unassigned` com motivo; margem de segurança configurável | IMPLEMENTADO | `tests/test_p2b_routing_core.py`, `test_lote_refrigerado_em_veiculo_comum…`, `test_prazo_de_validade…` |
+| P2B-5 | D | Solver consome CPU (planejamento repetido com muitos pontos) | Média | Limite de tempo do solver (`ROUTE_SOLVER_TIME_LIMIT_S`, padrão 3 s), no máximo 12 paradas e horizonte de 12 h; **sem rate limit** (ver P2-6) | PARCIAL | limite de paradas testado; tempo medido no benchmark; rate limit PENDENTE |
+| P2B-6 | I/T | Rota SIMULADA apresentada como real ou gravada como `USER_ENTERED` | Alta | `data_origin` da rota = `USER_ENTERED` só se **todas** as entradas forem; senão `SIMULATED` com rastreio (gerador/semente/dataset); rótulo "SIMULAÇÃO … estimativas, não rota viária" em toda resposta; `CHECK` no banco | IMPLEMENTADO | `test_plano_com_sucesso_persiste_solver_e_baseline` |
+| P2B-7 | I | Coordenadas dos doadores nas paradas são entregues a `ORG`/`ADMIN` | Média | Hoje: centroide municipal SIMULADO (`location_precision` informado). Para dados reais, restringir a localização exata ao pós-aceite e por perfil na Fase 3 | PENDENTE (para dados reais) | — |
+| P2B-8 | R | Planejamento sem trilha | Média | Auditoria `route.plan` (OK/DENIED) com papel, recurso e código; parâmetros e versão do algoritmo gravados na rota | IMPLEMENTADO | `test_rota_registra_auditoria` |
+| P2B-9 | T | Estimativa de tempo/distância tratada como viária | Média | Metodologia declarada (haversine × desvio ÷ velocidade, igual à Parte 1), gravada em `routes.distance_basis`/`parameters`; OSRM/OSM (ODbL) fica como extensão | IMPLEMENTADO (limitação documentada) | `test_premissas_iguais_as_da_parte_1` |
+
+### 12.3 Contêineres, CI/CD e dependências — F5
+
+| ID | STRIDE | Ameaça | Sev. | Mitigação | Status | Verificação |
+|---|---|---|---|---|---|---|
+| P2B-10 | E | Contêiner como root / capacidades excessivas | Alta | `USER` uid 10001, `cap_drop: ALL`, `no-new-privileges`, imagem `slim` multi-estágio, apenas os módulos necessários copiados | PARCIAL | Revisão do Dockerfile/Compose + Trivy misconfig local limpo; **imagem não construída aqui** (sem Docker); build no CI |
+| P2B-11 | I | Segredos na imagem ou no repositório | Alta | `.dockerignore` exclui `.env`, dados e testes; `.env.example` sem credenciais; senha do Postgres do CI gerada na execução; gitleaks (histórico e árvore) limpo | IMPLEMENTADO | gitleaks e Trivy secret locais; `security/reports/depois/` |
+| P2B-12 | I/E | Banco exposto ao host/rede | Alta | Compose padrão **não publica** a porta do Postgres; API/frontend ligados a `127.0.0.1`; credenciais por `.env`; `docker-compose.ci.yml` publica o banco só em `127.0.0.1` no CI | PARCIAL | Revisão do Compose; **`docker compose up` não executado aqui** |
+| P2B-13 | T | Cadeia de suprimentos do CI/CD (ação comprometida, tag móvel) | Alta | Ações fixadas por SHA, `permissions: contents: read`, binários baixados com checksum (gitleaks), versões fixadas | PARCIAL | actionlint limpo; **workflow não executado no GitHub**; proteção de branch/revisão obrigatória PENDENTES |
+| P2B-14 | T/I | Dependências ou imagem base vulneráveis | Alta | pip-audit e Bandit no CI e localmente (antes/depois em `security/reports/`); Trivy `fs` e `image` no CI com *gate* em CRITICAL corrigível | PARCIAL | pip-audit 0 / Bandit 0 locais; **Trivy de vulnerabilidades não executado** (DB inacessível localmente) |
+| P2B-15 | T | Alerta suprimido sem registro | Média | Toda supressão tem justificativa em `security/reports/SUPRESSOES.md` | IMPLEMENTADO | Bandit: 7 `nosec`, todos listados |
+| P2B-16 | T | Migrações divergentes entre ambientes | Média | Alembic versionado (0001, 0002); serviço `migrate` no Compose antes da API; teste de *head* | IMPLEMENTADO (testes locais) | `test_migration_head_e_tabelas`; execução no Compose pendente |
+| P2B-17 | I | Mypy/tipagem como controle | Baixa | **Não adotado** (falha interna da ferramenta); registrado | NÃO ADOTADO | — |
+
+### 12.4 Dados, licenças, administração e deploy
+
+| ID | STRIDE | Ameaça | Sev. | Mitigação | Status | Verificação |
+|---|---|---|---|---|---|---|
+| P2B-18 | I | Redistribuição de bases brutas com licença **não confirmada** (NEEDS_REVIEW, `publication_cleared=false`) | Alta | `data/` fora do repositório e das imagens (`.gitignore`/`.dockerignore`); nenhum endpoint ou botão de exportação/download de bases brutas; aviso acadêmico visível na interface; indicadores agregados na exibição pública | IMPLEMENTADO | `tests/test_p2b_uso_academico.py`; `docs/data/DATA_LICENSES.md` |
+| P2B-19 | E | Conta ADMIN com poder total (criar usuários, ver tudo) sem MFA, token estático sem expiração | Alta | Criação de usuários por endpoint de ADMIN e por `scripts/create_user.py`; ações auditadas; **sem MFA, expiração ou rotação** (P2-3) | PARCIAL | `test_p2_auth.py`; OIDC/MFA PENDENTES |
+| P2B-20 | I/T | Deploy sem TLS, sem rate limit, sem WAF; segredos de produção | Alta | **Não há deploy em nuvem nesta parte**; o Compose é de desenvolvimento/demonstração local (`127.0.0.1`). TLS, rate limit, WAF, gerenciador de segredos e IaC verificada permanecem PENDENTES (P2-6, P2-7, I3, I5) | **PENDENTE** | — |
+| P2B-21 | T | Artefatos `joblib` (modelo/parser) comprometidos ao serem carregados no contêiner | Alta | Verificação de *hash* na carga (M1) e artefatos copiados de caminho fixo; sem assinatura | PARCIAL | `tests/test_features_model.py` |
+| P2B-22 | I | Métrica de dados simulados lida como desempenho real | Média | Rótulo "calculada sobre dados simulados" em relatórios, API (`/model/info`) e benchmark de rotas; MANUALLY_LABELED não existe | IMPLEMENTADO | `docs/MODEL_REPORT.md`, `docs/ROUTING_BENCHMARK.json` |
+
+### 12.5 Riscos residuais ao final da Parte 2
+1. **P2B-1** (scores/ranking expostos a todos os perfis) — a corrigir na Fase 3 Parte 1, seção 3.
+2. TLS, rate limit, autenticação com expiração/rotação/MFA e gerenciador de segredos (P2-3, P2-6, P2-7, P2B-19, P2B-20).
+3. Resultados do Trivy (vulnerabilidades de dependências e imagens) e a execução real do pipeline no GitHub e do `docker compose up` — **ainda não verificados** (ver `docs/FASE2_P2_RELATORIO_FINAL.md`).
+4. Desempenho do parser e do modelo em textos e dados **reais** é **desconhecido** (sem rotulagem manual; toda métrica é sobre dados simulados).
+
+### 12.6 Rastreabilidade para testes (Parte 2)
+`tests/test_p2b_routing_core.py` (P2B-4, P2B-9), `tests/test_p2b_routes_api.py` (P2B-2, P2B-3, P2B-4, P2B-6, P2B-8), `tests/test_p2b_divulgacao_scores_pendente.py` (P2B-1, *xfail* estrito), `tests/test_portabilidade.py` (portabilidade do `streamlit run`), `tests/test_p2b_uso_academico.py` (P2B-18).

@@ -15,7 +15,7 @@ import pandas as pd
 from api.service import DETOUR, Ranker
 from core.settings import SETTINGS, TZ, MatchSettings
 from pipelines.geo import EARTH_RADIUS_KM
-from .eligibility import RULE_ORDER, RULES, DonationCtx, evaluate, reasons_for, travel_hours
+from .eligibility import RULE_ORDER, RULES, DonationCtx, evaluate, reasons_for
 from .index import OrgIndex
 from .scoring import business_rule_score, distance_score, final_score
 

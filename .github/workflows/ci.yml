@@ -1,0 +1,206 @@
+# CI/CD da Rede Alimenta IA — Fase 2 Parte 2.
+# lint · testes · SAST (Bandit) · dependências (pip-audit + Trivy) · segredos (Trivy + gitleaks) · build Docker + Trivy de imagem/config · fluxo completo via Docker Compose.
+# Relatórios (JSON/texto) saem como artefatos em security/reports/ci/ (não são commitados pelo CI).
+# Ações de terceiros fixadas por SHA de commit (comentário indica a versão).
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.10"
+  TRIVY_VERSION: "v0.75.0"
+  GITLEAKS_VERSION: "8.30.1"
+
+jobs:
+  lint:
+    name: lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install "ruff==0.17.0"
+      - run: ruff check .
+
+  tests:
+    name: testes (pytest + PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: rede_alimenta
+          POSTGRES_PASSWORD: ci-teste-nao-e-segredo
+          POSTGRES_DB: rede_alimenta_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U rede_alimenta -d rede_alimenta_test"
+          --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://rede_alimenta:ci-teste-nao-e-segredo@127.0.0.1:5432/rede_alimenta_test
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-*.txt
+      - run: pip install -r requirements-dev.txt
+      # data/simulated não vai ao Git: regenera o conjunto "smoke" (simulador documentado, mesma seed e parâmetros usados pelos testes)
+      - name: Gera dados SIMULADOS (tag smoke)
+        run: python -m simulation.generator --seed 20261003 --n-lots 3000 --n-donors 1000 --tag smoke
+      - run: python -m pytest -q --junitxml=security/reports/ci/pytest-junit.xml
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: pytest-junit
+          path: security/reports/ci/pytest-junit.xml
+          if-no-files-found: ignore
+
+  sast-bandit:
+    name: SAST (Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install "bandit==1.9.4"
+      - name: Bandit (relatórios completos; falha com severidade MÉDIA ou ALTA)
+        run: |
+          mkdir -p security/reports/ci
+          DIRS="api app core database match ml pipelines routing scripts simulation quality eda"
+          bandit -r $DIRS -x tests -f json -o security/reports/ci/bandit.json || true
+          bandit -r $DIRS -x tests -f txt  -o security/reports/ci/bandit.txt  || true
+          bandit -r $DIRS -x tests --severity-level medium
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: bandit
+          path: security/reports/ci/bandit.*
+
+  dependencies-and-secrets:
+    name: dependências e segredos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # histórico completo para o gitleaks
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+      - name: pip-audit (dependências Python; falha se houver vulnerabilidade conhecida)
+        run: |
+          mkdir -p security/reports/ci
+          pip install "pip-audit==2.10.1"
+          pip-audit -r requirements-dev.txt -f json -o security/reports/ci/pip-audit.json || true
+          pip-audit -r requirements-dev.txt
+      - name: Trivy fs (vulnerabilidades de dependências + segredos + configuração)
+        run: |
+          trivy fs --scanners vuln,secret,misconfig --skip-dirs .venv,data,.git --format json --output security/reports/ci/trivy-fs.json .
+          trivy fs --scanners vuln,secret,misconfig --skip-dirs .venv,data,.git --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 .
+      - name: gitleaks (segredos no histórico do Git)
+        run: |
+          curl -sSfL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o gitleaks.checksums "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
+          grep "gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" gitleaks.checksums | sha256sum -c -
+          tar xzf gitleaks.tgz gitleaks
+          ./gitleaks detect --source . --redact --report-format json --report-path security/reports/ci/gitleaks.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: dependencias-e-segredos
+          path: security/reports/ci/*.json
+          if-no-files-found: ignore
+
+  docker:
+    name: Docker (build, Trivy de imagem e fluxo completo no Compose)
+    runs-on: ubuntu-latest
+    needs: [lint, tests]
+    env:
+      APP_DB: rede_alimenta
+      APP_USER: rede_alimenta
+      SIM_TAG: smoke
+      COMPOSE_FILES: -f docker-compose.yml -f docker-compose.ci.yml
+    steps:
+      - name: Senha efêmera do Postgres (gerada na execução; nada de segredo no repositório)
+        run: |
+          PW="$(openssl rand -hex 16)"
+          echo "::add-mask::$PW"
+          echo "POSTGRES_PASSWORD=$PW" >> "$GITHUB_ENV"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements-*.txt
+      - uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
+        with:
+          version: ${{ env.TRIVY_VERSION }}
+      - run: pip install -r requirements-dev.txt
+      - name: Gera dados SIMULADOS (tag smoke) para a carga do Compose
+        run: python -m simulation.generator --seed 20261003 --n-lots 3000 --n-donors 1000 --tag smoke
+      - name: Cria .env a partir de .env.example (sem segredos reais)
+        run: |
+          cp .env.example .env
+          sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=${POSTGRES_PASSWORD}|; s|^SIM_TAG=.*|SIM_TAG=${SIM_TAG}|" .env
+      - name: Build das imagens
+        run: docker compose ${COMPOSE_FILES} build api frontend
+      - name: Trivy config (Dockerfiles)
+        run: |
+          mkdir -p security/reports/ci
+          trivy config --format json --output security/reports/ci/trivy-config.json docker
+          trivy config --severity HIGH,CRITICAL --exit-code 1 docker
+      - name: Trivy de imagem (relatório completo; falha com CRITICAL corrigível)
+        run: |
+          for img in rede-alimenta-api:local rede-alimenta-frontend:local; do
+            n=$(echo "$img" | cut -d: -f1)
+            trivy image --format json --output "security/reports/ci/trivy-image-${n}.json" "$img"
+            trivy image --severity HIGH,CRITICAL --ignore-unfixed --format table "$img" || true
+            trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 "$img"
+          done
+      - name: Sobe banco e migrações
+        run: docker compose ${COMPOSE_FILES} up -d postgres migrate
+      - name: Carga dos dados (ONGs PUBLIC + SIMULATED)
+        run: docker compose ${COMPOSE_FILES} --profile seed run --rm seed
+      - name: Sobe API e frontend
+        run: docker compose ${COMPOSE_FILES} up -d api frontend
+      - name: Espera a API ficar pronta e checa a interface
+        run: |
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8000/ready && break; sleep 3; done
+          curl -sf http://127.0.0.1:8000/ready
+          curl -sf http://127.0.0.1:8501/_stcore/health
+      - name: Fluxo completo (doador → parser → confirmação → match → ONG aceita/recusa → coleta)
+        env:
+          DATABASE_URL: postgresql+psycopg://rede_alimenta:ci_compose_pw_aleatoria_0123456789@127.0.0.1:5432/rede_alimenta
+          API_BASE_URL: http://127.0.0.1:8000
+          E2E_SIM_TAG: smoke
+          E2E_OUT: security/reports/ci/e2e-compose.json
+        run: python -m scripts.e2e_flow
+      - name: Logs dos contêineres (em caso de falha)
+        if: failure()
+        run: docker compose ${COMPOSE_FILES} logs --no-color --tail=200
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: docker
+          path: security/reports/ci/*
+          if-no-files-found: ignore
+      - name: Derruba o ambiente
+        if: always()
+        run: docker compose ${COMPOSE_FILES} down -v

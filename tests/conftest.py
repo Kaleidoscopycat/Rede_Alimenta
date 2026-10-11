@@ -83,7 +83,7 @@ def _mk_user(role, label, donor_id=None, org_id=None, demo=False):
 def world(client, clock):
     """Contas TÉCNICAS de teste (tokens) sobre dados do simulador (SIMULATED) e ONGs reais; nenhuma entidade de negócio é inventada."""
     import pandas as pd
-    from sqlalchemy import select, func
+    from sqlalchemy import select
     from database import models as m
     from database.session import session_scope
     from api.state import STATE

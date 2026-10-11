@@ -6,7 +6,7 @@ import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import or_, select
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api.auth import audit, forbid, get_db, require_roles
@@ -84,7 +84,7 @@ def create_match(body: MatchIn, request: Request, db: Session = Depends(get_db),
     except lifecycle.LifecycleError as e:
         db.rollback()
         audit("match.create", "DENIED", request, user, "donation", body.donation_id, e.status_code, detail={"codigo": e.code})
-        raise _http(e)
+        raise _http(e) from e
     audit("match.create", "OK", request, user, "match", mt.id, 201, detail={"status": mt.status, "latency_ms": mt.latency_ms.get("total_ms")}, session=db)
     db.commit()
     return match_view(db, mt, user, body.top_n)
@@ -124,7 +124,7 @@ def respond(match_id: uuid.UUID, body: RespondIn, request: Request, db: Session 
     except lifecycle.LifecycleError as e:
         db.rollback()
         audit("match.respond", "DENIED", request, user, "match", match_id, e.status_code, detail={"codigo": e.code})
-        raise _http(e)
+        raise _http(e) from e
     audit("match.respond", "OK", request, user, "match", match_id, 200, detail={"accept": body.accept, "status": mt.status}, session=db)
     db.commit()
     return match_view(db, mt, user)
@@ -142,7 +142,7 @@ def outcome(match_id: uuid.UUID, body: OutcomeIn, request: Request, db: Session 
     except lifecycle.LifecycleError as e:
         db.rollback()
         audit("match.outcome", "DENIED", request, user, "match", match_id, e.status_code, detail={"codigo": e.code})
-        raise _http(e)
+        raise _http(e) from e
     audit("match.outcome", "OK", request, user, "match", match_id, 200, detail={"result": body.result}, session=db)
     db.commit()
     return match_view(db, mt, user)
@@ -175,7 +175,7 @@ def batch_compare(body: BatchIn, request: Request, db: Session = Depends(get_db)
         run = run_batch_comparison(db, STATE.engine, body.donation_ids, at, user)
     except lifecycle.LifecycleError as e:
         db.rollback()
-        raise _http(e)
+        raise _http(e) from e
     audit("match.batch_compare", "OK", request, user, "batch_run", run.id, 201, session=db)
     db.commit()
     return {"id": run.id, "data_origin": run.data_origin, "n_lots": run.n_lots, "n_assigned_greedy": run.n_assigned_greedy, "n_assigned_optimal": run.n_assigned_optimal,

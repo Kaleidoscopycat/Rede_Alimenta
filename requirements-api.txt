@@ -1,0 +1,18 @@
+# Dependências de EXECUÇÃO da API e dos scripts de banco/carga (imagem docker/Dockerfile.api).
+# Versões testadas na Fase 1/2 (Python 3.10). scikit-learn é fixado porque os artefatos .joblib dependem da versão.
+pandas==2.3.3
+numpy==2.2.6
+scikit-learn==1.7.2   # artefatos .joblib dependem desta versão
+scipy==1.15.3
+pyarrow==25.0.1
+PyYAML==6.0.3
+dateparser==1.4.3
+joblib==1.6.0
+fastapi==0.142.2
+uvicorn==0.54.0
+pydantic==2.13.5
+python-multipart==0.0.32
+SQLAlchemy==2.0.54
+alembic==1.20.0
+psycopg[binary]==3.3.6
+ortools==9.15.6755   # solver de roteirização (Apache-2.0)

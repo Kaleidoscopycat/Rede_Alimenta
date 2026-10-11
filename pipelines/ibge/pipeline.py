@@ -5,7 +5,7 @@ import json
 
 import pandas as pd
 
-from ..common import BRONZE, RAW, SILVER, get_logger, norm_text, register, register_layer, trace_columns, now_utc, sha256_file
+from ..common import BRONZE, RAW, SILVER, get_logger, norm_text, register, register_layer, trace_columns, now_utc
 
 log = get_logger("ibge")
 SID = "ibge_municipios"

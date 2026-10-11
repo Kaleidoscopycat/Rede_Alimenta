@@ -2,7 +2,7 @@
 
 Executar: DATABASE_URL=... uvicorn api.main:app   (Swagger em /docs).
 Autenticação por token de usuário (Bearer) com perfis DONOR | ORG | ADMIN em TODOS os endpoints, exceto /health, /ready e a documentação OpenAPI.
-Não há rotas de coleta/roteirização (Parte 2)."""
+Rotas de coleta (Fase 2 Parte 2): POST /api/v1/routes/plan e GET /api/v1/routes/{id}."""
 from __future__ import annotations
 
 import asyncio
@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from api.routers import admin, donations, donors, matches, organizations, predictions, public_data
+from api.routers import admin, donations, donors, matches, organizations, predictions, public_data, routes
 from api.state import STATE
 from core.settings import SETTINGS
 from database.session import session_scope
@@ -52,7 +52,7 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="Rede Alimenta IA — API v1 (Fase 2 Parte 1)", version="2.1.0", lifespan=lifespan,
+app = FastAPI(title="Rede Alimenta IA — API v1 (Fase 2 Parte 2)", version="2.2.0", lifespan=lifespan,
               description=("Conecta DOADOR → ONG. **Modelos treinados em dados SIMULADOS; atributos declarados das ONGs são SIMULADOS; métricas não representam desempenho real.** "
                            "Autenticação: `Authorization: Bearer <token>` (perfis DONOR, ORG, ADMIN). Sem TLS/rate limit nesta fase."))
 
@@ -77,5 +77,5 @@ def ready():
             "orgs_ranqueaveis": len(STATE.index.orgs)}
 
 
-for r in (organizations.router, public_data.router, donors.router, donations.router, matches.router, predictions.router, admin.router):
+for r in (organizations.router, public_data.router, donors.router, donations.router, matches.router, predictions.router, admin.router, routes.router):
     app.include_router(r)

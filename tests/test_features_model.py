@@ -1,9 +1,10 @@
-import hashlib, json
+import hashlib
+import json
 from pathlib import Path
 import numpy as np
 import pandas as pd
 from ml.dataset import FEATURES, FORBIDDEN, FEATURE_ORIGIN
-from ml.evaluation.metrics import ranking_metrics, rank_within_lot, classification_metrics
+from ml.evaluation.metrics import ranking_metrics, classification_metrics
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "ml/artifacts/ranker"
 

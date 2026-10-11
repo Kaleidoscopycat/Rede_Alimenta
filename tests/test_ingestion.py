@@ -1,10 +1,15 @@
-import hashlib, json
+import hashlib
+import json
 from pathlib import Path
 import pandas as pd
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_raw_inalterado_confere_checksums():
+    if not (ROOT / "data" / "raw").exists():
+        pytest.skip("data/raw não está no repositório (licenças não confirmadas: sem redistribuição das bases brutas); a verificação roda onde o RAW existe")
     base = json.loads((ROOT / "data/metadata/raw_checksums.json").read_text(encoding="utf-8"))
     for rel, info in base.items():
         p = ROOT / rel

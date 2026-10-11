@@ -68,7 +68,7 @@ def test_ong_so_ve_e_responde_propostas_dirigidas_a_ela(client, world):
     d = ready_donation(client, world, "donor_a", 1)
     mt = client.post("/api/v1/matches", headers=world["donor_a"], json={"donation_id": d["id"], "top_n": 5}).json()
     assert mt["status"] == "PROPOSED"
-    r = client.get(f"/api/v1/organizations?limit=200", headers=world["admin"]).json()
+    r = client.get("/api/v1/organizations?limit=200", headers=world["admin"]).json()
     top = mt["ranking"][0]
     other = mt["ranking"][1]
     h_top, h_other = org_token(client, world["admin"], top["org_id"]), org_token(client, world["admin"], other["org_id"])

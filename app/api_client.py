@@ -70,3 +70,16 @@ class ApiClient:
 
     def events(self, match_id: str) -> dict:
         return self._req("GET", f"/api/v1/matches/{match_id}/events")
+
+    def plan_route(self, donation_ids: list[str], vehicle_id: str | None = None, departure_at: str | None = None, safety_margin_h: float | None = None) -> dict:
+        body: dict = {"donation_ids": donation_ids}
+        if vehicle_id:
+            body["vehicle_id"] = vehicle_id
+        if departure_at:
+            body["departure_at"] = departure_at
+        if safety_margin_h is not None:
+            body["safety_margin_h"] = safety_margin_h
+        return self._req("POST", "/api/v1/routes/plan", json=body)
+
+    def get_route(self, route_id: str) -> dict:
+        return self._req("GET", f"/api/v1/routes/{route_id}")

@@ -31,7 +31,8 @@ def reset_engine() -> None:
 
 def get_sessionmaker() -> sessionmaker[Session]:
     get_engine()
-    assert _factory is not None
+    if _factory is None:
+        raise RuntimeError("fábrica de sessões não inicializada")
     return _factory
 
 

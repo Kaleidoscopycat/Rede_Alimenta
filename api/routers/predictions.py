@@ -27,13 +27,13 @@ def predictions(body: PredictionIn, request: Request, db: Session = Depends(get_
     try:
         lote = LoteIn(**data)
     except ValidationError as e:
-        raise HTTPException(422, e.errors(include_url=False, include_context=False, include_input=False))
+        raise HTTPException(422, e.errors(include_url=False, include_context=False, include_input=False)) from None
     r = STATE.ranker
     t0 = time.perf_counter()
     try:
         out = r.predict(lote.model_dump())
     except ValueError as e:
-        raise HTTPException(422, str(e))
+        raise HTTPException(422, str(e)) from None
     ms = (time.perf_counter() - t0) * 1000
     res = PredictOut(**out, model_version=r.meta["model_version"], data_version=r.data_version, data_origin=r.meta["data_origin"], aviso=AVISO)
     db.add(m.MlPrediction(kind="RANKER", model_name="ranker", model_version=r.meta["model_version"], output={"top": [x.model_dump() for x in res.ranking[:5]], "confidence": res.confidence},

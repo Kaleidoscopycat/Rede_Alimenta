@@ -41,7 +41,8 @@ for c in FEATURES:
     FEATURE_ORIGIN.setdefault(c, "SIMULATED")
 
 FORBIDDEN = {"resposta", "coletou", "coletou_dentro_validade", "target", "horas_resposta", "horas_ate_coleta", "proposta_em", "resposta_em", "coleta_em", "motivos_exclusao"}
-assert not (set(FEATURES) & FORBIDDEN)
+if set(FEATURES) & FORBIDDEN:
+    raise RuntimeError("vazamento de alvo: FEATURES contém colunas proibidas (ver FORBIDDEN)")
 
 
 def build_pairs(tag: str = "main") -> pd.DataFrame:

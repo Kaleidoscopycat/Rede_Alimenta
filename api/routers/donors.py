@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from api.auth import audit, current_user, forbid, get_db, require_roles
+from api.auth import audit, forbid, get_db, require_roles
 from api.schemas_v2 import DonorCreate, DonorOut
 from database import models as m
 

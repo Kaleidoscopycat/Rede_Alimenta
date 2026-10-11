@@ -2,7 +2,6 @@
 eles se juntam aos reais apenas em gold/pairs (ml/dataset.py), preservando `data_origin`."""
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 from .common import GOLD, SILVER, get_logger, register_layer

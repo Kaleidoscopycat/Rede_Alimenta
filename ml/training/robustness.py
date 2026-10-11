@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.pipeline import Pipeline
 

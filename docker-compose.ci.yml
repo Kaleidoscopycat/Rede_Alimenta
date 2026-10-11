@@ -1,0 +1,6 @@
+# Sobreposição SOMENTE para o CI: publica o PostgreSQL em 127.0.0.1 para o script de validação ponta a ponta (scripts/e2e_flow.py) criar contas de demonstração.
+# Uso: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"

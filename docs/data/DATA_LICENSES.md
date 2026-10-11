@@ -30,3 +30,6 @@
 **Regra de conformidade aplicada:** NEEDS_REVIEW = IPEA/OSC, RBBA, coordenadas, CNPJ, TACO, Anvisa Guia 26, SEDUC-GO, dados OSM (e IBGE até citação da licença); RESTRICTED = guias Anvisa 2022/16-2018 e MDS 2018 (reprodução comercial proibida). Uso restrito a pesquisa/prototipagem acadêmica; não publicar bases brutas; nenhum dado desses entra em produção/comercialização antes da confirmação formal registrada neste arquivo.
 
 **Pendências de terceiros mantidas como PENDENTES (nenhuma marcada como resolvida):** confirmação formal de licença do **IPEA** (Mapa das OSCs), do **MDS/RBBA** e do **IBGE**; obtenção da base de **CNPJ** (Receita) e da **malha oficial do IBGE**; contato com o **NEPA** (TACO).
+
+## Nota — Fase 2 Parte 2 (outubro/2026)
+Sem resposta aos pedidos de confirmação de licença, as bases públicas já processadas (ONGs, municípios, indicadores) seguem em **uso acadêmico** com licença **NEEDS_REVIEW** e `publication_cleared=false`; nada foi declarado como licenciado. Ver `docs/data/PENDING_LICENSE_CONFIRMATIONS.md`. Licenças de **software** adicionadas nesta parte: `docs/data/SOFTWARE_LICENSES.md`.

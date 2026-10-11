@@ -11,7 +11,7 @@ import datetime as dt
 import uuid
 from typing import Any, Optional
 
-from sqlalchemy import (BigInteger, Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer, Numeric, SmallInteger, String, Text,
+from sqlalchemy import (BigInteger, Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer, SmallInteger, String, Text,
                         UniqueConstraint, func, text)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -398,3 +398,83 @@ class BatchAssignmentRun(Base):
     difference: Mapped[float] = mapped_column(Float)
     details: Mapped[dict[str, Any]] = mapped_column(JSONB)
     __table_args__ = (CheckConstraint("data_origin IN ('SIMULATED','USER_ENTERED')", name="ck_batch_origin"),)
+
+
+# ------------------------------------------------------------------ roteirização das coletas (Fase 2 Parte 2)
+class Vehicle(SimTraceMixin, Base):
+    """Veículo de coleta de uma ONG. SIMULATED enquanto vier da frota simulada (sim_fleet); USER_ENTERED quando a própria ONG o declarar."""
+    __tablename__ = "vehicles"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    organization_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    vehicle_type: Mapped[str] = mapped_column(String(30))
+    capacity_kg: Mapped[float] = mapped_column(Float)
+    refrigerated: Mapped[bool] = mapped_column(Boolean, default=False)
+    base_municipio_ibge: Mapped[int] = mapped_column(ForeignKey("municipalities.ibge_code"))
+    base_lat: Mapped[float] = mapped_column(Float)
+    base_lon: Mapped[float] = mapped_column(Float)
+    location_precision: Mapped[str] = mapped_column(String(24), default="MUNICIPALITY_CENTROID")
+    data_origin: Mapped[str] = mapped_column(String(12))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    __table_args__ = tuple(_origin_checks("vehicle", ("SIMULATED", "USER_ENTERED"))) + (
+        CheckConstraint("capacity_kg > 0", name="ck_vehicle_cap"),
+        Index("uq_vehicle_sim_org", "dataset_version", "organization_id", unique=True, postgresql_where=text("dataset_version IS NOT NULL")))
+
+
+class Route(SimTraceMixin, Base):
+    """Plano de coleta (uma linha por algoritmo: SOLVER e baseline NEAREST_NEIGHBOR do mesmo pedido compartilham `plan_group_id`).
+    Distâncias e tempos são ESTIMATIVAS (haversine × desvio ÷ velocidade); não são rota viária."""
+    __tablename__ = "routes"
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=_uuid)
+    plan_group_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
+    is_primary: Mapped[bool] = mapped_column(Boolean)
+    organization_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    vehicle_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("vehicles.id"))
+    requested_by: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id"))
+    status: Mapped[str] = mapped_column(String(12))  # PLANNED | INFEASIBLE
+    algorithm: Mapped[str] = mapped_column(String(24))  # ORTOOLS_GLS | NEAREST_NEIGHBOR
+    algorithm_version: Mapped[str] = mapped_column(String(40))
+    parameters: Mapped[dict[str, Any]] = mapped_column(JSONB)  # todas as premissas usadas (desvio, velocidades, margem, janelas, limites do solver...)
+    departure_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
+    delivery_done_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))
+    total_km_est: Mapped[Optional[float]] = mapped_column(Float)
+    total_minutes_est: Mapped[Optional[int]] = mapped_column(Integer)
+    kg_collected: Mapped[float] = mapped_column(Float, default=0.0)
+    n_stops: Mapped[int] = mapped_column(SmallInteger, default=0)
+    unassigned: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list)
+    comparison: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    solver_info: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    distance_basis: Mapped[str] = mapped_column(String(40), default="HAVERSINE_X_DETOUR")
+    data_origin: Mapped[str] = mapped_column(String(12))
+    created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    stops: Mapped[list["RouteStop"]] = relationship(back_populates="route", order_by="RouteStop.seq")
+    __table_args__ = tuple(_origin_checks("route", ("SIMULATED", "USER_ENTERED"))) + (
+        CheckConstraint("status IN ('PLANNED','INFEASIBLE')", name="ck_route_status"),
+        CheckConstraint("algorithm IN ('ORTOOLS_GLS','NEAREST_NEIGHBOR')", name="ck_route_algo"))
+
+
+class RouteStop(SimTraceMixin, Base):
+    __tablename__ = "route_stops"
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    route_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("routes.id", ondelete="CASCADE"), index=True)
+    seq: Mapped[int] = mapped_column(SmallInteger)
+    stop_type: Mapped[str] = mapped_column(String(10))  # DEPARTURE | PICKUP | DELIVERY
+    donation_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("donations.id"))
+    donor_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("donors.id"))
+    lat: Mapped[float] = mapped_column(Float)
+    lon: Mapped[float] = mapped_column(Float)
+    location_precision: Mapped[str] = mapped_column(String(24))
+    planned_arrival_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
+    planned_start_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
+    planned_depart_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True))
+    wait_min: Mapped[int] = mapped_column(Integer, default=0)
+    window_start_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))
+    window_end_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))
+    deadline_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))  # só PICKUP: validade − margem
+    load_kg_after: Mapped[float] = mapped_column(Float, default=0.0)
+    leg_km_est: Mapped[float] = mapped_column(Float, default=0.0)
+    leg_minutes_est: Mapped[int] = mapped_column(Integer, default=0)
+    data_origin: Mapped[str] = mapped_column(String(12))
+    route: Mapped[Route] = relationship(back_populates="stops")
+    __table_args__ = tuple(_origin_checks("rstop", ("SIMULATED", "USER_ENTERED"))) + (
+        CheckConstraint("stop_type IN ('DEPARTURE','PICKUP','DELIVERY')", name="ck_rstop_type"),
+        UniqueConstraint("route_id", "seq", name="uq_rstop_seq"))

@@ -1,0 +1,28 @@
+# Contexto de build enxuto: nada de dados, ambiente virtual, testes, docs ou segredos.
+.git
+.github
+.venv
+venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.mypy_cache
+.ruff_cache
+data
+docs
+tests
+eda
+quality
+prompts_adaptados
+Claude outputs
+security/reports
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.log
+*.md
+!requirements*.txt
+Comandos de terminal.txt
+Informações gerais importantes sobre o projeto.txt

@@ -1,11 +1,15 @@
 """Treino e avaliação da análise semântica (seção 12). Treina SOMENTE em texto SIMULADO; avalia em simulado visto, simulado reservado (F4)
 e rascunho IA provisório. MANUALLY_LABELED: ausente (reportado como tal)."""
 from __future__ import annotations
-import datetime as dt, json, sys
+import datetime as dt
+import json
+import sys
 from pathlib import Path
-import joblib, numpy as np, pandas as pd
+import joblib
+import numpy as np
+import pandas as pd
 
-from ml.semantic.classifier import (ARTIFACT_DIR, RulesBaseline, TextClassifier, SemanticParser, choose_threshold, ece, extract_quantity)
+from ml.semantic.classifier import (ARTIFACT_DIR, RulesBaseline, TextClassifier, choose_threshold, ece, extract_quantity)
 from ml.semantic.validity import parse_validity
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -75,7 +79,7 @@ def eval_set(df: pd.DataFrame, clf: TextClassifier, base: RulesBaseline, tau: fl
     return out
 
 
-from ml.semantic.classifier import PER_RANK
+from ml.semantic.classifier import PER_RANK  # noqa: E402
 
 
 def _rk(x):

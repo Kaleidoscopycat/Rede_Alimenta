@@ -66,7 +66,10 @@ def run(seed: int = 20261003, n_lots: int = 60000, n_donors: int = 8000, scenari
     lots = E.make_lots(P, rng["lots"], donors, prods, w_prod, n_lots, season, np.datetime64(P["general.period_start"]), int(P["general.period_days"]), sigma_kg)
     log.info("lotes=%d doadores=%d mix=%s [%.0fs]", len(lots), len(donors), {k: round(v, 3) for k, v in diag["nova_kg_share"].items()}, time.time() - t0)
     # ---------------- textos
-    pr = P.raw["texts"]; rt = random.Random(int(kids["texts"].generate_state(1)[0])); nrng = rng["texts"]
+    pr = P.raw["texts"]
+    # Supressão justificada em security/reports/SUPRESSOES.md (B311)
+    rt = random.Random(int(kids["texts"].generate_state(1)[0]))  # nosec B311  # noqa: S311
+    nrng = rng["texts"]
     fr = {k: float(nrng.uniform(*pr[k]["range"])) for k in ("frac_validade_ausente", "frac_ambigua", "frac_inconsistente", "frac_vago", "frac_duas_categorias")}
     tp = {k: float(nrng.uniform(*pr[k]["range"])) for k in ("p_temp_mention", "p_allergen_mention", "p_typo")}
     probs = np.array([fr["frac_validade_ausente"], fr["frac_ambigua"], fr["frac_inconsistente"], fr["frac_vago"], fr["frac_duas_categorias"]])

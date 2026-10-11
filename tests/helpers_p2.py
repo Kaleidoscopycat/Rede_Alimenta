@@ -3,9 +3,6 @@ from __future__ import annotations
 
 import itertools
 
-from api.auth import hash_token, new_token
-from database import models as m
-from database.session import session_scope
 
 _counter = itertools.count(1)
 

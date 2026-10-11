@@ -39,7 +39,7 @@ def per_lot_metrics(df: pd.DataFrame, score: str, lot: str = "lot_id", target: s
         out[f"hit{k}"] = (out["first_rank"] <= k).astype(float)
         sel = pos[pos["rank"] <= k]
         dcg = (1.0 / np.log2(sel["rank"] + 1)).groupby(sel["lot"]).sum().reindex(out.index).fillna(0.0)
-        idcg = out["n_pos"].map(lambda n: float(np.sum(1.0 / np.log2(np.arange(1, min(int(n), k) + 1) + 1))))
+        idcg = out["n_pos"].map(lambda n: float(np.sum(1.0 / np.log2(np.arange(1, min(int(n), k) + 1) + 1))))  # noqa: B023 - a lambda é consumida na própria iteração do laço (map imediato)
         out[f"ndcg{k}"] = dcg / idcg
     return out
 

@@ -1,0 +1,22 @@
+line-length = 200
+target-version = "py310"
+extend-exclude = [".venv", "data", "Claude outputs", "prompts_adaptados"]
+
+[lint]
+select = ["E", "F", "W", "B", "S"]
+ignore = [
+  "E501",   # linhas longas: o projeto já usa linhas largas
+  "E701", "E702", "E741",
+  "S101",   # assert (só ocorre em testes; o código de produção não usa assert para validação)
+  "B008",   # Depends() do FastAPI em argumentos
+  "B905",   # zip() sem strict: os comprimentos são garantidos pelo contexto; strict=True mudaria o comportamento já validado
+]
+
+[lint.per-file-ignores]
+"tests/**" = ["S", "B", "E402", "F841"]
+"database/migrations/versions/*.py" = ["W291"]   # migração já aplicada: não se edita nem para espaços em docstring
+"scripts/*.py" = ["E402", "S603", "S607"]
+"app/streamlit_app.py" = ["E402"]
+# O simulador é versionado e reprodutível por semente: não se altera o código só para limpar variáveis não usadas
+# (algumas atribuições consomem o gerador aleatório). Ver security/reports/SUPRESSOES.md.
+"simulation/**" = ["F841", "E731"]

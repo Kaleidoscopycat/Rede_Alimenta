@@ -1,5 +1,4 @@
 """Motor de match: elegibilidade, scores separados, ciclo de vida (PROPOSED→ACCEPTED|DECLINED|EXPIRED→próxima→COLLECTED|FAILED), capacidade, concorrência, lote e contrato."""
-import copy
 import datetime as dt
 import threading
 
@@ -341,7 +340,7 @@ def test_contrato_openapi(client):
                 "/api/v1/matches/{match_id}/respond", "/api/v1/matches/{match_id}/events", "/api/v1/predictions", "/api/v1/model/info", "/health", "/ready"]
     faltando = [p for p in exigidos if p not in paths]
     assert not faltando, faltando
-    assert not [p for p in paths if "rota" in p.lower() or "route" in p.lower()], "a Parte 1 não expõe endpoints de rota"
+    assert {"/api/v1/routes/plan", "/api/v1/routes/{route_id}"} <= set(paths), "Parte 2: endpoints de rotas"
     for p, ops in paths.items():
         if p.startswith("/api/v1"):
             for meth, op in ops.items():

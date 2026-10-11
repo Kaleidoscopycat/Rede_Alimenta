@@ -43,6 +43,25 @@ class MatchSettings:
 SETTINGS = MatchSettings()
 
 
+@dataclass(frozen=True)
+class RouteSettings:
+    """Premissas da roteirização (Fase 2 Parte 2). Mesma metodologia de geolocalização da Parte 1: haversine × fator de desvio ÷ velocidade
+    (api/service.py: DETOUR, SPEED_SHORT, SPEED_LONG, SERVICE_MIN). São PREMISSAS não verificadas — NÃO são distância/tempo viários reais."""
+    algorithm_version: str = "routing-1.0.0"
+    detour: float = field(default_factory=lambda: _f("ROUTE_DETOUR", 1.35))
+    speed_short_kmh: float = field(default_factory=lambda: _f("ROUTE_SPEED_SHORT_KMH", 22.0))
+    speed_long_kmh: float = field(default_factory=lambda: _f("ROUTE_SPEED_LONG_KMH", 55.0))
+    short_threshold_km: float = 15.0          # distância em linha reta até a qual vale a velocidade curta (igual à Parte 1)
+    unload_min: int = field(default_factory=lambda: _i("ROUTE_SERVICE_MIN", 30))   # descarga na ONG (Parte 1: SERVICE_MIN = 30)
+    safety_margin_h: float = field(default_factory=lambda: _f("ROUTE_SAFETY_MARGIN_H", 2.0))  # entrega limite = validade − margem
+    horizon_h: float = field(default_factory=lambda: _f("ROUTE_HORIZON_H", 12.0))             # duração máxima de uma viagem
+    solver_time_limit_s: int = field(default_factory=lambda: _i("ROUTE_SOLVER_TIME_LIMIT_S", 3))
+    max_stops: int = field(default_factory=lambda: _i("ROUTE_MAX_STOPS", 12))
+
+
+ROUTE = RouteSettings()
+
+
 def database_url() -> str:
     url = os.environ.get("DATABASE_URL")
     if not url:

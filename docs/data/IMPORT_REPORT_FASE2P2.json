@@ -1,0 +1,45 @@
+{
+  "nota": "Relatório da execução idempotente de scripts.bootstrap_db sobre o banco que já continha a carga (as seções de inserção mostram 0 porque nada foi reinserido); 'contagens_no_banco' é o estado real. Os 15.758 veículos SIMULADOS foram importados na migration 0002 (Fase 2 Parte 2); nenhum dado USER_ENTERED existe.",
+  "sources": {
+    "sources": 0,
+    "dataset_versions": 0
+  },
+  "territory": {
+    "municipalities": 0,
+    "indicators": 0
+  },
+  "food_categories": 0,
+  "organizations": {
+    "organizations": 0,
+    "locations": 0
+  },
+  "simulated": {
+    "dataset_version": "0.2.0+477ed37e+20261003",
+    "tag": "main",
+    "org_profiles": 0,
+    "vehicles": 0,
+    "donors": 0,
+    "donor_locations": 0,
+    "donations": 0,
+    "donation_items": 0
+  },
+  "contagens_no_banco": {
+    "organizations(PUBLIC)": 54590,
+    "organization_locations": 54590,
+    "organizations_sem_coordenada": 0,
+    "municipalities(PUBLIC)": 5571,
+    "public_indicators(PUBLIC)": 27855,
+    "organization_profiles(SIMULATED)": 54590,
+    "organization_profiles(USER_ENTERED)": 0,
+    "vehicles(SIMULATED)": 15758,
+    "vehicles(USER_ENTERED)": 0,
+    "donors(SIMULATED)": 8000,
+    "donors(USER_ENTERED)": 0,
+    "donations(SIMULATED)": 60000,
+    "donations(USER_ENTERED)": 0,
+    "donation_items(SIMULATED)": 60000,
+    "public_data_sources": 7,
+    "food_categories": 11
+  },
+  "segundos": 2.6
+}
