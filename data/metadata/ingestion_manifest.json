@@ -1,0 +1,314 @@
+{
+  "pipeline_version": "1.0.0",
+  "sources": {
+    "ibge_municipios": {
+      "layers": {
+        "bronze": {
+          "path": "data/bronze/ibge_municipios.parquet",
+          "sha256": "47a413172ed685bb2f168dbb16a991fe9310a96f721dcc1155ada0f0d066479a",
+          "bytes": 100763,
+          "n_records": 5571,
+          "built_at_utc": "2026-10-03T15:43:29+00:00",
+          "pipeline_version": "1.0.0"
+        },
+        "silver": {
+          "path": "data/silver/municipios.parquet",
+          "sha256": "27a90118a3f120627cfddc22e13ed66e73a75a6a42a0ac45dd1a43a20fcd232f",
+          "bytes": 318847,
+          "n_records": 5571,
+          "built_at_utc": "2026-10-03T15:43:29+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      },
+      "n_records_raw": 5571,
+      "last_updated_utc": "2026-10-03T15:43:29+00:00",
+      "source_url": "https://servicodados.ibge.gov.br/api/v1/localidades/municipios",
+      "source_name": "IBGE",
+      "source_dataset": "Municípios (API Localidades)",
+      "source_updated_at": "não verificável",
+      "license_status": "dado aberto; licença explícita NÃO localizada (APPROVED* p/ pesquisa)",
+      "raw_path": "data/raw/ibge/ibge_municipios.json",
+      "raw_sha256": "86ecdccdf97d72e7e5e46f0854cfcea8bacc28154cc1bc4ed0e6110e3a6c9c02",
+      "raw_bytes": 2470036,
+      "raw_integrity": "IGUAL_A_FASE0",
+      "ingested_at": "2026-10-03T15:43:20+00:00",
+      "download_attempt": "FALHA",
+      "download_error": "ProxyError: HTTPSConnectionPool(host='servicodados.ibge.gov.br', port=443): Max retries exceeded with url: /api/v1/localidades/municipios (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connec",
+      "download_note": ""
+    },
+    "ibge_populacao": {
+      "layers": {
+        "bronze": {
+          "path": "data/bronze/ibge_populacao.parquet",
+          "sha256": "1313a2ec8163e30eef4aa98abc36b40ccf45b0e9d515f46dd78babdbe5b75438",
+          "bytes": 71111,
+          "n_records": 5571,
+          "built_at_utc": "2026-10-03T15:43:29+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      },
+      "source_name": "IBGE/SIDRA",
+      "source_url": "https://servicodados.ibge.gov.br/api/v3/agregados/6579",
+      "n_records_raw": 5571,
+      "last_updated_utc": "2026-10-03T15:43:29+00:00",
+      "source_dataset": "População estimada 2026 (agregado 6579)",
+      "source_updated_at": "2026",
+      "license_status": "dado aberto; licença explícita NÃO localizada",
+      "raw_path": "data/raw/ibge/ibge_populacao_municipios_2026.json",
+      "raw_sha256": "36b8bd4c9ec1c74f0b1e76cbb108fec91571c351b9423e508bf0f4350e6d27b0",
+      "raw_bytes": 689494,
+      "raw_integrity": "IGUAL_A_FASE0",
+      "ingested_at": "2026-10-03T15:43:20+00:00",
+      "download_attempt": "SEM_URL_REGISTRADA",
+      "download_note": "URL exata (variável/período/localidades) usada na Fase 0 não foi registrada; só a base do agregado consta em DATA_LINEAGE."
+    },
+    "ibge_coords": {
+      "layers": {
+        "bronze": {
+          "path": "data/bronze/ibge_coords.parquet",
+          "sha256": "948ab8ede490cb49f2b28289c4ad38ff4c41648a9753650597b990e5bbfbabdb",
+          "bytes": 128177,
+          "n_records": 5571,
+          "built_at_utc": "2026-10-03T15:43:29+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      },
+      "source_name": "kelvins/municipios-brasileiros (terceiros, MIT)",
+      "source_url": "https://github.com/kelvins/municipios-brasileiros",
+      "n_records_raw": 5571,
+      "last_updated_utc": "2026-10-03T15:43:29+00:00",
+      "source_dataset": "Coordenadas de municípios",
+      "source_updated_at": "commit 2025-12-10",
+      "license_status": "MIT (repositório); origem primária NÃO confirmada (PROXY)",
+      "raw_path": "data/raw/ibge_coords/kelvins_municipios.csv",
+      "raw_sha256": "22bd03d004361329f69ddfa3f6c99cd53012aa53972a172e10b141288ad0b1fe",
+      "raw_bytes": 390201,
+      "raw_integrity": "IGUAL_A_FASE0",
+      "ingested_at": "2026-10-03T15:43:20+00:00",
+      "download_attempt": "OK",
+      "incoming_sha256": "22bd03d004361329f69ddfa3f6c99cd53012aa53972a172e10b141288ad0b1fe",
+      "incoming_bytes": 390201,
+      "incoming_equals_raw": true,
+      "downloaded_at": "2026-10-03T15:43:24+00:00"
+    },
+    "paa_compra_doacao": {
+      "layers": {
+        "bronze": {
+          "path": "data/bronze/paa_compra_doacao.parquet",
+          "sha256": "3251276081a5a3491c1ff6c3b06682e8b257ccda256ed3b3c0d916d352cb492a",
+          "bytes": 803998,
+          "n_records": 49627,
+          "built_at_utc": "2026-10-03T15:43:56+00:00",
+          "pipeline_version": "1.0.0"
+        },
+        "silver": {
+          "path": "data/silver/paa_compra_doacao.parquet",
+          "sha256": "d44f00b5aab8f79561bc29a6b27cb4e975225a6cf45c57f9f91ab01f0b296179",
+          "bytes": 893459,
+          "n_records": 49627,
+          "built_at_utc": "2026-10-03T15:43:57+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      },
+      "source_name": "MDS/SAGI",
+      "source_url": "https://aplicacoes.mds.gov.br/sagi/servicos/misocial",
+      "n_records_raw": 49627,
+      "silver_descartes": {
+        "sem_municipio_ibge": 0,
+        "valores_negativos": 0
+      },
+      "last_updated_utc": "2026-10-03T15:43:57+00:00",
+      "source_dataset": "PAA Compra c/ Doação Simultânea",
+      "source_updated_at": "2026-06",
+      "license_status": "CC-BY (metadado dados.gov.br, Fase 0)",
+      "raw_path": "data/raw/paa_mds/paa_execucao_compra_doacao_simultanea.csv",
+      "raw_sha256": "164543861c927a9a1188676cdd333895b677bdbc499fea8be6b5e36e163b70fe",
+      "raw_bytes": 2079436,
+      "raw_integrity": "IGUAL_A_FASE0",
+      "ingested_at": "2026-10-03T15:43:28+00:00",
+      "download_attempt": "SEM_URL_REGISTRADA",
+      "download_note": "URL/consulta exata não registrada na Fase 0; domínio bloqueado neste ambiente."
+    },
+    "paa_leite": {
+      "layers": {
+        "bronze": {
+          "path": "data/bronze/paa_leite.parquet",
+          "sha256": "a5c1bdbd55f438824ae50a70ac47de294b09f8e2ed0433c3fdc7cb21860d30cf",
+          "bytes": 126000,
+          "n_records": 8367,
+          "built_at_utc": "2026-10-03T15:43:57+00:00",
+          "pipeline_version": "1.0.0"
+        },
+        "silver": {
+          "path": "data/silver/paa_leite.parquet",
+          "sha256": "cdf173614022fb6866ca48fb10a3e4ffc82ec58e63036431a4824f5d567ecbc5",
+          "bytes": 138419,
+          "n_records": 8367,
+          "built_at_utc": "2026-10-03T15:43:57+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      },
+      "source_name": "MDS/SAGI",
+      "source_url": "https://aplicacoes.mds.gov.br/sagi/servicos/misocial",
+      "n_records_raw": 8367,
+      "silver_descartes": {
+        "sem_municipio_ibge": 0,
+        "valores_negativos": 0
+      },
+      "last_updated_utc": "2026-10-03T15:43:57+00:00",
+      "source_dataset": "PAA Incentivo ao Leite",
+      "source_updated_at": "2026-06",
+      "license_status": "CC-BY (metadado dados.gov.br, Fase 0)",
+      "raw_path": "data/raw/paa_mds/paa_execucao_leite.csv",
+      "raw_sha256": "e0ce63da5a9ac1e439cd19fd0983bf9274ce5ed0f141c33762c6df1c58890eb9",
+      "raw_bytes": 289415,
+      "raw_integrity": "IGUAL_A_FASE0",
+      "ingested_at": "2026-10-03T15:43:28+00:00",
+      "download_attempt": "SEM_URL_REGISTRADA",
+      "download_note": "URL/consulta exata não registrada na Fase 0; domínio bloqueado neste ambiente."
+    },
+    "paa_municipios": {
+      "layers": {
+        "bronze": {
+          "path": "data/bronze/paa_municipios.parquet",
+          "sha256": "9510a58bdf6f06c75aec0412b410e220ccb26abf11515303acac472e381dd71e",
+          "bytes": 62359,
+          "n_records": 19032,
+          "built_at_utc": "2026-10-03T15:43:57+00:00",
+          "pipeline_version": "1.0.0"
+        },
+        "silver": {
+          "path": "data/silver/paa_municipios.parquet",
+          "sha256": "2a30197a61ed10b0d03d8f8efb29b2f89081896b43ba3a5a018da99900d86f52",
+          "bytes": 119022,
+          "n_records": 19032,
+          "built_at_utc": "2026-10-03T15:43:57+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      },
+      "source_name": "MDS/SAGI",
+      "source_url": "https://aplicacoes.mds.gov.br/sagi/servicos/misocial",
+      "n_records_raw": 19032,
+      "silver_descartes": {
+        "sem_municipio_ibge": 0,
+        "valores_negativos": 0
+      },
+      "last_updated_utc": "2026-10-03T15:43:58+00:00",
+      "source_dataset": "PAA Municípios Aderidos",
+      "source_updated_at": "2026-06",
+      "license_status": "CC-BY (metadado dados.gov.br, Fase 0)",
+      "raw_path": "data/raw/paa_mds/paa_municipios_aderidos_2026.csv",
+      "raw_sha256": "a2ad9de34eb1f4038a2f209d512deb63b7f5cf0ea4f8fc2bd4324a0e88210954",
+      "raw_bytes": 609785,
+      "raw_integrity": "IGUAL_A_FASE0",
+      "ingested_at": "2026-10-03T15:43:28+00:00",
+      "download_attempt": "SEM_URL_REGISTRADA",
+      "download_note": "URL/consulta exata não registrada na Fase 0; domínio bloqueado neste ambiente."
+    },
+    "ipea_osc_area": {
+      "layers": {
+        "bronze": {
+          "path": "data/bronze/ipea_osc.parquet",
+          "sha256": "65ba6a89dd1a675a661507e90919f563650b65feb7e7aedf1b98c4b97e9e1341",
+          "bytes": 9295526,
+          "n_records": 960315,
+          "built_at_utc": "2026-10-03T15:43:42+00:00",
+          "pipeline_version": "1.0.0"
+        },
+        "silver": {
+          "path": "data/silver/osc.parquet",
+          "sha256": "b1ff7db387ded02bcd2176b6c01162705d6bb125492f28814742309a9ecae3fd",
+          "bytes": 22099828,
+          "n_records": 960315,
+          "built_at_utc": "2026-10-03T15:43:55+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      },
+      "source_name": "IPEA",
+      "source_url": "https://dados.gov.br/dados/conjuntos-dados/mapaosc",
+      "n_records_raw": 960315,
+      "elegiveis_proxy": 54398,
+      "sem_municipio": 32,
+      "pii_minimizacao": "CNPJ, razão social e nome fantasia não ingeridos",
+      "last_updated_utc": "2026-10-03T15:43:55+00:00",
+      "source_dataset": "Mapa das OSCs: área/subárea",
+      "source_updated_at": "não verificável",
+      "license_status": "Other (Attribution); uso comercial NÃO confirmado (NEEDS_REVIEW)",
+      "raw_path": "data/raw/ipea_osc/area_subarea.csv",
+      "raw_sha256": "c2e07a328ac5beb8f8cdd03abd2da58029115ec6949a6cf6b598550d019925e8",
+      "raw_bytes": 266910744,
+      "raw_integrity": "IGUAL_A_FASE0",
+      "ingested_at": "2026-10-03T15:43:28+00:00",
+      "download_attempt": "SEM_URL_REGISTRADA",
+      "download_note": "URL direta do CSV não registrada na Fase 0; dados.gov.br retorna 401 a leitor automático e está bloqueado neste ambiente."
+    },
+    "rbba_resumo": {
+      "layers": {
+        "bronze": {
+          "path": "data/bronze/rbba_pontos.parquet",
+          "sha256": "964f168094046eee4161b9c88395bc7b7ded2eb14d7d86cb5806c367b0a6b854",
+          "bytes": 19364,
+          "n_records": 192,
+          "built_at_utc": "2026-10-03T15:43:55+00:00",
+          "pipeline_version": "1.0.0"
+        },
+        "silver": {
+          "path": "data/silver/rbba.parquet",
+          "sha256": "cf2eded6f7c39ab0644641c86167dc841667651ac16aeb46c646cec889ed1f95",
+          "bytes": 33686,
+          "n_records": 192,
+          "built_at_utc": "2026-10-03T15:43:56+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      },
+      "source_name": "MDS/Alimenta Cidades",
+      "source_url": "https://alimentacidades.digital/rbba/api/resumo",
+      "n_records_raw": 192,
+      "geo_quality": {
+        "OK": 187,
+        "REVISAR": 3,
+        "SUSPEITA": 2
+      },
+      "location_precision": {
+        "EXACT": 190,
+        "MUNICIPALITY_CENTROID": 2
+      },
+      "last_updated_utc": "2026-10-03T15:43:56+00:00",
+      "source_dataset": "RBBA resumo 2025",
+      "source_updated_at": "2025",
+      "license_status": "NÃO declarada (NEEDS_REVIEW); endpoint não documentado",
+      "raw_path": "data/raw/rbba/rbba_resumo.json",
+      "raw_sha256": "682df159a74da024fc89d928bae39ff3453c5f5585ce6a69e37b20d6935ad1cf",
+      "raw_bytes": 122567,
+      "raw_integrity": "IGUAL_A_FASE0",
+      "ingested_at": "2026-10-03T15:43:28+00:00",
+      "download_attempt": "FALHA",
+      "download_error": "ProxyError: HTTPSConnectionPool(host='alimentacidades.digital', port=443): Max retries exceeded with url: /rbba/api/resumo (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 40",
+      "download_note": ""
+    },
+    "gold_territory": {
+      "layers": {
+        "gold": {
+          "path": "data/gold/territory.parquet",
+          "sha256": "d43bb02fda184f3414faf57f12835fd5b6567b10fa05c451e1b18ae6bd76f4b1",
+          "bytes": 271811,
+          "n_records": 5571,
+          "built_at_utc": "2026-10-03T15:43:59+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      }
+    },
+    "gold_organizations": {
+      "layers": {
+        "gold": {
+          "path": "data/gold/organizations.parquet",
+          "sha256": "ae8c14e0d790067aba86b41714162ee5072913509cdebed9d21201026805032f",
+          "bytes": 2011469,
+          "n_records": 54590,
+          "built_at_utc": "2026-10-03T15:44:00+00:00",
+          "pipeline_version": "1.0.0"
+        }
+      }
+    }
+  }
+}

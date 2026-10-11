@@ -1,0 +1,23 @@
+# Versões testadas na Fase 1 (Python 3.10)
+pandas==2.3.3
+numpy==2.2.6
+scikit-learn==1.7.2   # artefatos .joblib dependem desta versão
+pyarrow==25.0.1
+PyYAML==6.0.3
+dateparser==1.4.3
+requests==2.34.2
+joblib==1.6.0
+matplotlib==3.10.9
+fastapi==0.142.2
+uvicorn==0.54.0
+pydantic==2.13.5
+httpx==0.28.1         # TestClient
+pytest==9.1.1
+# --- Fase 2 Parte 1 (PostgreSQL, Alembic, UI) ---
+SQLAlchemy==2.0.54
+alembic==1.20.0
+psycopg[binary]==3.3.6
+scipy==1.15.3
+streamlit==1.65.0
+python-multipart==0.0.32
+pgserver==0.1.4       # só para subir um PostgreSQL local SEM Docker (scripts/pg_local.sh); opcional se você já tem PostgreSQL/Docker

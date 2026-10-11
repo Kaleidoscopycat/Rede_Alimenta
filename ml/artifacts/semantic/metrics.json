@@ -1,0 +1,246 @@
+{
+  "C_escolhido": 10.0,
+  "selecao_C": {
+    "1.0": {
+      "acc_categoria_val": 0.9585394983791162,
+      "acc_perecibilidade_val": 0.9803787749530797
+    },
+    "10.0": {
+      "acc_categoria_val": 0.9619518853437979,
+      "acc_perecibilidade_val": 0.9844736393106979
+    },
+    "50.0": {
+      "acc_categoria_val": 0.9607575499061594,
+      "acc_perecibilidade_val": 0.982767445828357
+    }
+  },
+  "tau": 0.66,
+  "tau_info": {
+    "review_cost": 0.3,
+    "c_under": 3.0,
+    "c_over": 1.0,
+    "best_tau": 0.66,
+    "best_cost": 0.025661149974407098,
+    "cost_no_review": 0.04077802422794745,
+    "cost_review_all": 0.3
+  },
+  "rotulo": "Métricas calculadas sobre dados SIMULADOS (textos gerados por modelo de linguagem de templates). Não representam desempenho em textos reais.",
+  "avaliacoes": [
+    {
+      "conjunto": "SIMULADO_visto (famílias F1-F3, teste)",
+      "n": 11467,
+      "baseline_regras": {
+        "acc_categoria": 0.8608179994767594,
+        "acc_perecibilidade": 0.8961367402110404,
+        "acc_refrigeracao": 0.9031132815906514,
+        "f1_macro_categoria": 0.8536617789330201,
+        "subestima_perecibilidade": 0.0855498386674806
+      },
+      "logreg_tfidf": {
+        "acc_categoria": 0.9612801953431587,
+        "acc_perecibilidade": 0.9843027818958752,
+        "acc_refrigeracao": 0.9173279846516089,
+        "f1_macro_categoria": 0.9622698988134957,
+        "subestima_perecibilidade": 0.00784860905206244
+      },
+      "ece_perecibilidade": 0.009528126111849868,
+      "reliability_perecibilidade": [
+        {
+          "bin": "0.3-0.4",
+          "n": 1,
+          "conf_media": 0.3419832785113766,
+          "acuracia": 1.0
+        },
+        {
+          "bin": "0.4-0.5",
+          "n": 16,
+          "conf_media": 0.46127551147990875,
+          "acuracia": 0.375
+        },
+        {
+          "bin": "0.5-0.6",
+          "n": 73,
+          "conf_media": 0.5512926350444737,
+          "acuracia": 0.6301369863013698
+        },
+        {
+          "bin": "0.6-0.7",
+          "n": 116,
+          "conf_media": 0.6554308413998956,
+          "acuracia": 0.7155172413793104
+        },
+        {
+          "bin": "0.7-0.8",
+          "n": 213,
+          "conf_media": 0.7529141157584461,
+          "acuracia": 0.7887323943661971
+        },
+        {
+          "bin": "0.8-0.9",
+          "n": 401,
+          "conf_media": 0.8567914663886428,
+          "acuracia": 0.8927680798004988
+        },
+        {
+          "bin": "0.9-1.0",
+          "n": 10647,
+          "conf_media": 0.9911299876154368,
+          "acuracia": 0.9979336902413826
+        }
+      ],
+      "ece_categoria": 0.01746175383718823,
+      "taxa_revisao_humana": 0.059213394959448856,
+      "acc_categoria_sem_revisao": 0.9941601779755284,
+      "validade": {
+        "n_informada_verdade": 9615,
+        "taxa_extracao": 0.9874154966198648,
+        "exatidao_exata": 0.898672846008005,
+        "mae_dias": 1.5584579734569202,
+        "falso_positivo_informada": 0.019438444924406047,
+        "alerta_inconsistencia_taxa": 0.025987616639051192
+      },
+      "quantidade": {
+        "taxa_extracao": 0.9655734734553361,
+        "acc_valor": 0.9655734734553361,
+        "acc_unidade": 0.9655734734553361
+      }
+    },
+    {
+      "conjunto": "SIMULADO_reservado (família F4, nunca vista no treino)",
+      "n": 12024,
+      "baseline_regras": {
+        "acc_categoria": 0.8728376580172987,
+        "acc_perecibilidade": 0.9086826347305389,
+        "acc_refrigeracao": 0.8997005988023952,
+        "f1_macro_categoria": 0.8572385574133109,
+        "subestima_perecibilidade": 0.07385229540918163
+      },
+      "logreg_tfidf": {
+        "acc_categoria": 0.9559214903526281,
+        "acc_perecibilidade": 0.9821190951430473,
+        "acc_refrigeracao": 0.9009481037924152,
+        "f1_macro_categoria": 0.9495609731137549,
+        "subestima_perecibilidade": 0.007152361942781104
+      },
+      "ece_perecibilidade": 0.014198323447444944,
+      "reliability_perecibilidade": [
+        {
+          "bin": "0.3-0.4",
+          "n": 9,
+          "conf_media": 0.3720952810110547,
+          "acuracia": 0.4444444444444444
+        },
+        {
+          "bin": "0.4-0.5",
+          "n": 49,
+          "conf_media": 0.4621118956249373,
+          "acuracia": 0.5510204081632653
+        },
+        {
+          "bin": "0.5-0.6",
+          "n": 154,
+          "conf_media": 0.5503560383957374,
+          "acuracia": 0.6623376623376623
+        },
+        {
+          "bin": "0.6-0.7",
+          "n": 156,
+          "conf_media": 0.6546051504717512,
+          "acuracia": 0.7243589743589743
+        },
+        {
+          "bin": "0.7-0.8",
+          "n": 192,
+          "conf_media": 0.7543823612231236,
+          "acuracia": 0.8125
+        },
+        {
+          "bin": "0.8-0.9",
+          "n": 443,
+          "conf_media": 0.8553666026273453,
+          "acuracia": 0.90744920993228
+        },
+        {
+          "bin": "0.9-1.0",
+          "n": 11021,
+          "conf_media": 0.9891702174710018,
+          "acuracia": 0.9985482261137828
+        }
+      ],
+      "ece_categoria": 0.019340014253005765,
+      "taxa_revisao_humana": 0.06204258150365935,
+      "acc_categoria_sem_revisao": 0.9908671750310338,
+      "validade": {
+        "n_informada_verdade": 10082,
+        "taxa_extracao": 0.9865106129736163,
+        "exatidao_exata": 0.9164488236476975,
+        "mae_dias": 1.124069977880555,
+        "falso_positivo_informada": 0.0,
+        "alerta_inconsistencia_taxa": 0.028359946773120426
+      },
+      "quantidade": {
+        "taxa_extracao": 0.9859519089890546,
+        "acc_valor": 0.9859519089890546,
+        "acc_unidade": 0.9859519089890546
+      }
+    },
+    {
+      "conjunto": "RASCUNHO_IA_PROVISORIO (n pequeno; NÃO é rotulagem humana)",
+      "n": 81,
+      "n_indefinido": 2,
+      "indefinido_sinalizado_para_revisao": 1.0,
+      "baseline_regras": {
+        "acc_categoria": 0.9382716049382716,
+        "acc_perecibilidade": 0.9629629629629629,
+        "acc_refrigeracao": 0.9382716049382716,
+        "f1_macro_categoria": 0.932172373081464,
+        "subestima_perecibilidade": 0.012345679012345678
+      },
+      "logreg_tfidf": {
+        "acc_categoria": 0.9753086419753086,
+        "acc_perecibilidade": 0.9876543209876543,
+        "acc_refrigeracao": 0.9382716049382716,
+        "f1_macro_categoria": 0.9714977832624893,
+        "subestima_perecibilidade": 0.012345679012345678
+      },
+      "ece_perecibilidade": 0.016880938070279846,
+      "reliability_perecibilidade": [
+        {
+          "bin": "0.5-0.6",
+          "n": 1,
+          "conf_media": 0.5286128528790522,
+          "acuracia": 0.0
+        },
+        {
+          "bin": "0.8-0.9",
+          "n": 1,
+          "conf_media": 0.8634649921402877,
+          "acuracia": 1.0
+        },
+        {
+          "bin": "0.9-1.0",
+          "n": 79,
+          "conf_media": 0.991111289582862,
+          "acuracia": 1.0
+        }
+      ],
+      "ece_categoria": 0.010688559732330719,
+      "taxa_revisao_humana": 0.024691358024691357,
+      "acc_categoria_sem_revisao": 0.9873417721518988,
+      "validade": {
+        "n_informada_verdade": 74,
+        "taxa_extracao": 1.0,
+        "exatidao_exata": 1.0,
+        "mae_dias": 0.0,
+        "falso_positivo_informada": 0.0,
+        "alerta_inconsistencia_taxa": 0.024691358024691357
+      },
+      "quantidade": {
+        "taxa_extracao": 0.95,
+        "acc_valor": 0.8625,
+        "acc_unidade": 0.8625
+      }
+    }
+  ],
+  "MANUALLY_LABELED": "AUSENTE: conjunto rotulado manualmente pela equipe ainda não existe; ver data/manual_labeled/manual_labeled_text_TEMPLATE.csv"
+}

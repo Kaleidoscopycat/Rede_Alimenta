@@ -1,0 +1,338 @@
+{
+  "gerado_em": "2026-10-03T16:30:41.673413+00:00",
+  "sim_tag": "main",
+  "reais": [
+    {
+      "tabela": "silver/osc",
+      "linhas": 960315,
+      "colunas": 30,
+      "nulos_pct": {
+        "municipio_ibge": 0.0,
+        "uf": 0.0
+      },
+      "chave": "ong_id",
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": null,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {},
+      "codigo_ibge": {
+        "municipio_ibge": {
+          "invalidos_formato": 0,
+          "inexistentes": 0
+        }
+      },
+      "data_origin": {
+        "PUBLIC": 960315
+      }
+    },
+    {
+      "tabela": "silver/rbba",
+      "linhas": 192,
+      "colunas": 24,
+      "nulos_pct": {},
+      "chave": "ong_id",
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": 0,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {},
+      "codigo_ibge": {
+        "municipio_ibge": {
+          "invalidos_formato": 0,
+          "inexistentes": 0
+        }
+      },
+      "data_origin": {
+        "PUBLIC": 192
+      }
+    },
+    {
+      "tabela": "silver/municipios",
+      "linhas": 5571,
+      "colunas": 13,
+      "nulos_pct": {},
+      "chave": "codigo_ibge",
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": 0,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {},
+      "codigo_ibge": {
+        "codigo_ibge": {
+          "invalidos_formato": 0,
+          "inexistentes": 0
+        }
+      },
+      "data_origin": {
+        "PUBLIC": 5571
+      }
+    },
+    {
+      "tabela": "gold/organizations",
+      "linhas": 54590,
+      "colunas": 26,
+      "nulos_pct": {
+        "natureza_juridica": 0.0035,
+        "ano_fundacao": 0.0035,
+        "area_assistencia_social": 0.0035,
+        "area_desenv_direitos": 0.0035,
+        "area_saude": 0.0035,
+        "area_educacao_pesquisa": 0.0035,
+        "area_religiao": 0.0035,
+        "modalidade_rbba": 0.9965
+      },
+      "chave": "ong_id",
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": 0,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {
+        "lat": {
+          "min": -33.525,
+          "max": 4.4799,
+          "fora_da_faixa": 0
+        },
+        "lon": {
+          "min": -72.8997,
+          "max": -32.4107,
+          "fora_da_faixa": 0
+        },
+        "populacao_2026": {
+          "min": 1183.0,
+          "max": 11911337.0,
+          "fora_da_faixa": 0
+        }
+      },
+      "codigo_ibge": {
+        "municipio_ibge": {
+          "invalidos_formato": 0,
+          "inexistentes": 0
+        }
+      },
+      "data_origin": {
+        "PUBLIC": 54590
+      }
+    },
+    {
+      "tabela": "gold/territory",
+      "linhas": 5571,
+      "colunas": 16,
+      "nulos_pct": {},
+      "chave": "codigo_ibge",
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": 0,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {
+        "latitude": {
+          "min": -33.6866,
+          "max": 4.60314,
+          "fora_da_faixa": 0
+        },
+        "longitude": {
+          "min": -72.8997,
+          "max": -32.4107,
+          "fora_da_faixa": 0
+        },
+        "populacao_2026": {
+          "min": 857.0,
+          "max": 11911337.0,
+          "fora_da_faixa": 0
+        }
+      },
+      "codigo_ibge": {
+        "codigo_ibge": {
+          "invalidos_formato": 0,
+          "inexistentes": 0
+        }
+      },
+      "data_origin": {
+        "PUBLIC": 5571
+      }
+    }
+  ],
+  "simuladas": [
+    {
+      "tabela": "sim_donor",
+      "linhas": 8000,
+      "colunas": 18,
+      "nulos_pct": {},
+      "chave": "donor_id",
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": 0,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {
+        "lat": {
+          "min": -33.6866,
+          "max": 4.60314,
+          "fora_da_faixa": 0
+        },
+        "lon": {
+          "min": -72.8997,
+          "max": -34.8151,
+          "fora_da_faixa": 0
+        }
+      },
+      "codigo_ibge": {
+        "municipio_ibge": {
+          "invalidos_formato": 0,
+          "inexistentes": 0
+        }
+      },
+      "data_origin": {
+        "SIMULATED": 8000
+      }
+    },
+    {
+      "tabela": "sim_lot",
+      "linhas": 60000,
+      "colunas": 26,
+      "nulos_pct": {},
+      "chave": "lot_id",
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": 0,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {
+        "quantidade_kg": {
+          "min": 5.0,
+          "max": 5000.0,
+          "fora_da_faixa": 0
+        },
+        "dias_ate_validade": {
+          "min": 0.0,
+          "max": 319.0,
+          "fora_da_faixa": 0
+        },
+        "horas_ate_validade": {
+          "min": 3.043888888888889,
+          "max": 7673.756388888889,
+          "fora_da_faixa": 0
+        }
+      },
+      "datas": {
+        "created_at": {
+          "min": "2025-10-01 06:01:44",
+          "max": "2026-09-30 20:48:31",
+          "futuras": 0
+        }
+      },
+      "data_origin": {
+        "SIMULATED": 60000
+      }
+    },
+    {
+      "tabela": "sim_ong_declared",
+      "linhas": 54590,
+      "colunas": 23,
+      "nulos_pct": {},
+      "chave": "ong_id",
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": 0,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {},
+      "data_origin": {
+        "SIMULATED": 54590
+      }
+    },
+    {
+      "tabela": "sim_fleet",
+      "linhas": 54590,
+      "colunas": 12,
+      "nulos_pct": {
+        "tipo_veiculo": 0.7113,
+        "capacidade_kg": 0.7113
+      },
+      "chave": "ong_id",
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": 0,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {
+        "capacidade_kg": {
+          "min": 200.03468619263833,
+          "max": 11975.978598992908,
+          "fora_da_faixa": 0
+        }
+      },
+      "data_origin": {
+        "SIMULATED": 54590
+      }
+    },
+    {
+      "tabela": "sim_pair_outcome",
+      "linhas": 895177,
+      "colunas": 39,
+      "nulos_pct": {
+        "resposta_em": 0.179,
+        "coleta_em": 0.7514,
+        "horas_resposta": 0.179,
+        "horas_ate_coleta": 0.7514
+      },
+      "chave": [
+        "lot_id",
+        "ong_id"
+      ],
+      "duplicados_chave": 0,
+      "linhas_duplicadas_completas": null,
+      "colunas_pii_por_nome": [],
+      "pii_por_valor": {},
+      "faixas": {
+        "dist_km": {
+          "min": 0.0,
+          "max": 149.81866455078125,
+          "fora_da_faixa": 0
+        },
+        "tempo_deslocamento_est_h": {
+          "min": 0.5052918195724487,
+          "max": 4.840204238891602,
+          "fora_da_faixa": 0
+        }
+      },
+      "datas": {
+        "lote_registrado_em": {
+          "min": "2025-10-01 06:01:44",
+          "max": "2026-09-30 20:48:31",
+          "futuras": 0
+        },
+        "proposta_em": {
+          "min": "2025-10-01 06:03:20",
+          "max": "2026-09-30 20:53:53",
+          "futuras": 0
+        },
+        "resposta_em": {
+          "min": "2025-10-01 07:24:03",
+          "max": "2026-10-13 12:47:09",
+          "futuras": 0
+        },
+        "coleta_em": {
+          "min": "2025-10-01 11:30:00",
+          "max": "2026-10-13 15:53:45",
+          "futuras": 0
+        }
+      },
+      "data_origin": {
+        "SIMULATED": 895177
+      }
+    }
+  ],
+  "geo_organizacoes": {
+    "location_precision": {
+      "MUNICIPALITY_CENTROID": 54400,
+      "EXACT": 190
+    },
+    "geo_quality": {
+      "NAO_APLICAVEL": 54398,
+      "OK": 187,
+      "REVISAR": 3,
+      "SUSPEITA": 2
+    },
+    "rankable_by_distance": 54590,
+    "total": 54590
+  },
+  "problemas": [],
+  "status": "OK"
+}

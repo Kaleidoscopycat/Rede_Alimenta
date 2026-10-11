@@ -1,0 +1,372 @@
+{
+  "generated_at_utc": "2026-10-02T23:04:34+00:00",
+  "centroides": {
+    "n": 5571,
+    "fonte": "kelvins/municipios-brasileiros (MIT) — compilação de terceiros; origem primária não declarada"
+  },
+  "rbba": {
+    "kpis": {
+      "bancos": 362,
+      "aderidos": 208,
+      "municipios": 176,
+      "ufs": 27,
+      "relatorios": 161,
+      "kg_recebidos": 66285063.38,
+      "kg_doados": 62483403.16,
+      "kg_perdidos": 3215754.25,
+      "pct_perda": 0.04851401033690918,
+      "pessoas_atendidas": 5167799,
+      "instituicoes": 11071,
+      "bancos_perdas": 78,
+      "bancos_acoes": 119,
+      "bancos_projetos": 60,
+      "registros_descartados": 0
+    },
+    "n_pontos": 192,
+    "municipios_distintos_com_ponto": 161,
+    "anomalias_coordenadas": [
+      {
+        "id": "BA000038",
+        "nome": "Banco de Alimentos Imperatriz",
+        "cidade": "Imperatriz",
+        "uf": "MA",
+        "lat_rbba": -54.91004,
+        "lon_rbba": -47.459722,
+        "dist_km_ao_centroide": 5492.1
+      },
+      {
+        "id": "BA000307",
+        "nome": "Banco  de Alimentos Municipal de Três Corações",
+        "cidade": "Três Corações",
+        "uf": "MG",
+        "lat_rbba": 21.718309,
+        "lon_rbba": -45.261494,
+        "dist_km_ao_centroide": 4827.0
+      }
+    ],
+    "dist_km_ponto_vs_centroide": {
+      "mediana": 1.6656052396154717,
+      "p90": 6.1523654562545005
+    },
+    "ano": 2025,
+    "mensal_kg": [
+      {
+        "mes": "Jan",
+        "recebido": 5244552.86,
+        "doado": 4840828.54
+      },
+      {
+        "mes": "Fev",
+        "recebido": 5352755.31,
+        "doado": 5039820.38
+      },
+      {
+        "mes": "Mar",
+        "recebido": 5207349.85,
+        "doado": 4854757.45
+      },
+      {
+        "mes": "Abr",
+        "recebido": 5254775.23,
+        "doado": 4919383.12
+      },
+      {
+        "mes": "Mai",
+        "recebido": 5721468.83,
+        "doado": 5390808.16
+      },
+      {
+        "mes": "Jun",
+        "recebido": 5201945.36,
+        "doado": 4881912.03
+      },
+      {
+        "mes": "Jul",
+        "recebido": 5533178.45,
+        "doado": 5191874.12
+      },
+      {
+        "mes": "Ago",
+        "recebido": 5009493.04,
+        "doado": 4770085.92
+      },
+      {
+        "mes": "Set",
+        "recebido": 5752836.8,
+        "doado": 5348430.5
+      },
+      {
+        "mes": "Out",
+        "recebido": 6107488.39,
+        "doado": 5880886.74
+      },
+      {
+        "mes": "Nov",
+        "recebido": 6093521.11,
+        "doado": 5749917.39
+      },
+      {
+        "mes": "Dez",
+        "recebido": 5805698.15,
+        "doado": 5614698.81
+      }
+    ],
+    "origens_top": [
+      {
+        "categoria": "Perdas e Desperdícios",
+        "valor": 36332726.06,
+        "pct": 0.5481284049124492
+      },
+      {
+        "categoria": "PAA",
+        "valor": 7961707.05,
+        "pct": 0.12011313928082118
+      },
+      {
+        "categoria": "Campanhas Eventuais",
+        "valor": 5956617.31,
+        "pct": 0.08986364357610725
+      },
+      {
+        "categoria": "Hortas Urbanas e Periurbanas",
+        "valor": 4582112.75,
+        "pct": 0.06912737977983963
+      },
+      {
+        "categoria": "Doadores Diversos",
+        "valor": 1374785.85,
+        "pct": 0.020740507437076845
+      },
+      {
+        "categoria": "Alimentos Recebidos",
+        "valor": 1299830.06,
+        "pct": 0.01960969777683269
+      },
+      {
+        "categoria": "Doações de outros Bancos de Alimentos",
+        "valor": 1135147.15,
+        "pct": 0.017125232927551286
+      },
+      {
+        "categoria": "Agricultor Rural",
+        "valor": 1075641.01,
+        "pct": 0.016227502172450965
+      },
+      {
+        "categoria": "Alimentos recebidos do Desperdício",
+        "valor": 778285.3,
+        "pct": 0.011741488358217814
+      },
+      {
+        "categoria": "Fazendas, supermercados e distribuidores alimentícios",
+        "valor": 437014.51,
+        "pct": 0.006592956055494383
+      },
+      {
+        "categoria": "Outras origens",
+        "valor": 5351196.33,
+        "pct": 0.08073004772315871
+      }
+    ],
+    "classificacao_nova": [
+      {
+        "categoria": "Alimentos in natura e/ou minimamente processados",
+        "valor": 56095026.629999995,
+        "pct": 0.8822997469413588
+      },
+      {
+        "categoria": "Ingredientes Culinários",
+        "valor": 819607.97,
+        "pct": 0.01289133721768091
+      },
+      {
+        "categoria": "Alimentos Processados",
+        "valor": 2858407.35,
+        "pct": 0.04495892475807387
+      },
+      {
+        "categoria": "Alimentos Ultraprocessados",
+        "valor": 3805154.49,
+        "pct": 0.05984999108288641
+      }
+    ],
+    "modalidades": [
+      {
+        "categoria": "Público Municipal",
+        "valor": 110,
+        "pct": 0.5288461538461539
+      },
+      {
+        "categoria": "SESC",
+        "valor": 86,
+        "pct": 0.41346153846153844
+      },
+      {
+        "categoria": "OSC",
+        "valor": 8,
+        "pct": 0.038461538461538464
+      },
+      {
+        "categoria": "Público Estadual",
+        "valor": 2,
+        "pct": 0.009615384615384616
+      },
+      {
+        "categoria": "Público Federal",
+        "valor": 1,
+        "pct": 0.004807692307692308
+      },
+      {
+        "categoria": "Público Distrital",
+        "valor": 1,
+        "pct": 0.004807692307692308
+      }
+    ],
+    "operacionais": [
+      {
+        "categoria": "Convencional",
+        "valor": 129,
+        "pct": 0.6201923076923077
+      },
+      {
+        "categoria": "Colheita Urbana",
+        "valor": 58,
+        "pct": 0.27884615384615385
+      },
+      {
+        "categoria": "Colheita Urbana e Rural",
+        "valor": 17,
+        "pct": 0.08173076923076923
+      },
+      {
+        "categoria": "Colheita Rural",
+        "valor": 4,
+        "pct": 0.019230769230769232
+      }
+    ],
+    "perdas_momento": [
+      {
+        "categoria": "Pós-triagem",
+        "valor": 1499538.45,
+        "pct": 0.4663100266446044
+      },
+      {
+        "categoria": "Pré-triagem",
+        "valor": 1342424.83,
+        "pct": 0.41745255564849215
+      },
+      {
+        "categoria": "Não definido",
+        "valor": 373790.97,
+        "pct": 0.11623741770690343
+      }
+    ]
+  },
+  "paa": {
+    "n_linhas": 49627,
+    "indice_sazonal_mes": {
+      "1": 0.532,
+      "2": 0.537,
+      "3": 0.687,
+      "4": 0.943,
+      "5": 1.262,
+      "6": 1.15,
+      "7": 1.243,
+      "8": 1.295,
+      "9": 1.07,
+      "10": 1.21,
+      "11": 1.28,
+      "12": 0.791
+    },
+    "kg_por_ano": {
+      "2021": 63451365.882213086,
+      "2022": 21724998.59358883,
+      "2023": 47527173.90320778,
+      "2024": 57290413.72462952,
+      "2025": 27014173.763469696,
+      "2026": 15778889.958428383
+    },
+    "registros_por_ano": {
+      "2021": 13270,
+      "2022": 4752,
+      "2023": 6734,
+      "2024": 12329,
+      "2025": 8064,
+      "2026": 4478
+    },
+    "aviso": "PAA traz apenas totais por município-mês (kg, R$, nº agricultores); NÃO traz produto/categoria.",
+    "municipios_distintos_com_execucao": 3781
+  },
+  "osc": {
+    "n_linhas": 960315,
+    "sem_municipio": 32,
+    "n_cnpj_distintos": 960315,
+    "municipios_com_osc": 5570,
+    "por_area_flag1": {
+      "Habitação": 385,
+      "Saúde": 24046,
+      "Cultura e recreação": 106487,
+      "Educação e pesquisa": 37327,
+      "Assistência social": 54398,
+      "Religião": 296137,
+      "Associações patronais, profissionais e de produtores rurais": 41460,
+      "Meio ambiente e proteção animal": 641,
+      "Desenvolvimento e defesa de direitos": 323020,
+      "Outros": 20603,
+      "Outras atividades associativas": 134783
+    },
+    "sub_flags_relevantes": {
+      "Ass Social sub Assistência social": 27,
+      "Ass Social sub Outros": 296136,
+      "Desenv e Def sub Centros e associações comunitárias": 32
+    },
+    "assistencia_social_total": 54398,
+    "municipios_com_assistencia_social": 4421,
+    "candidatas_receptor_total": 54420,
+    "municipios_com_candidata": 4421,
+    "top_natureza_juridica": {
+      "3999": 753627,
+      "3220": 192211,
+      "3069": 12135,
+      "3301": 2342
+    },
+    "por_uf": {
+      "SP": 194130,
+      "MG": 102949,
+      "RJ": 79791,
+      "BA": 68407,
+      "RS": 65442,
+      "PR": 58737,
+      "SC": 48273,
+      "CE": 37397,
+      "PE": 32570,
+      "GO": 31104,
+      "MA": 29175,
+      "PA": 27944,
+      "ES": 21071,
+      "DF": 20445,
+      "PB": 17489,
+      "MT": 17473,
+      "PI": 15818,
+      "MS": 14558,
+      "AM": 14359,
+      "RN": 13270,
+      "AL": 10972,
+      "RO": 9509,
+      "TO": 9355,
+      "SE": 9063,
+      "AC": 4249,
+      "AP": 4100,
+      "RR": 2633
+    },
+    "campos_AUSENTES": [
+      "coordenadas",
+      "endereço/CEP",
+      "capacidade de armazenamento",
+      "refrigeração",
+      "horário de funcionamento",
+      "tipos de alimento aceitos"
+    ],
+    "aviso_area_alimentar": "Não existe subárea de 'segurança alimentar' nas colunas; a regra de elegibilidade é um PROXY (assistência social / centros comunitários)."
+  }
+}

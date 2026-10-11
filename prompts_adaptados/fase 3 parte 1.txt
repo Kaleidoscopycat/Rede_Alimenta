@@ -1,0 +1,426 @@
+==================================================
+FASE 3 PARTE 1 — DOAÇÃO COM VÁRIOS ITENS E EXPERIÊNCIA POR PERFIL
+==================================================
+
+Esta é a primeira parte da Fase 3. A Fase 2 (Partes 1 e 2) entregou
+banco, API, motor de match, análise semântica, interface operacional
+mínima, roteirização, Docker, CI/CD e varredura de segurança.
+
+Objetivo desta parte: tornar a experiência de DOADORES e ONGs simples e
+segura, permitir que o doador monte a doação item por item e aplicar,
+na própria API, a visibilidade de informação por perfil.
+
+Execute somente a PARTE 1. Não construa o dashboard do administrador,
+o deploy em nuvem, o README final nem o pitch: isso é a Fase 3 Parte 2.
+Não avance para a Parte 2.
+
+Leia:
+
+- AGENTS.md
+- docs/ da Fase 2 (partes 1 e 2) e security/STRIDE.md
+- código da API, do motor de match, do parser e da interface
+- database/models.py (Donation, DonationItem)
+
+Problema: conectar DOADOR → ONG. Fora de escopo: ONG → beneficiário.
+
+==================================================
+1. PROBLEMAS OBSERVADOS NA VALIDAÇÃO DA FASE 2 PARTE 1
+==================================================
+
+Ao testar a interface, foram observados dois defeitos de escopo. Eles
+são a razão desta parte.
+
+A) Doação com vários itens
+
+Um texto com quatro itens diferentes (arroz, feijão, macarrão e óleo,
+cada um com sua validade) foi tratado como UM lote: uma categoria
+(GRAOS_CEREAIS), uma quantidade (5,0 kg), uma validade (325 dias, que
+corresponde à validade mais próxima). A quantidade total real era de
+cerca de 23 kg de secos mais 3,6 litros de óleo. Causas:
+
+- o parser, a API, a tela e o cálculo do match trabalham com um lote
+  de uma única categoria, uma validade e uma quantidade;
+- a tabela donation_items existe, mas não guarda validade nem
+  refrigeração por item, e a interface não permite cadastrar itens;
+- o parser leu um único número de peso e ignorou as unidades, e ainda
+  marcou o campo "quantidade_kg" como OK com confiança 0,95
+  ("kg informado"), o que é confiança indevida.
+
+B) Informação da IA exposta a qualquer perfil
+
+A interface mostra o ranking com ML_SCORE, BUSINESS_RULE_SCORE,
+DISTANCE_SCORE e FINAL_SCORE ao doador, e a API entrega isso a
+qualquer perfil autenticado. Útil para auditar o motor, mas expõe
+informação interna ao doador e, para a ONG, a classificação das
+outras ONGs. (Risco registrado no STRIDE na Fase 2 Parte 2 como
+mitigação pendente.)
+
+==================================================
+2. DOAÇÃO COM VÁRIOS ITENS
+==================================================
+
+2.1 Modelo de dados
+
+Em migration Alembic própria, reversível, ampliar donation_items com
+campos opcionais (nulos para os itens históricos simulados, que NÃO
+devem ser alterados nem preenchidos com valores inventados):
+
+- perecibilidade;
+- exige_refrigeracao;
+- validade do item (validity_days e/ou expires_at, com validity_source);
+- peso por unidade/embalagem (unit_weight) e sua unidade;
+- descrição livre curta do item;
+- demais campos que a análise do código mostrar necessários.
+
+Regras:
+- data_origin do item é sempre igual ao da doação (constraint e teste);
+- categoria do item deve ser um código válido de food_categories;
+- a doação (Donation) passa a ser o cabeçalho: doador, janela de
+  retirada, status e campos AGREGADOS derivados dos itens;
+- doações históricas simuladas sem itens detalhados continuam
+  funcionando no nível do lote (compatibilidade com os 83 testes e
+  com o simulador).
+
+2.2 Agregação dos itens no lote (usada pelo match)
+
+Recalcular os campos do lote sempre que os itens mudarem:
+
+- quantity_kg = soma dos kg de todos os itens;
+- validade do lote = a MAIS PRÓXIMA entre os itens (critério
+  conservador: o lote inteiro só pode ser entregue antes dela);
+- exige_refrigeracao = verdadeiro se QUALQUER item exigir;
+- perecibilidade = a mais restritiva entre os itens;
+- categoria = a de maior peso; guardar também a lista das categorias
+  e uma marca "lote misto" quando houver mais de uma. Não criar
+  categoria nova na taxonomia sem registro de decisão e fonte.
+
+Limitação obrigatória a registrar (relatório, docs/ e tela do
+administrador): o ranker foi treinado e avaliado somente com lotes
+SIMULADOS de uma única categoria. Lotes mistos estão fora do que as
+métricas cobrem; o desempenho neles é DESCONHECIDO. Marcar o match de
+lote misto como tal na explicação mostrada ao administrador.
+
+Aviso ao doador, sem jargão: se a diferença entre a validade mais
+próxima e a mais distante for maior que um limite configurável
+(valor em configuração, não fixo no código), sugerir "separar os itens
+de validade curta em outra doação", porque a validade mais próxima
+define o prazo de todo o lote.
+
+2.3 Conversão para kg
+
+Reaproveitar a conversão existente (api/parsing.py: kg, g, litro,
+unidades com massa unitária da taxonomia). Regras:
+- item = unidades × peso da embalagem, convertido para kg;
+- conversão de litro para kg e massa unitária por categoria são
+  PREMISSAS do projeto e devem aparecer na tela como "peso estimado"
+  e na documentação (docs/DONATION_ITEMS.md), com a fonte quando
+  existir, ou como "premissa sem fonte" quando não existir;
+- nunca preencher peso silenciosamente: se faltar, o campo fica
+  pendente e o doador informa.
+
+2.4 Entrada manual de itens (caminho PRINCIPAL)
+
+O doador monta a doação adicionando itens, quantos quiser (limite
+máximo em configuração):
+
+- "Adicionar item": categoria (lista), nome do alimento (texto
+  curto), quantidade de unidades, peso ou volume por unidade
+  (valor e unidade), validade (data, ou mês/ano) e se exige
+  refrigeração;
+- lista dos itens já adicionados, cada um editável e removível;
+- total em kg calculado e exibido na tela, com o aviso de peso
+  estimado quando houver conversão por premissa;
+- a doação só pode ser enviada com pelo menos um item e com todos os
+  campos obrigatórios preenchidos;
+- itens e doação só podem ser alterados antes de o match ser
+  gerado; depois, a doação é bloqueada para edição (criar nova
+  doação em vez de alterar).
+
+Endpoints: definir e documentar a API de rascunho de doação e de
+itens (criar rascunho, adicionar, alterar, remover item, confirmar),
+com o contrato OpenAPI atualizado. Preservar a compatibilidade dos
+contratos atuais ou versioná-los, e manter os testes existentes
+passando (atualizando-os quando o contrato mudar de forma
+justificada).
+
+2.5 Preenchimento por texto (OPCIONAL, atalho)
+
+O botão "Preencher a partir de um texto" permanece como atalho. O
+parser deve:
+
+- dividir o texto em itens candidatos (linhas, marcadores, separadores)
+  e extrair por item: nome, categoria, quantidade de unidades, peso da
+  embalagem, validade e refrigeração;
+- tratar data apenas com mês e ano (ex.: 12/2027) de forma conservadora
+  (último dia do mês), mantendo o campo PENDENTE de confirmação e
+  informando isso;
+- NUNCA marcar um campo de quantidade como OK quando o texto tiver
+  mais de um número de peso/quantidade que não possa ser associado a
+  um item com segurança: nesse caso o campo fica PENDENTE com a
+  confiança reduzida;
+- ser apenas sugestão: o resultado preenche a lista de itens para o
+  doador conferir e editar; nada é enviado sem confirmação.
+
+Teste de regressão obrigatório (apenas como texto de teste do parser,
+sem gravar como doação real nem como USER_ENTERED):
+quatro itens — arroz agulhinha tipo 1 (pacote de 5 kg, 3 unidades,
+validade 12/2027), feijão carioca (pacote de 1 kg, 5 unidades,
+validade 08/2027), macarrão espaguete (pacote de 500 g, 6 unidades,
+validade 05/2028) e óleo de soja (garrafa de 900 ml, 4 unidades,
+validade 10/2027). Resultado esperado: quatro itens separados;
+quantidades de 15 kg, 5 kg e 3 kg para os três secos; óleo com
+conversão de volume sinalizada como premissa; validades só com
+mês/ano marcadas como pendentes; nenhuma quantidade marcada OK por
+engano; validade do lote = a mais próxima.
+
+==================================================
+3. VISIBILIDADE POR PERFIL (OBRIGATÓRIO, NA API)
+==================================================
+
+A restrição é aplicada na API, não só na tela: esconder um campo na
+interface não protege, pois quem tem o token consegue chamar a API
+diretamente.
+
+DOADOR (DONOR) vê somente:
+- os próprios dados de cadastro registrados no banco;
+- as doações que ele mesmo cadastrou, com os itens e os dados que ele
+  informou ou confirmou;
+- o status de cada doação em linguagem simples: PENDENTE (aguardando
+  resposta da ONG), ACEITA ou RECUSADA (acrescentar EXPIRADA e
+  COLETADA apenas se existirem no ciclo do match), com a data de cada
+  mudança;
+- quando aceita, o nome da ONG que aceitou (registro público).
+O doador NÃO vê: nenhum cálculo ou saída da IA (scores, ranking de
+ONGs, confiança do parser, alertas internos, versão do modelo,
+importância de atributos), nenhuma decisão automática e seu motivo,
+nem dados de outros doadores ou de ONGs não relacionadas.
+Se o parser (atalho da seção 2.5) pré-preencher os itens, o doador
+vê apenas campos de formulário a conferir, sem confiança, sem alerta
+interno e sem rótulo de score; ao confirmar, passam a ser dado dele.
+Se isto for considerado exposição indevida, trocar por formulário
+sem sugestão; registrar a decisão em docs/.
+
+ONG (ORG) vê:
+- tudo o que o doador vê sobre a doação que lhe foi proposta (itens,
+  validade, refrigeração, janela de retirada e status), mais os dados
+  mínimos do doador necessários à coleta (regra detalhada em docs/LGPD
+  na Fase 4; até lá, expor só o necessário e registrar a decisão);
+- a ANÁLISE DA IA sobre essa doação: campos extraídos pelo parser com
+  confiança, perecibilidade, necessidade de refrigeração, alertas de
+  inconsistência, marca de lote misto, e a explicação do motivo pelo
+  qual a proposta foi feita para ela (fatores do ranking referentes a
+  ela);
+- as próprias propostas, o histórico dos estados do match e os
+  próprios aceites/recusas.
+A ONG NÃO vê: o ranking nem os scores das outras ONGs, doações
+propostas a outras ONGs, nem métricas internas do modelo.
+
+ADMINISTRADOR (ADMIN) vê tudo, incluindo:
+- todos os cálculos da IA: ML_SCORE, BUSINESS_RULE_SCORE,
+  DISTANCE_SCORE, FINAL_SCORE, ranking completo, regras eliminatórias,
+  confiança do parser, versão do modelo e do parser, importância de
+  atributos, limitações (incluindo lote misto);
+- todas as decisões automáticas e seus motivos, os match_events e o
+  audit_logs.
+Conta ADMIN: token por ambiente, criado por script, nunca no código;
+em ambiente público não usar conta de demonstração com privilégio
+real; registrar todo acesso ADMIN a dados sensíveis em audit_logs.
+
+IMPLEMENTAÇÃO
+- esquemas de resposta (response_model) separados por perfil, por
+  exemplo DonorView, OrgView e AdminView, em vez de um único esquema
+  com campos opcionais. Campos de IA só existem em OrgView (apenas os
+  permitidos acima) e AdminView;
+- o esquema vem do perfil do token autenticado no servidor, nunca de
+  parâmetro enviado pelo cliente;
+- endpoints de ranking completo, scores e modelo (ex.: /predict,
+  /model/info, /matches/{id}/ranking) restritos a ADMIN, com 403 para
+  os demais;
+- endpoint GET /api/v1/me que informa o perfil do token, para a
+  interface montar as telas certas (a interface é só apresentação e
+  não é a barreira de segurança).
+
+==================================================
+4. INTERFACE SIMPLIFICADA (STREAMLIT)
+==================================================
+
+Expandir o frontend da Fase 2 Parte 1, sem recriá-lo do zero. O
+frontend conversa apenas com a API HTTP e nunca acessa o banco. O
+dashboard completo do administrador é a Parte 2; aqui o administrador
+mantém as telas técnicas atuais (ranking, scores e explicações),
+agrupadas numa área "Visão técnica (admin)".
+
+Princípios: pouca informação por tela, uma ação principal por tela,
+linguagem simples em português do Brasil, sem jargão de IA ("parser",
+"confiança", "match", "score", "τ") para doador e ONG, mensagens de
+erro compreensíveis (nunca traceback), confirmação antes de ações
+irreversíveis, boa leitura no celular, selo de origem (SIMULADO ou
+USER_ENTERED) sempre visível, porém discreto.
+
+DOADOR (menu: "Nova doação" e "Minhas doações")
+- Nova doação em passos: (1) Itens: adicionar, editar e remover
+  itens, com total em kg; (2) Retirada: dias e horários (usar os
+  campos de janela de retirada já existentes, com opções simples);
+  (3) Revisar e enviar.
+- Minhas doações: um cartão por doação com data, itens, total em kg,
+  validade mais próxima e o status em destaque (Pendente, Aceita,
+  Recusada), com o nome da ONG quando aceita. Atualização por
+  polling, como já existe.
+- Nenhuma nota, ranking ou termo técnico da IA.
+
+ONG (menu: "Propostas recebidas" e "Histórico")
+- Propostas recebidas: um cartão por proposta com os itens, total em
+  kg, validade mais próxima com o prazo em destaque, necessidade de
+  refrigeração, janela de retirada, distância aproximada (com aviso
+  quando for aproximada) e botões Aceitar e Recusar, com confirmação.
+- Bloco recolhível "Análise da IA" com o que a seção 3 permite à ONG.
+- Histórico: propostas respondidas e seus estados.
+
+ADMIN
+- "Visão técnica (admin)": telas atuais com ranking, scores,
+  explicações e match_events, mais o aviso de lote misto.
+
+==================================================
+5. TESTES
+==================================================
+
+- migration (subir e reverter) e modelos de itens; data_origin do
+  item herdado da doação; itens históricos simulados intactos;
+- agregação do lote: soma de kg, validade mais próxima, refrigeração
+  se qualquer item exigir, categoria predominante, marca de lote
+  misto; recálculo ao editar ou remover item;
+- conversão para kg com sinalização de premissa; peso ausente deixa o
+  campo pendente;
+- parser: o teste de regressão da seção 2.5 e o caso de vários pesos
+  sem associação segura (campo pendente);
+- API de rascunho e itens: criar, adicionar, alterar, remover,
+  confirmar, bloqueio de edição após o match; 401, 403 e acesso a
+  recurso de outro dono (404 ou 403);
+- visibilidade: varredura recursiva do JSON de TODAS as respostas
+  acessíveis ao doador, falhando se aparecer qualquer chave de IA (ex.:
+  ml_score, business_rule_score, distance_score, final_score, ranking,
+  confidence, model_version, feature_importance) ou dado de outro
+  doador; teste equivalente para a ONG (sem ranking ou score de outras
+  ONGs, sem doação proposta a outra ONG); ADMIN vê tudo;
+- contrato OpenAPI refletindo os esquemas por perfil;
+- AppTest do Streamlit por perfil: o doador não encontra elemento de
+  score; o fluxo de adicionar itens funciona;
+- atualizar os testes e o script e2e da Fase 2 Parte 1 que dependiam
+  de o doador ver o ranking (usar token ADMIN para inspecioná-lo);
+- manter a suíte existente passando.
+
+Sem registros de negócio fictícios nos testes da tela.
+
+==================================================
+6. DOCUMENTAÇÃO E SEGURANÇA
+==================================================
+
+- docs/DONATION_ITEMS.md: modelo de itens, regras de agregação,
+  premissas de conversão para kg, limitação de lote misto;
+- docs/ROLE_VISIBILITY.md: matriz perfil × dado, com a decisão sobre
+  os campos em aberto (sugestão do parser ao doador, dados do doador
+  mostrados à ONG);
+- atualizar security/STRIDE.md: risco de divulgação de informação
+  (item do STRIDE da Fase 2 Parte 2) marcado como implementado,
+  parcial ou pendente, e os riscos novos (edição de itens, acesso
+  entre perfis);
+- atualizar o README com os comandos para criar usuários DONOR, ORG e
+  ADMIN e rodar a interface, incluindo os equivalentes em PowerShell.
+
+==================================================
+VALIDAÇÃO
+==================================================
+
+Executar a API e o Streamlit (local e, se já disponível, docker
+compose up) e percorrer, com os três perfis:
+
+doador monta a doação com vários itens e validades diferentes →
+confere o total → envia → match gerado → ONG vê os itens e a análise
+da IA, e aceita ou recusa → doador vê só o status → admin vê scores,
+ranking e o aviso de lote misto.
+
+Conferir em cada resposta de API e em cada tela que a visibilidade da
+seção 3 foi respeitada.
+
+Para demonstrar o fluxo, use apenas:
+- registros do simulador documentado, marcados SIMULATED; ou
+- entradas manuais reais.
+Contas de demonstração (--demo) operam somente sobre dados SIMULATED;
+o que for digitado nelas herda esse escopo. Não insira doações
+fictícias fora dessas vias e nunca as marque como USER_ENTERED.
+
+Finalizar somente com:
+
+[ ] migration de itens (validade, refrigeração e peso por item) aplicada
+    e reversível
+[ ] agregação do lote (soma de kg, validade mais próxima, refrigeração,
+    categoria predominante, lote misto) implementada e testada
+[ ] entrada manual de itens funcionando (adicionar, editar, remover)
+[ ] parser dividindo o texto em itens, sem marcar quantidade como OK
+    quando houver ambiguidade (regressão da seção 2.5 passando)
+[ ] visibilidade por perfil aplicada na API (doador sem dados de IA;
+    ONG com análise da IA só da própria doação; ADMIN com tudo)
+[ ] testes de visibilidade (varredura de chaves de IA) passando
+[ ] interface simplificada do doador e da ONG funcionando
+[ ] visão técnica do admin preservada
+[ ] STRIDE e documentação atualizados
+[ ] testes passando
+
+IMPORTANTE:
+
+Execute esta parte de ponta a ponta.
+
+Leia primeiro o AGENTS.md e toda a documentação relevante existente.
+
+Analise → implemente → execute → teste → corrija → teste novamente.
+
+Não solicite confirmação entre pequenas etapas técnicas.
+
+Não encerre após apenas escrever o código.
+
+REGRA DE DADOS: REAL vs SIMULADO
+
+Dados REAIS (ONGs, território, indicadores, produtos, referências)
+nunca podem ser inventados.
+
+Dados SIMULADOS são permitidos SOMENTE para doadores, lotes de doação
+e desfechos de match, gerados pelo simulador documentado, reprodutível
+e versionado, e sempre com data_origin = SIMULATED.
+
+É terminantemente proibido:
+- Faker ou valores aleatórios sem premissa documentada;
+- mocks de negócio;
+- dados simulados gravados como reais ou como USER_ENTERED;
+- apresentar dado simulado como se fosse real;
+- apresentar métrica obtida em dado simulado como desempenho no mundo real;
+- dados gerados por IA apresentados como dados reais;
+- dados de pessoas físicas, reais ou fictícios.
+
+Se uma fonte REAL não fornecer os dados necessários, documente a
+limitação e procure outra fonte REAL E PÚBLICA. Se não houver fonte
+adequada, trate a lacuna por simulação documentada ou deixe a
+funcionalidade pendente. Nunca preencha a lacuna em silêncio.
+
+Não invente métricas, resultados de IA, fontes, licenças ou números.
+
+Somente finalize esta parte quando:
+
+- todos os requisitos executáveis desta parte tiverem sido implementados;
+- as licenças e premissas de conversão tiverem sido registradas;
+- o código estiver executando;
+- os testes relevantes tiverem sido executados;
+- erros encontrados tiverem sido investigados e corrigidos;
+- nenhuma informação fictícia estiver sendo apresentada como real.
+
+Ao final apresente:
+
+1. alterações realizadas;
+2. arquivos criados/modificados;
+3. premissas de conversão e fontes, quando houver;
+4. testes executados e resultados (inclua a regressão do parser);
+5. como cada perfil (DONOR, ORG, ADMIN) foi verificado;
+6. limitações (lote misto, campos de visibilidade em aberto);
+7. pendências reais;
+8. próximo passo recomendado.
+
+Não avance automaticamente para a Fase 3 Parte 2.

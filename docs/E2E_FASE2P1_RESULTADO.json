@@ -1,0 +1,255 @@
+{
+  "exemplo_bloqueado_por_validade_vencida": null,
+  "api": "http://127.0.0.1:8000",
+  "texto_simulado": "laranja  (118kg) vence dia 04/10",
+  "lot_id_simulador": "L000014",
+  "donor_id_simulador": "D01953",
+  "ready": {
+    "status": "ready",
+    "model_version": "ranker-1.0.0",
+    "parser_version": "semantic-parser-1.0.0+6ddef1e7ec57",
+    "engine_version": "match-engine-1.0.0",
+    "orgs_ranqueaveis": 54590
+  },
+  "me": {
+    "user_id": "78282f6c-b42f-4b60-84ae-064d6226f8a9",
+    "role": "DONOR",
+    "label": "e2e-conta-doador",
+    "donor_id": "17827c4f-1124-5d93-b23c-2aec4ee90869",
+    "organization_id": null,
+    "is_demo": true,
+    "data_origin_scope": "SIMULATED",
+    "auth_limitations": "Autenticação mínima: token estático por usuário (sem expiração/rotação automática, sem escopos), sem TLS e sem rate limit nesta fase (mitigações PENDENTES: Parte 2 e Fase 3; ver security/STRIDE.md)."
+  },
+  "parse": {
+    "fields": {
+      "categoria": {
+        "value": "FRUTAS",
+        "confidence": 0.9987,
+        "status": "OK",
+        "note": null
+      },
+      "perecibilidade": {
+        "value": "PERECIVEL_BAIXO_RISCO",
+        "confidence": 0.9995,
+        "status": "OK",
+        "note": null
+      },
+      "exige_refrigeracao": {
+        "value": false,
+        "confidence": 0.9127,
+        "status": "OK",
+        "note": "refrigeração é o ponto fraco do parser (acurácia ≈ 0,90–0,92 em texto SIMULADO)"
+      },
+      "dias_ate_validade": {
+        "value": 362,
+        "confidence": 0.9,
+        "status": "PENDING_CONFIRMATION",
+        "note": "validity_source=INFORMADA"
+      },
+      "quantidade_kg": {
+        "value": 118.0,
+        "confidence": 0.95,
+        "status": "OK",
+        "note": "kg informado"
+      }
+    },
+    "validity_source": "INFORMADA",
+    "needs_human_confirmation": [
+      "validade"
+    ],
+    "parser_version": "semantic-parser-1.0.0+6ddef1e7ec57",
+    "confidence_threshold": 0.66,
+    "threshold_note": "limiar calibrado sobre texto simulado",
+    "training_data_origin": "SIMULATED"
+  },
+  "donation_inicial": {
+    "id": "f44afcf5-267f-449b-b334-d93eaac59b01",
+    "status": "PENDING_CONFIRMATION",
+    "block_reason": "campos pendentes de confirmação: dias_ate_validade",
+    "pending_fields": [
+      "dias_ate_validade"
+    ],
+    "data_origin": "SIMULATED"
+  },
+  "confirmacao_aplicada": {
+    "accept_fields": [
+      "dias_ate_validade"
+    ]
+  },
+  "donation_final": {
+    "id": "f44afcf5-267f-449b-b334-d93eaac59b01",
+    "status": "READY",
+    "block_reason": null,
+    "categoria": "FRUTAS",
+    "quantity_kg": 118.0,
+    "validity_days": 362,
+    "data_origin": "SIMULATED"
+  },
+  "match_latencia_http_ms": 150.5,
+  "match_latency_ms_motor": {
+    "busca_espacial_ms": 0.97,
+    "elegibilidade_ms": 22.34,
+    "candidatas_ms": 10.63,
+    "ml_ms": 14.08,
+    "scores_ms": 3.0,
+    "total_ms": 51.06
+  },
+  "eligibility": {
+    "n_in_radius": 9150,
+    "n_eligible": 2700,
+    "por_regra": {
+      "E_LOCALIZACAO_AUSENTE": 0,
+      "E_NAO_CADASTRADA": 0,
+      "E_CATEGORIA_NAO_ACEITA": 4620,
+      "E_CAPACIDADE": 3801,
+      "E_REFRIGERACAO": 0,
+      "E_HORARIO": 0,
+      "E_PRAZO_VALIDADE": 0
+    }
+  },
+  "ranking_top3": [
+    {
+      "posicao": 1,
+      "ong_id": "ONG-1a48b182efab",
+      "uf": "SP",
+      "dist_km": 0.0,
+      "location_precision": "MUNICIPALITY_CENTROID",
+      "distancia_aproximada": true,
+      "ML_SCORE": 0.5533,
+      "BUSINESS_RULE_SCORE": 0.9262,
+      "DISTANCE_SCORE": 0.9994,
+      "FINAL_SCORE": 0.7544
+    },
+    {
+      "posicao": 2,
+      "ong_id": "ONG-1a0ac44e8439",
+      "uf": "SP",
+      "dist_km": 0.0,
+      "location_precision": "MUNICIPALITY_CENTROID",
+      "distancia_aproximada": true,
+      "ML_SCORE": 0.5447,
+      "BUSINESS_RULE_SCORE": 0.9262,
+      "DISTANCE_SCORE": 0.9995,
+      "FINAL_SCORE": 0.7501
+    },
+    {
+      "posicao": 3,
+      "ong_id": "ONG-2994c0fc57a9",
+      "uf": "SP",
+      "dist_km": 0.0,
+      "location_precision": "MUNICIPALITY_CENTROID",
+      "distancia_aproximada": true,
+      "ML_SCORE": 0.5425,
+      "BUSINESS_RULE_SCORE": 0.9262,
+      "DISTANCE_SCORE": 0.9994,
+      "FINAL_SCORE": 0.749
+    }
+  ],
+  "explicacao_top1": [
+    "Distância em linha reta: 0.0 km — APROXIMADA: usa centroide de município (ONG: MUNICIPALITY_CENTROID; doador: MUNICIPALITY_CENTROID); deslocamento estimado 30 min (desvio 1.35×, velocidade média; não é rota)",
+    "Espera até a janela de coleta: 10.4 h; folga até a validade: 8678.5 h",
+    "ML_SCORE 0.553: probabilidade estimada de aceite e coleta dentro da validade — modelo treinado em dados SIMULADOS",
+    "BUSINESS_RULE_SCORE 0.926: capacidade 0.96, refrigeração 1.00, tipo 0.70, contexto regional 1.00",
+    "DISTANCE_SCORE 0.999; FINAL_SCORE 0.754 = 0.5·ML + 0.3·REGRAS + 0.2·DISTÂNCIA",
+    "Regras eliminatórias aprovadas (7): E_LOCALIZACAO_AUSENTE, E_NAO_CADASTRADA, E_CATEGORIA_NAO_ACEITA, E_CAPACIDADE, E_REFRIGERACAO, E_HORARIO, E_PRAZO_VALIDADE",
+    "Capacidade, horários, categorias e refrigeração da ONG são DECLARADOS SIMULADOS (sem cadastro real)."
+  ],
+  "polling_ong1_pendente": true,
+  "apos_recusa": {
+    "status": "PROPOSED",
+    "current_org": "ONG-1a0ac44e8439",
+    "current_position": 2
+  },
+  "eventos": [
+    {
+      "event_type": "RANKED",
+      "to_status": "PROPOSED",
+      "ong_id": null,
+      "rank_position": null,
+      "at": "2026-10-08T01:34:43.761380+00:00",
+      "seconds_since_previous": null,
+      "actor_type": "DONOR",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "PROPOSED",
+      "to_status": "PROPOSED",
+      "ong_id": "ONG-1a48b182efab",
+      "rank_position": 1,
+      "at": "2026-10-08T01:34:43.761380+00:00",
+      "seconds_since_previous": 0.0,
+      "actor_type": "SYSTEM",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "DECLINED",
+      "to_status": "PROPOSED",
+      "ong_id": "ONG-1a48b182efab",
+      "rank_position": 1,
+      "at": "2026-10-08T01:34:45.593965+00:00",
+      "seconds_since_previous": 1.833,
+      "actor_type": "ORG",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "PROPOSED",
+      "to_status": "PROPOSED",
+      "ong_id": "ONG-1a0ac44e8439",
+      "rank_position": 2,
+      "at": "2026-10-08T01:34:45.593965+00:00",
+      "seconds_since_previous": 0.0,
+      "actor_type": "SYSTEM",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "ACCEPTED",
+      "to_status": "ACCEPTED",
+      "ong_id": "ONG-1a0ac44e8439",
+      "rank_position": 2,
+      "at": "2026-10-08T01:34:45.677975+00:00",
+      "seconds_since_previous": 0.084,
+      "actor_type": "ORG",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "COLLECTED",
+      "to_status": "COLLECTED",
+      "ong_id": "ONG-1a0ac44e8439",
+      "rank_position": 2,
+      "at": "2026-10-08T01:34:45.710633+00:00",
+      "seconds_since_previous": 0.033,
+      "actor_type": "ORG",
+      "data_origin": "SIMULATED"
+    }
+  ],
+  "status_final": "COLLECTED",
+  "metricas_tempo": {
+    "SIMULATED": {
+      "n_matches": 1,
+      "doacao_registrada_ate_primeira_proposta_s": {
+        "n": 1,
+        "media_s": 0.051,
+        "mediana_s": 0.051
+      },
+      "proposta_ate_resposta_s": {
+        "n": 2,
+        "media_s": 0.958,
+        "mediana_s": 0.958
+      },
+      "doacao_registrada_ate_aceite_s": {
+        "n": 1,
+        "media_s": 1.967,
+        "mediana_s": 1.967
+      },
+      "aceite_ate_coleta_s": {
+        "n": 1,
+        "media_s": 0.033,
+        "mediana_s": 0.033
+      }
+    },
+    "_nota": "Tempos vindos de data_origin=SIMULATED são de EXECUÇÕES DE DEMONSTRAÇÃO sobre doações simuladas (respostas dadas por contas de teste); NÃO representam o tempo real de ONGs. Apenas USER_ENTERED reflete uso real (hoje: nenhum)."
+  },
+  "segundos_total_fluxo": 2.11,
+  "rotulo": "Todos os dados do fluxo são SIMULATED (doador/lote/perfis das ONGs) sobre registros públicos reais de ONGs; tempos de resposta das ONGs são de operadores de teste, NÃO de uso real."
+}

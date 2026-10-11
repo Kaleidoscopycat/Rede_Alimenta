@@ -1,0 +1,349 @@
+==================================================
+FASE 4 — HARDENING, LGPD E PRODUCTIZATION
+==================================================
+
+Nenhuma feature grande nova deve ser criada nesta fase.
+
+Objetivo:
+
+transformar o MVP funcional em um projeto apresentável,
+auditável e preparado para evolução comercial.
+
+Problema: conectar DOADOR → ONG. Fora de escopo: ONG → beneficiário.
+
+==================================================
+1. LGPD
+==================================================
+
+Criar:
+
+docs/LGPD.md
+
+Documentar:
+
+- finalidade;
+- base de dados públicas utilizada;
+- dados futuramente fornecidos por doadores e ONGs;
+- minimização;
+- retenção;
+- exclusão;
+- segurança;
+- logs;
+- tratamento de informações pessoais (usuários, contatos de
+  responsáveis);
+- responsabilidades.
+
+Criar separação conceitual entre:
+
+PUBLIC DATA
+SIMULATED DATA
+USER PROVIDED DATA
+
+Registrar que doadores e ONGs são pessoas jurídicas, que nenhum dado
+de beneficiário final é tratado e que os dados simulados não contêm
+dados pessoais.
+
+==================================================
+2. DATA GOVERNANCE
+==================================================
+
+Finalizar:
+
+DATA_SOURCES.md
+DATA_DICTIONARY.md
+DATA_LINEAGE.md
+DATA_LICENSES.md
+DATA_SIMULATION.md  (versão final do simulador: premissas, fontes dos
+parâmetros, seed, generator_version, validação de realismo e limites)
+
+Cada dataset utilizado deve ser auditável e ter sua origem
+(PUBLIC / SIMULATED / USER_ENTERED) declarada.
+
+==================================================
+3. MODEL CARD
+==================================================
+
+Criar:
+
+docs/MODEL_CARD.md
+
+Incluir:
+
+- objetivo (recomendação doador → ONG);
+- problema;
+- algoritmo;
+- dados (reais e simulados) e proporção de cada um;
+- período dos dados;
+- features (com origem REAL/PROXY/SIMULADO);
+- target;
+- train/validation/test split;
+- métricas e comparação com baselines;
+- limitações, incluindo circularidade da simulação;
+- vieses;
+- usos recomendados;
+- usos NÃO recomendados (ex.: decisões sobre beneficiários finais,
+  afirmar desempenho real sem validação com doações reais);
+- versão.
+
+==================================================
+4. ARCHITECTURE
+==================================================
+
+Criar documentação arquitetural.
+
+docs/architecture/
+
+architecture.md
+data-flow.md
+deployment.md
+
+Criar diagramas Mermaid.
+
+Representar:
+
+Fontes Públicas + Simulador documentado
+      ↓
+ETL
+      ↓
+Data Lake / Processing
+      ↓
+PostgreSQL (nuvem)
+      ↓
+ML (ranking doador → ONG)
+      ↓
+FastAPI
+      ↓
+Motor de Match (ML + regras + distância)
+      ↓
+Streamlit
+
+==================================================
+5. README
+==================================================
+
+Revisar e finalizar o README profissional criado na Fase 3,
+garantindo:
+
+- problema (desperdício e conexão doador → ONG);
+- solução;
+- arquitetura;
+- screenshots;
+- tecnologias;
+- dados (reais x simulados);
+- IA;
+- segurança;
+- execução local;
+- Docker;
+- configuração;
+- testes;
+- deploy;
+- API;
+- limitações;
+- roadmap;
+- licença do software;
+- licenças dos datasets.
+
+==================================================
+6. SWAGGER
+==================================================
+
+Revisar todos os endpoints.
+
+Adicionar:
+
+description
+response models
+error models
+examples de schema
+
+Não inserir exemplos de negócio falsos fingindo serem registros reais.
+Exemplos de schema devem ser claramente genéricos ou marcados como
+ilustrativos.
+
+==================================================
+7. SEGURANÇA FINAL
+==================================================
+
+Executar novamente:
+
+testes
+Bandit
+Trivy
+dependency scan
+secret scan
+
+Documentar vulnerabilidades remanescentes e atualizar o quadro de
+"vulnerabilidades mitigadas" do dashboard.
+
+==================================================
+8. REPRODUTIBILIDADE
+==================================================
+
+Uma nova instalação deve conseguir:
+
+clone
+→ configurar .env
+→ baixar fontes públicas
+→ gerar dados simulados (mesma seed)
+→ processar
+→ inicializar banco
+→ treinar/carregar modelo
+→ iniciar sistema
+
+sem edição manual do código.
+
+==================================================
+9. PREPARAÇÃO COMERCIAL
+==================================================
+
+Criar:
+
+docs/COMMERCIAL_READINESS.md
+
+Analisar:
+
+- datasets que podem ser utilizados comercialmente;
+- datasets com share-alike;
+- datasets com atribuição;
+- custos futuros de infraestrutura;
+- limitações de APIs;
+- riscos de rate limit;
+- custos e limites de serviços de mapas, geocodificação e roteamento;
+  obrigações da licença ODbL do OpenStreetMap (atribuição e
+  share-alike) e opção de instância própria de roteamento;
+- logística real: frota própria das ONGs x voluntários x
+  transportadores, cadeia de frio, seguro e responsabilidade sanitária
+  no transporte (verificar a legislação vigente);
+- substituição das premissas logísticas simuladas por dados reais de
+  piloto (tempo de resposta das ONGs, janelas de retirada, frota);
+- serviços que deverão ser substituídos ao escalar;
+- necessidade de acordos com bancos de alimentos e ONGs;
+- necessidade de cadastro e verificação de doadores;
+- requisitos sanitários e responsabilidade na doação de alimentos
+  (verificar a legislação vigente aplicável);
+- substituição da simulação por dados reais de doações (piloto) e
+  como retreinar e revalidar o modelo;
+- funcionalidades futuras B2B;
+- multi-tenancy;
+- autenticação corporativa;
+- billing futuro;
+- observabilidade;
+- SLA.
+
+Não implementar billing neste momento.
+
+==================================================
+10. PITCH
+==================================================
+
+Revisar e finalizar:
+
+docs/PITCH.md
+
+Estrutura:
+
+Problema (desperdício de alimentos x ONGs sem acesso ao excedente)
+→ Dados reais
+→ Rede Alimenta IA
+→ Como a IA funciona (ranking doador → ONG)
+→ Recomendação
+→ Segurança
+→ Impacto
+→ Arquitetura
+→ Demonstração
+→ Evolução comercial.
+
+Não atribuir à plataforma impacto que ela ainda não produziu.
+
+Diferenciar sempre três categorias:
+
+impacto histórico observado nos datasets públicos
+
+impacto SIMULADO na demonstração
+
+impacto produzido pela plataforma com doações reais
+
+Os números da demonstração (kg salvos, refeições, tempo de match)
+devem ser apresentados como simulação, a menos que existam doações
+reais registradas.
+
+==================================================
+CONCLUSÃO
+==================================================
+
+Antes de finalizar, executar a suíte completa.
+
+Entregar resumo contendo:
+
+- testes;
+- cobertura se disponível;
+- métricas de IA (rotuladas como calculadas sobre dados simulados);
+- fontes de dados;
+- status das licenças;
+- URL do deploy;
+- vulnerabilidades;
+- limitações;
+- pendências.
+
+Não esconder pendências.
+
+IMPORTANTE:
+
+Execute esta fase de ponta a ponta.
+
+Leia primeiro o AGENTS.md e toda a documentação relevante existente.
+
+Analise → implemente → execute → teste → corrija → teste novamente.
+
+Não solicite confirmação entre pequenas etapas técnicas.
+
+Não encerre após apenas escrever o código.
+
+REGRA DE DADOS: REAL vs SIMULADO
+
+Dados REAIS (ONGs, território, indicadores, produtos, referências)
+nunca podem ser inventados.
+
+Dados SIMULADOS são permitidos SOMENTE para doadores, lotes de doação
+e desfechos de match, gerados pelo simulador documentado, reprodutível
+e versionado, e sempre identificados como SIMULADOS em dados,
+documentação e interface.
+
+É terminantemente proibido:
+- Faker ou valores aleatórios sem premissa documentada;
+- mocks de negócio;
+- apresentar dado simulado como se fosse real;
+- apresentar métrica obtida em dado simulado como desempenho no mundo real;
+- dados gerados por IA apresentados como dados reais;
+- dados de pessoas físicas, reais ou fictícios.
+
+Se uma fonte REAL não fornecer os dados necessários, documente a
+limitação e procure outra fonte REAL E PÚBLICA. Se não houver fonte
+adequada, trate a lacuna por simulação documentada ou deixe a
+funcionalidade pendente. Nunca preencha a lacuna em silêncio.
+
+Não invente métricas, resultados de IA, fontes, licenças ou números.
+
+Somente finalize esta fase quando:
+
+- todos os requisitos executáveis desta fase tiverem sido implementados;
+- os dados utilizados tiverem origem verificável;
+- as licenças tiverem sido registradas;
+- o código estiver executando;
+- os testes relevantes tiverem sido executados;
+- erros encontrados tiverem sido investigados e corrigidos;
+- nenhuma informação fictícia estiver sendo apresentada como real.
+
+Ao final apresente:
+
+1. alterações realizadas;
+2. arquivos criados/modificados;
+3. fontes de dados usadas;
+4. licenças;
+5. quantidade REAL de registros processados e quantidade SIMULADA;
+6. testes executados e resultados;
+7. métricas do modelo (rotuladas como calculadas sobre dados simulados);
+8. pendências reais;
+9. próximo passo recomendado.
+
+Não avance automaticamente para a próxima fase.

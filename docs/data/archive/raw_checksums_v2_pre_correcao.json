@@ -1,0 +1,58 @@
+{
+  "data/raw/ibge/ibge_municipios.json": {
+    "sha256": "86ecdccdf97d72e7e5e46f0854cfcea8bacc28154cc1bc4ed0e6110e3a6c9c02",
+    "bytes": 2470036
+  },
+  "data/raw/ibge/ibge_populacao_municipios_2026.json": {
+    "sha256": "36b8bd4c9ec1c74f0b1e76cbb108fec91571c351b9423e508bf0f4350e6d27b0",
+    "bytes": 689494
+  },
+  "data/raw/ibge_coords/kelvins_LICENSE": {
+    "sha256": "c8254a78fe3edcb841e0df79bcd217e2626c2a13f9374dd8a51729d88dc0bc88",
+    "bytes": 1075
+  },
+  "data/raw/ibge_coords/kelvins_README.md": {
+    "sha256": "527c62c6d3f6f6b06fbc5699da5b2d3b6870d401495108c466e73a2245354f31",
+    "bytes": 5699
+  },
+  "data/raw/ibge_coords/kelvins_estados.csv": {
+    "sha256": "395c7b797b85592d71c686a0b537ba05349dee36c19b26a4b0d89494ff71448a",
+    "bytes": 1077
+  },
+  "data/raw/ibge_coords/kelvins_municipios.csv": {
+    "sha256": "22bd03d004361329f69ddfa3f6c99cd53012aa53972a172e10b141288ad0b1fe",
+    "bytes": 390201
+  },
+  "data/raw/ipea_osc/Dicionario_Dados.xlsx": {
+    "sha256": "6b4b4484785b8534644e8751ed9243c1a4f048b73e596c7b1ac5028a11be4f30",
+    "bytes": 9245
+  },
+  "data/raw/ipea_osc/area_subarea.csv": {
+    "sha256": "c2e07a328ac5beb8f8cdd03abd2da58029115ec6949a6cf6b598550d019925e8",
+    "bytes": 266910744
+  },
+  "data/raw/ipea_osc/dicionario_dados.txt": {
+    "sha256": "81914c7b3dd1a2aa356d3b4a229dada934fd62b9d4c72b27efef4a04928a077a",
+    "bytes": 8865
+  },
+  "data/raw/paa_mds/paa_agricultores_por_sexo.csv": {
+    "sha256": "206fd19479e6351ccce2e28707f5a0b3941c7eff8fa99d889a6e721099c80013",
+    "bytes": 582679
+  },
+  "data/raw/paa_mds/paa_execucao_compra_doacao_simultanea.csv": {
+    "sha256": "164543861c927a9a1188676cdd333895b677bdbc499fea8be6b5e36e163b70fe",
+    "bytes": 2079436
+  },
+  "data/raw/paa_mds/paa_execucao_leite.csv": {
+    "sha256": "e0ce63da5a9ac1e439cd19fd0983bf9274ce5ed0f141c33762c6df1c58890eb9",
+    "bytes": 289415
+  },
+  "data/raw/paa_mds/paa_municipios_aderidos_2026.csv": {
+    "sha256": "a2ad9de34eb1f4038a2f209d512deb63b7f5cf0ea4f8fc2bd4324a0e88210954",
+    "bytes": 609785
+  },
+  "data/raw/rbba/rbba_resumo.json": {
+    "sha256": "682df159a74da024fc89d928bae39ff3453c5f5585ce6a69e37b20d6935ad1cf",
+    "bytes": 122567
+  }
+}

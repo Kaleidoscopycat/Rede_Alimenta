@@ -1,0 +1,323 @@
+Faremos agora em etapas o projeto. A seguir, listei as instruções necessárias para começar.
+
+Leia integralmente o AGENTS.md na raiz do projeto antes de começar.
+Agora execute somente a FASE 0 — Data Discovery, Simulação Fundamentada e Viabilidade.
+Não implemente ainda o produto completo e não avance para a Fase 1.
+
+==================================================
+CONTEXTO DO PROJETO (LEIA ANTES DE TUDO)
+==================================================
+
+Projeto Integrador "Rede Alimenta IA" (FIAP — Tecnólogo em IA).
+
+PROBLEMA QUE ESTAMOS RESOLVENDO:
+a conexão entre o DOADOR de alimentos (supermercado, restaurante,
+indústria, atacadista, produtor) e a ONG / banco de alimentos que
+recebe a doação, em tempo real, reduzindo o desperdício.
+
+FORA DE ESCOPO:
+a distribuição da ONG para o beneficiário final (pessoas atendidas).
+Não modele, não preveja e não use como target nada relacionado a
+"necessidade individual", "fome" ou seleção de pessoas beneficiadas.
+A ONG é a ponta que RECEBE a doação; o beneficiário final só pode
+aparecer como contexto agregado (ex.: capacidade de atendimento da ONG).
+
+Entregáveis do Checkpoint 1 (Mês 1) segundo o professor:
+- Dataset estruturado (Público/Simulado);
+- Modelo funcional em ambiente local;
+- Matriz de Ameaças e Riscos (STRIDE).
+
+Stack prevista: Scikit-learn / Hugging Face, FastAPI, Streamlit.
+
+==================================================
+FASE 0 — DATA DISCOVERY, SIMULAÇÃO FUNDAMENTADA E VIABILIDADE
+==================================================
+
+ATENÇÃO — ESTA FASE JÁ FOI EXECUTADA UMA VEZ (sob o enquadramento
+anterior). Não recomece do zero. Leia e REVISE o que existe:
+
+- data/raw/ (IBGE municípios e população, IPEA/Mapa das OSCs, PAA/MDS,
+  RBBA/MDS) já baixado e validado;
+- docs/data/DATA_SOURCE_CANDIDATES.md, DATA_FEASIBILITY_REPORT.md,
+  DATA_SOURCES.md, DATA_DICTIONARY.md, DATA_LINEAGE.md,
+  DATA_LICENSES.md e VALIDATION_LOG.txt;
+- scripts/validate_phase0_data.py.
+
+O relatório anterior concluiu por um índice de gap de cobertura
+municipal (onde expandir a rede). Esse não é o nosso problema:
+reescreva a seção de problema de IA e target para DOADOR → ONG, sem
+descartar as fontes já aprovadas, que passam a ser o lado REAL do
+projeto. Pontos a tratar na revisão:
+
+- OSCs (IPEA) têm município/UF, mas não coordenadas: definir como
+  calcular distância (ex.: centroide do município, fonte IBGE real) e
+  registrar essa limitação; bancos de alimentos da RBBA (192) têm
+  coordenadas;
+- o IBGE baixado não traz coordenadas de município: localizar fonte
+  real (malha/centroides) e registrar licença;
+- os KPIs agregados da RBBA (kg recebidos/doados/perdidos,
+  % de perda, instituições atendidas) podem servir como parâmetros
+  REAIS de calibração da simulação;
+- o PAA vira referência de categorias, volumes e sazonalidade;
+- fontes IPEA/OSC e RBBA estão NEEDS_REVIEW quanto à licença: manter
+  o status e registrar o plano de confirmação formal;
+- substituir a regra "nenhuma geração de dados sintéticos" pela regra
+  de dados REAL vs SIMULADO deste prompt (nesta fase continua sem
+  GERAR dados simulados, apenas especificar).
+
+Nesta fase NÃO implemente ainda o produto inteiro e NÃO gere o dataset
+simulado. Seu objetivo é determinar:
+
+1) quais dados públicos REAIS conseguimos utilizar (principalmente o
+   lado ONG/receptor, território e referências de alimentos);
+2) o que NÃO existe publicamente e precisará ser SIMULADO
+   (doações doador → ONG e seus desfechos);
+3) como essa simulação será fundamentada em parâmetros reais, para ser
+   o mais realista possível e honesta quanto aos seus limites.
+
+Pesquise fontes oficiais e tecnicamente confiáveis. Pesquise e use
+sempre as versões e documentação em português.
+
+Priorize:
+A) IPEA / Mapa das OSCs
+organizações; localização; área de atuação; natureza jurídica;
+informações públicas utilizáveis (lado ONG/receptor).
+B) Ministério do Desenvolvimento e Assistência Social
+Rede Brasileira de Bancos de Alimentos;
+equipamentos de segurança alimentar (bancos de alimentos, cozinhas
+comunitárias, restaurantes populares);
+relatórios públicos.
+C) IBGE
+municípios; códigos IBGE; coordenadas/malha territorial;
+população; indicadores de território.
+D) CONAB
+Programa de Aquisição de Alimentos; produtos; quantidades; estoques;
+doações simultâneas (usar como REFERÊNCIA de categorias, volumes e
+sazonalidade, e não como "doações da Rede Alimenta").
+E) Universo de doadores (lado doador)
+dados abertos de estabelecimentos (ex.: Receita Federal / CNPJ, por
+CNAE de supermercados, restaurantes, indústrias e atacado de
+alimentos) para obter DISTRIBUIÇÃO GEOGRÁFICA e porte dos tipos de
+doador.
+Usar apenas dados de estabelecimento/pessoa jurídica.
+Excluir qualquer dado de pessoa física (ex.: quadro societário).
+Verificar licença e condições de uso antes de aprovar.
+F) Referências sobre desperdício e perecibilidade
+estudos e relatórios públicos (Embrapa, FAO/ONU, MDS, ABRAS, tabelas
+de composição e vida útil de alimentos) que permitam parametrizar:
+taxas de excedente por tipo de doador, categorias de alimento,
+validade típica por categoria, necessidade de refrigeração.
+G) dados.gov.br
+buscar datasets complementares.
+H) Geografia e roteamento (Logística Inteligente)
+coordenadas/centroides de municípios (malha territorial do IBGE);
+geocodificação e roteamento com OpenStreetMap: analisar a licença ODbL
+(atribuição e share-alike), os limites de uso dos serviços públicos
+gratuitos de geocodificação/roteamento e a alternativa de instância
+própria. Registrar qual será usado na Fase 1 (distância em linha
+reta) e qual fica como extensão (distância por malha viária).
+
+==================================================
+ANÁLISE OBRIGATÓRIA
+==================================================
+
+Para cada fonte encontrada, registrar:
+
+nome;
+órgão;
+URL;
+formato;
+API ou download;
+atualização;
+granularidade;
+colunas disponíveis;
+cobertura geográfica;
+período histórico;
+quantidade aproximada de registros;
+licença;
+uso comercial permitido?;
+atribuição necessária?;
+presença de dados pessoais?;
+papel no projeto (REAL_FEATURE / PARAMETRO_DE_SIMULACAO / REFERENCIA);
+utilidade para o projeto.
+
+Criar:
+docs/data/DATA_SOURCE_CANDIDATES.md
+
+Depois classificar cada fonte como:
+APPROVED
+RESTRICTED
+REJECTED
+NEEDS_REVIEW
+
+Não utilizar dados NEEDS_REVIEW em produção.
+
+==================================================
+DEFINIR O PROBLEMA REAL DE IA
+==================================================
+
+Após analisar os dados disponíveis, definir a tarefa de IA.
+
+Tarefa inicial a avaliar (confirmar ou justificar alternativa):
+RECOMENDAÇÃO DOADOR → ONG.
+Dado um lote de doação (categoria de alimento, quantidade em kg,
+perecibilidade/validade, necessidade de refrigeração, localização do
+doador, janela de coleta), ranquear as ONGs candidatas pela
+probabilidade de que a doação seja ACEITA e COLETADA antes de vencer.
+
+Definir explicitamente:
+- unidade de observação (par lote x ONG candidata);
+- target (ex.: doação aceita e coletada dentro da validade);
+- features candidatas, SOMENTE as que tenham origem definida:
+  categoria; quantidade; dias até a validade; refrigeração exigida;
+  distância doador-ONG; tipo/porte do doador; tipo/área de atuação da
+  ONG; capacidade de armazenamento e refrigeração da ONG (se existir
+  fonte real; se não existir, parâmetro simulado documentado);
+  horário/dia da semana; indicadores territoriais do município.
+- análise semântica de validade e tipo de alimento a partir da
+  descrição em texto livre do lote (detalhada na Fase 1, seção 12).
+  Nesta fase: definir a taxonomia de categorias e a tabela de
+  perecibilidade com fontes públicas em português e registrar a
+  LACUNA conhecida: não há fonte pública confiável de descrições de
+  doação rotuladas, então os textos de treino serão SIMULADOS.
+
+Decisões já tomadas pela equipe (respeitar):
+- NÃO usar coluna de restrição religiosa;
+- NÃO usar aceita_alergenicos no dataset de ONGs;
+- contem_alergenico existe no dataset de doações, mas NÃO entra nas
+  features do modelo;
+- o dataset sintético será refeito do zero, o mais realista possível,
+  priorizando qualidade sobre rapidez.
+
+Classificar cada variável e cada resultado como exatamente um de:
+REAL (observado em fonte pública)
+PROXY (indicador real usado como aproximação)
+SIMULADO (gerado pelo simulador documentado)
+PREDITO (saída do modelo)
+
+NÃO afirmar que o modelo mede "fome", "necessidade" ou "impacto real".
+
+==================================================
+ESPECIFICAÇÃO DA SIMULAÇÃO
+==================================================
+
+Criar:
+docs/data/DATA_SIMULATION_SPEC.md
+
+O documento deve definir (sem gerar os dados ainda):
+1. o que será simulado (doadores, lotes, descrições textuais dos
+   lotes, candidatos, desfechos) e o que NÃO será simulado (ONGs,
+   municípios, categorias: vêm de fontes reais);
+2. de qual fonte real vem cada parâmetro (distribuições, sazonalidade,
+   validade, porte, localização);
+3. quando não houver fonte, a premissa explícita, a justificativa e o
+   intervalo de incerteza. Premissa já definida pela equipe:
+   0,4 kg por refeição (usada para converter kg doados em refeições);
+4. como o desfecho (aceite/coleta) será gerado: processo estocástico
+   com ruído e fatores não observáveis, NUNCA uma regra determinística
+   que o modelo apenas redescobre;
+5. riscos de circularidade: o modelo aprende a lógica do simulador, e
+   não o mundo real; como isso será reportado (baselines, comparação
+   com regra simples, limitação explícita);
+6. seed, versionamento do gerador e critérios de realismo (como
+   comparar o simulado com as referências reais);
+7. campos obrigatórios de rastreabilidade: data_origin = SIMULATED,
+   generator_version, seed, source_parameters.
+
+==================================================
+GO/NO-GO
+==================================================
+
+Gerar:
+docs/data/DATA_FEASIBILITY_REPORT.md
+
+O relatório deve explicar:
+1. quais dados reais existem;
+2. quais podemos usar;
+3. quais possuem licença compatível;
+4. o que precisará ser simulado e por quê;
+5. qual problema de IA é realmente viável;
+6. qual será o target;
+7. quais serão as features (com origem REAL/PROXY/SIMULADO);
+8. quais limitações existem (incluindo circularidade da simulação).
+
+Somente depois disso preparar o projeto para a Fase 1.
+
+==================================================
+VALIDAÇÃO DA FASE
+==================================================
+
+Não finalize enquanto não houver:
+
+[ ] fontes reais identificadas (ONGs, território, doadores, referências)
+[ ] licença analisada
+[ ] dados efetivamente baixados/acessados
+[ ] amostra REAL inspecionada
+[ ] schema identificado
+[ ] lacunas de dados (o que será simulado) documentadas
+[ ] problema de IA definido (doador → ONG)
+[ ] target definido e justificado
+[ ] DATA_SIMULATION_SPEC.md criado
+[ ] relatório de viabilidade criado
+[ ] nenhum dado simulado gerado nesta fase
+[ ] nenhum conteúdo fora do escopo (ONG → beneficiário)
+
+IMPORTANTE:
+
+Execute esta fase de ponta a ponta.
+Analise → implemente → execute → teste → corrija → teste novamente.
+Não solicite confirmação entre pequenas etapas técnicas.
+Não avance automaticamente para a próxima fase.
+Não encerre após apenas escrever o código.
+Somente finalize quando todos os requisitos executáveis da Fase 0
+estiverem concluídos.
+
+REGRA DE DADOS: REAL vs SIMULADO
+
+Dados REAIS (ONGs, território, indicadores, produtos, referências)
+nunca podem ser inventados.
+
+Dados SIMULADOS são permitidos SOMENTE para o que não existe
+publicamente: doadores (perfis operacionais), lotes de doação e
+desfechos de match. Eles só podem ser gerados por simulador
+documentado, reprodutível e versionado, parametrizado por fontes
+reais, conforme DATA_SIMULATION_SPEC.md.
+
+É terminantemente proibido:
+- Faker ou valores aleatórios sem premissa documentada;
+- mocks de negócio;
+- dados simulados sem a marcação data_origin = SIMULATED;
+- apresentar dado simulado como se fosse real;
+- apresentar métrica obtida em dado simulado como desempenho no mundo real;
+- dados gerados por IA apresentados como dados reais;
+- dados de pessoas físicas, reais ou fictícios.
+
+Se uma fonte REAL não fornecer os dados necessários, documente a
+limitação e procure outra fonte REAL E PÚBLICA. Se não houver fonte
+adequada, trate a lacuna conforme a regra acima (simulação documentada)
+ou deixe a funcionalidade pendente. Nunca preencha a lacuna em silêncio.
+
+Não invente métricas, resultados de IA, fontes, licenças ou números.
+
+Somente finalize esta fase quando:
+- todos os requisitos executáveis desta fase tiverem sido implementados;
+- os dados utilizados tiverem origem verificável;
+- as licenças tiverem sido registradas;
+- o código estiver executando;
+- os testes relevantes tiverem sido executados;
+- erros encontrados tiverem sido investigados e corrigidos;
+- nenhuma informação fictícia estiver sendo apresentada como real.
+
+Ao final, apresente:
+1. o que foi feito;
+2. arquivos criados/modificados;
+3. fontes reais encontradas;
+4. licenças encontradas;
+5. fontes aprovadas/rejeitadas;
+6. quantidade REAL de registros processados;
+7. testes executados e resultados;
+8. lacunas que exigirão simulação;
+9. pendências reais;
+10. limitações;
+11. problema de IA recomendado com base nos dados realmente encontrados;
+12. próximo passo recomendado.

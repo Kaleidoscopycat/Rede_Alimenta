@@ -1,0 +1,582 @@
+{
+  "rotulo": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)",
+  "dataset_tag": "main",
+  "dataset_version": "0.2.0+477ed37e+20261003",
+  "n_pares": {
+    "train": 626698,
+    "val": 134189,
+    "test": 134290
+  },
+  "divisao": "temporal por lote (70/15/15), todos os pares do lote no mesmo conjunto",
+  "limitacao_circularidade": "Rótulos gerados por simulador cujo desfecho depende de atributos latentes e estrutura definidos pela equipe; o modelo aprende o simulador, não o mundo real. Contrafactual: todos os pares candidatos têm rótulo.",
+  "baselines": {
+    "baseline_ong_mais_proxima": {
+      "val": {
+        "n_lotes": 8993,
+        "n_lotes_avaliaveis": 6788,
+        "n_lotes_sem_positivo": 2205,
+        "mrr": 0.465964669864935,
+        "top1_hit_rate": 0.27268709487330584,
+        "top3_hit_rate": 0.5654095462581026,
+        "top5_hit_rate": 0.7186210960518562,
+        "ndcg@1": 0.27268709487330584,
+        "ndcg@3": 0.291855209988519,
+        "ndcg@5": 0.32565815313552987,
+        "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+      },
+      "test": {
+        "n_lotes": 8994,
+        "n_lotes_avaliaveis": 6865,
+        "n_lotes_sem_positivo": 2129,
+        "mrr": 0.46528238775871694,
+        "top1_hit_rate": 0.27239621267297887,
+        "top3_hit_rate": 0.5662053896576839,
+        "top5_hit_rate": 0.7137654770575382,
+        "ndcg@1": 0.27239621267297887,
+        "ndcg@3": 0.28990876983845915,
+        "ndcg@5": 0.3219290899656721,
+        "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)",
+        "ic95_bootstrap_por_lote": {
+          "mrr": [
+            0.4572211809393164,
+            0.4749750211854181
+          ],
+          "top1_hit_rate": [
+            0.26233794610342315,
+            0.28492716678805535
+          ],
+          "top3_hit_rate": [
+            0.5557137654770575,
+            0.5784413692643846
+          ],
+          "top5_hit_rate": [
+            0.703244719592134,
+            0.723823743627094
+          ],
+          "ndcg@1": [
+            0.26233794610342315,
+            0.28492716678805535
+          ],
+          "ndcg@3": [
+            0.28265700061919957,
+            0.29732360582022693
+          ],
+          "ndcg@5": [
+            0.31637451511989645,
+            0.328844398000838
+          ]
+        }
+      }
+    },
+    "baseline_regra_distancia_categoria": {
+      "val": {
+        "n_lotes": 8993,
+        "n_lotes_avaliaveis": 6788,
+        "n_lotes_sem_positivo": 2205,
+        "mrr": 0.541048950967189,
+        "top1_hit_rate": 0.3513553329404832,
+        "top3_hit_rate": 0.6635238656452563,
+        "top5_hit_rate": 0.784325279905716,
+        "ndcg@1": 0.3513553329404832,
+        "ndcg@3": 0.3659309391872827,
+        "ndcg@5": 0.3959327946139627,
+        "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+      },
+      "test": {
+        "n_lotes": 8994,
+        "n_lotes_avaliaveis": 6865,
+        "n_lotes_sem_positivo": 2129,
+        "mrr": 0.5411022783965246,
+        "top1_hit_rate": 0.35338674435542605,
+        "top3_hit_rate": 0.6608885651857247,
+        "top5_hit_rate": 0.7855790240349599,
+        "ndcg@1": 0.35338674435542605,
+        "ndcg@3": 0.36511012825986766,
+        "ndcg@5": 0.3957380697709664,
+        "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)",
+        "ic95_bootstrap_por_lote": {
+          "mrr": [
+            0.5334515404377931,
+            0.5498297577028458
+          ],
+          "top1_hit_rate": [
+            0.34347050254916245,
+            0.3636088856518573
+          ],
+          "top3_hit_rate": [
+            0.649796067006555,
+            0.674876183539694
+          ],
+          "top5_hit_rate": [
+            0.7749308084486526,
+            0.7969446467589221
+          ],
+          "ndcg@1": [
+            0.34347050254916245,
+            0.3636088856518573
+          ],
+          "ndcg@3": [
+            0.357397726323245,
+            0.3743525681357741
+          ],
+          "ndcg@5": [
+            0.3889435993671896,
+            0.4031476067858197
+          ]
+        }
+      }
+    },
+    "baseline_aleatorio": {
+      "val": {
+        "n_lotes": 8993,
+        "n_lotes_avaliaveis": 6788,
+        "n_lotes_sem_positivo": 2205,
+        "mrr": 0.4597982245116895,
+        "top1_hit_rate": 0.25987035945786685,
+        "top3_hit_rate": 0.5629051266941661,
+        "top5_hit_rate": 0.7259870359457867,
+        "ndcg@1": 0.25987035945786685,
+        "ndcg@3": 0.28378022021015886,
+        "ndcg@5": 0.32364195819060737,
+        "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+      },
+      "test": {
+        "n_lotes": 8994,
+        "n_lotes_avaliaveis": 6865,
+        "n_lotes_sem_positivo": 2129,
+        "mrr": 0.4617498767316684,
+        "top1_hit_rate": 0.2671522214129643,
+        "top3_hit_rate": 0.5584850691915514,
+        "top5_hit_rate": 0.7134741442097596,
+        "ndcg@1": 0.2671522214129643,
+        "ndcg@3": 0.28236004193917275,
+        "ndcg@5": 0.3198727420214169,
+        "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)",
+        "ic95_bootstrap_por_lote": {
+          "mrr": [
+            0.4544989058040769,
+            0.46952610904713965
+          ],
+          "top1_hit_rate": [
+            0.2569373634377276,
+            0.27635833940276766
+          ],
+          "top3_hit_rate": [
+            0.5479825200291333,
+            0.5691260014566643
+          ],
+          "top5_hit_rate": [
+            0.7031281864530227,
+            0.7225273124544792
+          ],
+          "ndcg@1": [
+            0.2569373634377276,
+            0.27635833940276766
+          ],
+          "ndcg@3": [
+            0.2760534787354748,
+            0.28878480227286996
+          ],
+          "ndcg@5": [
+            0.31465242275592836,
+            0.32663890675139734
+          ]
+        }
+      }
+    }
+  },
+  "modelos": {
+    "LR": {
+      "val": {
+        "ranking": {
+          "n_lotes": 8993,
+          "n_lotes_avaliaveis": 6788,
+          "n_lotes_sem_positivo": 2205,
+          "mrr": 0.6465268052186143,
+          "top1_hit_rate": 0.48674130819092515,
+          "top3_hit_rate": 0.756776664702416,
+          "top5_hit_rate": 0.8660872127283441,
+          "ndcg@1": 0.48674130819092515,
+          "ndcg@3": 0.46288302263510583,
+          "ndcg@5": 0.4935063841822636,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+        },
+        "classificacao": {
+          "threshold": 0.23306856928054723,
+          "precision": 0.370199473243635,
+          "recall": 0.6856753895023445,
+          "f1": 0.4808082415178394,
+          "roc_auc": 0.7747452866546339,
+          "pr_auc": 0.41870103675891557,
+          "brier": 0.13502955120563262,
+          "matriz_confusao": {
+            "tn": 76898,
+            "fp": 30847,
+            "fn": 8312,
+            "tp": 18132
+          },
+          "taxa_positivos": 0.19706533322403474,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+        }
+      },
+      "threshold_val": 0.23306856928054723,
+      "test": {
+        "ranking": {
+          "n_lotes": 8994,
+          "n_lotes_avaliaveis": 6865,
+          "n_lotes_sem_positivo": 2129,
+          "mrr": 0.6486686300670277,
+          "top1_hit_rate": 0.487836853605244,
+          "top3_hit_rate": 0.7612527312454479,
+          "top5_hit_rate": 0.8696285506190823,
+          "ndcg@1": 0.487836853605244,
+          "ndcg@3": 0.4637794731614005,
+          "ndcg@5": 0.49476457194986867,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)",
+          "ic95_bootstrap_por_lote": {
+            "mrr": [
+              0.6409012537494875,
+              0.6568957183061332
+            ],
+            "top1_hit_rate": [
+              0.4763073561544064,
+              0.498761835396941
+            ],
+            "top3_hit_rate": [
+              0.7522214129643118,
+              0.7710160233066278
+            ],
+            "top5_hit_rate": [
+              0.8619045884923525,
+              0.8769191551347415
+            ],
+            "ndcg@1": [
+              0.4763073561544064,
+              0.498761835396941
+            ],
+            "ndcg@3": [
+              0.4562696436268377,
+              0.4717139502803338
+            ],
+            "ndcg@5": [
+              0.4876719275218078,
+              0.5015108155849003
+            ]
+          }
+        },
+        "classificacao": {
+          "threshold": 0.23306856928054723,
+          "precision": 0.37156028802806845,
+          "recall": 0.6791573452647278,
+          "f1": 0.48033437495879644,
+          "roc_auc": 0.7717375290969639,
+          "pr_auc": 0.4217492553414952,
+          "brier": 0.1365498646245455,
+          "matriz_confusao": {
+            "tn": 76662,
+            "fp": 30808,
+            "fn": 8605,
+            "tp": 18215
+          },
+          "taxa_positivos": 0.19971703030754337,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+        }
+      }
+    },
+    "RF": {
+      "val": {
+        "ranking": {
+          "n_lotes": 8993,
+          "n_lotes_avaliaveis": 6788,
+          "n_lotes_sem_positivo": 2205,
+          "mrr": 0.6797524493937281,
+          "top1_hit_rate": 0.5253388332351208,
+          "top3_hit_rate": 0.7928697701826753,
+          "top5_hit_rate": 0.8859752504419564,
+          "ndcg@1": 0.5253388332351208,
+          "ndcg@3": 0.5027240272484547,
+          "ndcg@5": 0.5296894316084846,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+        },
+        "classificacao": {
+          "threshold": 0.24073442194913708,
+          "precision": 0.3856346597521387,
+          "recall": 0.7142641052790804,
+          "f1": 0.500855176802832,
+          "roc_auc": 0.7940080031621971,
+          "pr_auc": 0.4460430059404319,
+          "brier": 0.13118045386590915,
+          "matriz_confusao": {
+            "tn": 77654,
+            "fp": 30091,
+            "fn": 7556,
+            "tp": 18888
+          },
+          "taxa_positivos": 0.19706533322403474,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+        }
+      },
+      "threshold_val": 0.24073442194913708,
+      "test": {
+        "ranking": {
+          "n_lotes": 8994,
+          "n_lotes_avaliaveis": 6865,
+          "n_lotes_sem_positivo": 2129,
+          "mrr": 0.6811103544024156,
+          "top1_hit_rate": 0.5318281136198106,
+          "top3_hit_rate": 0.7871813546977422,
+          "top5_hit_rate": 0.886817188638019,
+          "ndcg@1": 0.5318281136198106,
+          "ndcg@3": 0.49826252470619126,
+          "ndcg@5": 0.5263512367750801,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)",
+          "ic95_bootstrap_por_lote": {
+            "mrr": [
+              0.6721120764098731,
+              0.6909266876503766
+            ],
+            "top1_hit_rate": [
+              0.5184231609613984,
+              0.5456773488710852
+            ],
+            "top3_hit_rate": [
+              0.7785833940276766,
+              0.7979679533867444
+            ],
+            "top5_hit_rate": [
+              0.8798215586307356,
+              0.8948324836125273
+            ],
+            "ndcg@1": [
+              0.5184231609613984,
+              0.5456773488710852
+            ],
+            "ndcg@3": [
+              0.48964599607124965,
+              0.5079781183795974
+            ],
+            "ndcg@5": [
+              0.5185799442623289,
+              0.5337055192476678
+            ]
+          }
+        },
+        "classificacao": {
+          "threshold": 0.24073442194913708,
+          "precision": 0.3832752613240418,
+          "recall": 0.7054436987322893,
+          "f1": 0.49669221883860126,
+          "roc_auc": 0.7898771268009726,
+          "pr_auc": 0.4470349134924824,
+          "brier": 0.13299273360113165,
+          "matriz_confusao": {
+            "tn": 77026,
+            "fp": 30444,
+            "fn": 7900,
+            "tp": 18920
+          },
+          "taxa_positivos": 0.19971703030754337,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+        }
+      }
+    },
+    "HGB": {
+      "val": {
+        "ranking": {
+          "n_lotes": 8993,
+          "n_lotes_avaliaveis": 6788,
+          "n_lotes_sem_positivo": 2205,
+          "mrr": 0.6928908848141317,
+          "top1_hit_rate": 0.543753682969947,
+          "top3_hit_rate": 0.801266941661756,
+          "top5_hit_rate": 0.8926045963464938,
+          "ndcg@1": 0.543753682969947,
+          "ndcg@3": 0.5142091225227259,
+          "ndcg@5": 0.541034953918572,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+        },
+        "classificacao": {
+          "threshold": 0.24829037517817462,
+          "precision": 0.3909911401838205,
+          "recall": 0.7142641052790804,
+          "f1": 0.5053510273972602,
+          "roc_auc": 0.8022192719060762,
+          "pr_auc": 0.45881774422449695,
+          "brier": 0.12927161600979245,
+          "matriz_confusao": {
+            "tn": 78325,
+            "fp": 29420,
+            "fn": 7556,
+            "tp": 18888
+          },
+          "taxa_positivos": 0.19706533322403474,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+        }
+      },
+      "threshold_val": 0.24829037517817462,
+      "test": {
+        "ranking": {
+          "n_lotes": 8994,
+          "n_lotes_avaliaveis": 6865,
+          "n_lotes_sem_positivo": 2129,
+          "mrr": 0.6950365427240882,
+          "top1_hit_rate": 0.5461034231609614,
+          "top3_hit_rate": 0.8039329934450109,
+          "top5_hit_rate": 0.8935178441369265,
+          "ndcg@1": 0.5461034231609614,
+          "ndcg@3": 0.514590635762544,
+          "ndcg@5": 0.5398495870893497,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)",
+          "ic95_bootstrap_por_lote": {
+            "mrr": [
+              0.6860876311315132,
+              0.7054706132865273
+            ],
+            "top1_hit_rate": [
+              0.5331354697742171,
+              0.5602403495994174
+            ],
+            "top3_hit_rate": [
+              0.795626365622724,
+              0.8135615440640933
+            ],
+            "top5_hit_rate": [
+              0.8868099053168245,
+              0.9002221412964311
+            ],
+            "ndcg@1": [
+              0.5331354697742171,
+              0.5602403495994174
+            ],
+            "ndcg@3": [
+              0.5075304583079517,
+              0.5233917155276447
+            ],
+            "ndcg@5": [
+              0.5334679646838036,
+              0.5473743251747643
+            ]
+          }
+        },
+        "classificacao": {
+          "threshold": 0.24829037517817462,
+          "precision": 0.3892572130141191,
+          "recall": 0.7092841163310962,
+          "f1": 0.5026555687673405,
+          "roc_auc": 0.7979334329605329,
+          "pr_auc": 0.4591335743554136,
+          "brier": 0.13119544605540748,
+          "matriz_confusao": {
+            "tn": 77623,
+            "fp": 29847,
+            "fn": 7797,
+            "tp": 19023
+          },
+          "taxa_positivos": 0.19971703030754337,
+          "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+        }
+      }
+    }
+  },
+  "modelo_escolhido": "HGB",
+  "criterio_escolha": "maior MRR na validação",
+  "segmentos_mrr_modelo_escolhido_teste": {
+    "categoria": {
+      "BEBIDAS": 0.7023401360544218,
+      "CARNES_PESCADOS": 0.6306696714591451,
+      "FRUTAS": 0.7088377692751142,
+      "GRAOS_CEREAIS": 0.7206235658694675,
+      "HORT_FOLHOSAS": 0.6728314438380995,
+      "HORT_FRUTOS": 0.694274465636056,
+      "HORT_RAIZES": 0.7309932076747311,
+      "INDUSTRIALIZADOS": 0.7395698947851266,
+      "LATICINIOS_OVOS": 0.6177609950436037,
+      "PANIFICADOS": 0.5659678195735888,
+      "REFEICOES_PRONTAS": 0.58626554001554
+    },
+    "perecibilidade": {
+      "NAO_PERECIVEL": 0.7236357454707839,
+      "PERECIVEL_BAIXO_RISCO": 0.6996513807270416,
+      "PERECIVEL_REFRIGERADO_CONGELADO": 0.624187148368371,
+      "PRONTO_ALTO_RISCO": 0.58626554001554
+    },
+    "exige_refrigeracao": {
+      "0.0": 0.7131681650194852,
+      "1.0": 0.6374063669365684
+    }
+  },
+  "ablacao_HGB_teste": {
+    "sem_atributos_declarados_pela_ONG": {
+      "n_lotes": 8994,
+      "n_lotes_avaliaveis": 6865,
+      "n_lotes_sem_positivo": 2129,
+      "mrr": 0.6444547853215006,
+      "top1_hit_rate": 0.501238164603059,
+      "top3_hit_rate": 0.7238164603058995,
+      "top5_hit_rate": 0.8393299344501093,
+      "ndcg@1": 0.501238164603059,
+      "ndcg@3": 0.4401942187499684,
+      "ndcg@5": 0.46474001109736734,
+      "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+    },
+    "apenas_distancia_e_lote": {
+      "n_lotes": 8994,
+      "n_lotes_avaliaveis": 6865,
+      "n_lotes_sem_positivo": 2129,
+      "mrr": 0.6215121420620328,
+      "top1_hit_rate": 0.4770575382374363,
+      "top3_hit_rate": 0.6991988346686089,
+      "top5_hit_rate": 0.8176256372906046,
+      "ndcg@1": 0.4770575382374363,
+      "ndcg@3": 0.4175903336057845,
+      "ndcg@5": 0.44186998181488985,
+      "origem_metrica": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)"
+    }
+  },
+  "importancia_permutacao_pr_auc": {
+    "quantidade_kg": 0.08045148897948201,
+    "kg_sobre_capacidade": 0.060138354416533646,
+    "razao_deslocamento_validade": 0.031137987517988408,
+    "frota_capacidade_declarada_kg": 0.0205773465468585,
+    "exige_refrigeracao": 0.019573198824818228,
+    "kg_sobre_frota": 0.018122093631840752,
+    "horas_validade_menos_viagem": 0.017661724397154466,
+    "dist_km": 0.01435327520485613,
+    "ano_fundacao": 0.010545186228448966,
+    "dow_cadastro": 0.009964783786258813,
+    "precisa_frio_sem_frio_declarado": 0.009636091145659775,
+    "hora_cadastro": 0.009617141562457188,
+    "horas_ate_validade": 0.005199336921619668,
+    "location_precision_ong": 0.004666429264952698,
+    "paa_kg_historico_municipio": 0.0032282479070593895,
+    "horario_abertura_declarado_h": 0.0029142229797030628,
+    "horario_fechamento_declarado_h": 0.0025618137708979805,
+    "n_osc_assistencia_municipio": 0.0019200030707446358,
+    "populacao_2026": 0.0018957128122841227,
+    "janela_retirada_fim_h": 0.001528195468699256,
+    "frota_refrigerada_declarada": 0.0014857689199135327,
+    "n_dias_funcionamento_declarados": 0.0011889374158949306,
+    "capacidade_declarada_max_kg_dia": 0.001144221697076675,
+    "rank_distancia": 0.001117326128021623,
+    "uf": 0.0010505914356031543,
+    "elegivel_regra": 0.001049554251653373,
+    "categoria_aceita_declarada": 0.0009033442890309384,
+    "n_categorias_aceitas_declaradas": 0.0007576318235671953,
+    "ong_tipo": 0.0007065609025588837,
+    "categoria": 0.000668197141251381,
+    "tempo_deslocamento_est_h": 0.0005503462481542543,
+    "camara_fria_declarada": 0.00031579147149274345,
+    "geo_quality_ong": 0.00026260404014605276,
+    "paa_adesao": 6.0090425510472834e-05,
+    "perecibilidade": 4.960208757487372e-05,
+    "mesmo_municipio": 4.613132814679233e-05,
+    "tem_frota": 0.0,
+    "dia_comum_declarado": 0.0,
+    "location_precision_doador": 0.0,
+    "contem_alergenico": -3.017955697792729e-06,
+    "tempo_carga_min": -5.2446099922220935e-05,
+    "tem_banco_rbba_municipio": -6.0196616911478706e-05,
+    "janela_retirada_inicio_h": -0.0002215445559435314
+  },
+  "importancia_nota": "Importância reflete o simulador (SIMULATED), não causalidade no mundo real."
+}

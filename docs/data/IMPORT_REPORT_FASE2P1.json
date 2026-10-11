@@ -1,0 +1,41 @@
+{
+  "sources": {
+    "sources": 7,
+    "dataset_versions": 7
+  },
+  "territory": {
+    "municipalities": 5571,
+    "indicators": 27855
+  },
+  "food_categories": 11,
+  "organizations": {
+    "organizations": 54590,
+    "locations": 54590
+  },
+  "simulated": {
+    "dataset_version": "0.2.0+477ed37e+20261003",
+    "tag": "main",
+    "org_profiles": 54590,
+    "donors": 8000,
+    "donor_locations": 8000,
+    "donations": 60000,
+    "donation_items": 60000
+  },
+  "contagens_no_banco": {
+    "organizations(PUBLIC)": 54590,
+    "organization_locations": 54590,
+    "organizations_sem_coordenada": 0,
+    "municipalities(PUBLIC)": 5571,
+    "public_indicators(PUBLIC)": 27855,
+    "organization_profiles(SIMULATED)": 54590,
+    "organization_profiles(USER_ENTERED)": 0,
+    "donors(SIMULATED)": 8000,
+    "donors(USER_ENTERED)": 0,
+    "donations(SIMULATED)": 60000,
+    "donations(USER_ENTERED)": 0,
+    "donation_items(SIMULATED)": 60000,
+    "public_data_sources": 7,
+    "food_categories": 11
+  },
+  "segundos": 100.2
+}

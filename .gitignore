@@ -1,0 +1,32 @@
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+rede_alimenta_pgdata/
+*.log
+
+# Dados grandes (regeneráveis pelos pipelines e pelo simulador)
+data/raw/
+data/simulated/
+
+# Python e ferramentas
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Sistema e editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Anotações pessoais (não vão para o GitHub)
+Comandos de terminal.txt
+Informações gerais importantes sobre o projeto.txt

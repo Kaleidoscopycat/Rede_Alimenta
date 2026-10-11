@@ -1,0 +1,194 @@
+# Taxonomia de categorias, perecibilidade e nomes de produto — v0.2 (PREMISSA DO PROJETO; não é dado de fonte).
+# Fonte de cada campo: ver DATA_SIMULATION_SPEC.md §3.2. Âncoras citadas (Anvisa, MDS, Conab) LIMITAM mas não determinam os intervalos.
+# product_name_origin ∈ {MDS_CATALOGO_2018, CONAB_COMPENDIO_2021, MESA_BRASIL_SESC, SEDUC_GO_2024, PREMISSA_PROJETO}.
+# NUNCA "PAA" nem "TACO". nova_group = premissa de mapeamento (guia NOVA não lido; usado só na calibração R2).
+# unit_mass_kg = massa unitária (PREMISSA, sem fonte): liga o texto ao quantidade_kg.
+version: "0.2"
+perecibilidade_classes: [NAO_PERECIVEL, PERECIVEL_BAIXO_RISCO, PERECIVEL_REFRIGERADO_CONGELADO, PRONTO_ALTO_RISCO]
+categories:
+  HORT_FOLHOSAS:
+    desc: folhosas, talos, inflorescências (MDS grupo A)
+    perecibilidade: PERECIVEL_BAIXO_RISCO
+    p_refrigeracao: 0.6          # "recomendada" (premissa)
+    days: [1, 4]
+    anchor: "G6: folhas desinfetadas 12 h (contexto de cozinha escolar; só qualitativo)"
+    unit_mass_kg: {kg: 1.0, caixa: 10.0, unidade: 0.4, bandeja: 0.5}
+    unit_probs: {kg: 0.35, caixa: 0.4, unidade: 0.15, bandeja: 0.10}
+    products:
+      - {name: acelga, origin: MDS_CATALOGO_2018, nova: 1}
+      - {name: alface, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: couve, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: espinafre, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: rúcula, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: repolho, origin: PREMISSA_PROJETO, nova: 1, unit_mass_kg: {unidade: 1.5}}
+      - {name: brócolis, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: couve-flor, origin: PREMISSA_PROJETO, nova: 1, unit_mass_kg: {unidade: 0.9}}
+  HORT_RAIZES:
+    desc: raízes, bulbos, tubérculos (MDS grupo B)
+    perecibilidade: PERECIVEL_BAIXO_RISCO
+    p_refrigeracao: 0.0
+    days: [5, 30]
+    anchor: null
+    unit_mass_kg: {kg: 1.0, caixa: 20.0, pacote: 2.0, unidade: 0.25}
+    unit_probs: {kg: 0.4, caixa: 0.35, pacote: 0.15, unidade: 0.10}
+    products:
+      - {name: batata, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: cenoura, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: beterraba, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: mandioca, origin: CONAB_COMPENDIO_2021, nova: 1}
+      - {name: cebola, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: alho, origin: MDS_CATALOGO_2018, nova: 1, unit_mass_kg: {caixa: 10.0}}
+      - {name: batata-doce, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: inhame, origin: PREMISSA_PROJETO, nova: 1}
+  HORT_FRUTOS:
+    desc: hortaliças-fruto (MDS grupo C)
+    perecibilidade: PERECIVEL_BAIXO_RISCO
+    p_refrigeracao: 0.15
+    days: [2, 8]
+    anchor: null
+    unit_mass_kg: {kg: 1.0, caixa: 20.0, bandeja: 0.6, unidade: 0.3}
+    unit_probs: {kg: 0.35, caixa: 0.45, bandeja: 0.10, unidade: 0.10}
+    products:
+      - {name: tomate, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: abóbora, origin: MDS_CATALOGO_2018, nova: 1, unit_mass_kg: {unidade: 3.0}}
+      - {name: pepino, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: pimentão, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: chuchu, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: berinjela, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: abobrinha, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: quiabo, origin: PREMISSA_PROJETO, nova: 1}
+  FRUTAS:
+    desc: frutas (MDS grupo D)
+    perecibilidade: PERECIVEL_BAIXO_RISCO
+    p_refrigeracao: 0.15
+    days: [2, 10]
+    anchor: null
+    unit_mass_kg: {kg: 1.0, caixa: 18.0, bandeja: 0.6, unidade: 0.2}
+    unit_probs: {kg: 0.35, caixa: 0.45, bandeja: 0.10, unidade: 0.10}
+    products:
+      - {name: banana, origin: CONAB_COMPENDIO_2021, nova: 1}
+      - {name: melancia, origin: CONAB_COMPENDIO_2021, nova: 1, unit_mass_kg: {unidade: 8.0}}
+      - {name: laranja, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: maçã, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: mamão, origin: PREMISSA_PROJETO, nova: 1, unit_mass_kg: {unidade: 1.0}}
+      - {name: manga, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: abacaxi, origin: PREMISSA_PROJETO, nova: 1, unit_mass_kg: {unidade: 1.4}}
+      - {name: limão, origin: PREMISSA_PROJETO, nova: 1, unit_mass_kg: {unidade: 0.1}}
+      - {name: uva, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: frutas variadas, origin: MDS_CATALOGO_2018, nova: 1}
+  PANIFICADOS:
+    desc: pães e similares
+    perecibilidade: PERECIVEL_BAIXO_RISCO
+    p_refrigeracao: 0.0
+    days: [0, 1]
+    anchor: "G1: máximo 24 h após a fabricação"
+    unit_mass_kg: {kg: 1.0, pacote: 0.5, unidade: 0.05, caixa: 6.0, bandeja: 1.5}
+    unit_probs: {kg: 0.25, pacote: 0.25, unidade: 0.15, caixa: 0.20, bandeja: 0.15}
+    products:
+      - {name: pão francês, origin: SEDUC_GO_2024, nova: 3}
+      - {name: pão de forma, origin: PREMISSA_PROJETO, nova: 3, unit_mass_kg: {unidade: 0.5}}
+      - {name: bolo simples, origin: PREMISSA_PROJETO, nova: 3, unit_mass_kg: {unidade: 0.6}}
+      - {name: pão doce, origin: PREMISSA_PROJETO, nova: 3}
+      - {name: rosca, origin: PREMISSA_PROJETO, nova: 3, unit_mass_kg: {unidade: 0.3}}
+      - {name: broa de milho, origin: PREMISSA_PROJETO, nova: 3}
+  CARNES_PESCADOS:
+    desc: cárneos, pescados e embutidos
+    perecibilidade: PERECIVEL_REFRIGERADO_CONGELADO
+    p_refrigeracao: 1.0
+    days: [1, 5]                 # refrigerado
+    days_frozen: [30, 180]       # congelado
+    p_frozen: 0.45
+    anchor: "G6: carne moída 24 h a <= 4 C (contexto diferente); G1: congelado -18 C (ou -12 C: divergência na leitura)"
+    unit_mass_kg: {kg: 1.0, caixa: 15.0, pacote: 1.0, bandeja: 0.7}
+    unit_probs: {kg: 0.45, caixa: 0.30, pacote: 0.15, bandeja: 0.10}
+    products:
+      - {name: carne bovina, origin: MDS_CATALOGO_2018, nova: 1}
+      - {name: carne de ave, origin: MDS_CATALOGO_2018, nova: 1}
+      - {name: carne moída, origin: SEDUC_GO_2024, nova: 1}
+      - {name: frango, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: peixe, origin: PREMISSA_PROJETO, nova: 1}
+      - {name: linguiça, origin: PREMISSA_PROJETO, nova: 4}
+      - {name: salsicha, origin: SEDUC_GO_2024, nova: 4}
+  LATICINIOS_OVOS:
+    desc: leite fluido, queijos, iogurtes, ovos
+    perecibilidade: PERECIVEL_REFRIGERADO_CONGELADO
+    p_refrigeracao: 1.0
+    days: [2, 15]
+    anchor: "G1: refrigerado 4-10 C"
+    unit_mass_kg: {kg: 1.0, caixa: 12.0, pacote: 0.5, unidade: 0.2, duzia: 0.72, litro: 1.03}
+    unit_probs: {kg: 0.15, caixa: 0.35, pacote: 0.15, unidade: 0.10, duzia: 0.10, litro: 0.15}
+    products:
+      - {name: leite fluido, origin: MDS_CATALOGO_2018, nova: 1, allergen: true, units_only: [litro, caixa, unidade]}
+      - {name: queijo, origin: MDS_CATALOGO_2018, nova: 3, allergen: true, units_only: [kg, pacote, caixa]}
+      - {name: iogurte natural, origin: PREMISSA_PROJETO, nova: 1, allergen: true, units_only: [caixa, unidade, litro, pacote]}
+      - {name: iogurte, origin: PREMISSA_PROJETO, nova: 4, allergen: true, units_only: [caixa, unidade, litro, pacote]}
+      - {name: creme de leite, origin: SEDUC_GO_2024, nova: 3, allergen: true, units_only: [caixa, unidade, pacote]}
+      - {name: ovos, origin: PREMISSA_PROJETO, nova: 1, allergen: true, units_only: [duzia, caixa, bandeja]}
+      - {name: requeijão, origin: PREMISSA_PROJETO, nova: 4, allergen: true, units_only: [caixa, unidade, pacote]}
+      - {name: manteiga, origin: PREMISSA_PROJETO, nova: 2, allergen: true, units_only: [caixa, pacote, kg]}
+  REFEICOES_PRONTAS:
+    desc: refeições preparadas
+    perecibilidade: PRONTO_ALTO_RISCO
+    p_refrigeracao: 1.0
+    days: [0, 2]
+    anchor: "G1: refrigeradas máx. 5 dias a 4 C; quentes máx. 6 h acima de 60 C (premissa 0-2 dentro do limite)"
+    unit_mass_kg: {kg: 1.0, caixa: 8.0, bandeja: 2.0, unidade: 0.4}
+    unit_probs: {kg: 0.20, caixa: 0.30, bandeja: 0.20, unidade: 0.30}
+    products:
+      - {name: marmita, origin: PREMISSA_PROJETO, nova: 3}
+      - {name: refeição pronta, origin: PREMISSA_PROJETO, nova: 3}
+      - {name: marmitex, origin: PREMISSA_PROJETO, nova: 3}
+      - {name: sopa, origin: PREMISSA_PROJETO, nova: 3, units_only: [litro, caixa, bandeja]}
+      - {name: lasanha, origin: PREMISSA_PROJETO, nova: 3, allergen: true}
+      - {name: prato executivo, origin: PREMISSA_PROJETO, nova: 3}
+  GRAOS_CEREAIS:
+    desc: arroz, feijão, fubá, farinhas, macarrão
+    perecibilidade: NAO_PERECIVEL
+    p_refrigeracao: 0.0
+    days: [60, 365]
+    anchor: "validade é do fabricante (G4)"
+    unit_mass_kg: {kg: 1.0, pacote: 1.0, caixa: 10.0, unidade: 1.0}
+    unit_probs: {kg: 0.25, pacote: 0.35, caixa: 0.35, unidade: 0.05}
+    products:
+      - {name: arroz, origin: MESA_BRASIL_SESC, nova: 1}
+      - {name: feijão, origin: MESA_BRASIL_SESC, nova: 1}
+      - {name: fubá, origin: MESA_BRASIL_SESC, nova: 1}
+      - {name: farinha de milho, origin: MESA_BRASIL_SESC, nova: 1}
+      - {name: farinha de mandioca, origin: MESA_BRASIL_SESC, nova: 1}
+      - {name: macarrão, origin: MESA_BRASIL_SESC, nova: 1, allergen: true, unit_mass_kg: {pacote: 0.5, caixa: 10.0}}
+      - {name: aveia, origin: PREMISSA_PROJETO, nova: 1, allergen: true, unit_mass_kg: {pacote: 0.5, caixa: 6.0}}
+      - {name: farinha de trigo, origin: PREMISSA_PROJETO, nova: 1, allergen: true}
+  INDUSTRIALIZADOS:
+    desc: óleo, molho, conservas, leite em pó, doces, café, açúcar
+    perecibilidade: NAO_PERECIVEL
+    p_refrigeracao: 0.0
+    days: [30, 365]
+    anchor: "validade é do fabricante (G4)"
+    unit_mass_kg: {kg: 1.0, pacote: 0.5, caixa: 12.0, unidade: 0.4, litro: 0.92}
+    unit_probs: {kg: 0.10, pacote: 0.25, caixa: 0.45, unidade: 0.20}
+    products:
+      - {name: óleo, origin: MESA_BRASIL_SESC, nova: 2, units_only: [litro, caixa, unidade]}
+      - {name: leite em pó, origin: MESA_BRASIL_SESC, nova: 1, allergen: true, units_only: [pacote, caixa, unidade, kg]}
+      - {name: sardinha em lata, origin: MESA_BRASIL_SESC, nova: 3, allergen: true, units_only: [caixa, unidade], unit_mass_kg: {unidade: 0.125, caixa: 6.0}}
+      - {name: molho de tomate, origin: MESA_BRASIL_SESC, nova: 3, units_only: [caixa, unidade, pacote], unit_mass_kg: {unidade: 0.34, caixa: 8.0}}
+      - {name: açúcar, origin: MDS_CATALOGO_2018, nova: 2, units_only: [kg, pacote, caixa], unit_mass_kg: {pacote: 1.0, caixa: 10.0}}
+      - {name: café, origin: MDS_CATALOGO_2018, nova: 1, units_only: [pacote, caixa, kg], unit_mass_kg: {pacote: 0.5, caixa: 5.0}}
+      - {name: doces de frutas, origin: MDS_CATALOGO_2018, nova: 4, units_only: [caixa, unidade, pacote]}
+      - {name: goiabada, origin: SEDUC_GO_2024, nova: 4, units_only: [caixa, unidade, pacote]}
+      - {name: mel, origin: MDS_CATALOGO_2018, nova: 2, units_only: [unidade, caixa, kg], unit_mass_kg: {unidade: 0.5, caixa: 6.0}}
+      - {name: amendoim, origin: MDS_CATALOGO_2018, nova: 1, allergen: true, units_only: [pacote, caixa, kg]}
+      - {name: biscoito, origin: PREMISSA_PROJETO, nova: 4, allergen: true, units_only: [caixa, pacote, unidade], unit_mass_kg: {pacote: 0.4, caixa: 8.0}}
+  BEBIDAS:
+    desc: sucos e bebidas não alcoólicas
+    perecibilidade: NAO_PERECIVEL
+    p_refrigeracao: 0.0
+    days: [30, 180]
+    anchor: "validade é do fabricante (G4)"
+    unit_mass_kg: {litro: 1.0, caixa: 12.0, unidade: 1.0, pacote: 1.0}
+    unit_probs: {litro: 0.20, caixa: 0.55, unidade: 0.20, pacote: 0.05}
+    products:
+      - {name: suco de fruta, origin: MDS_CATALOGO_2018, nova: 1}
+      - {name: suco de caixinha, origin: PREMISSA_PROJETO, nova: 4, unit_mass_kg: {unidade: 0.2, caixa: 4.8}}
+      - {name: água de coco, origin: PREMISSA_PROJETO, nova: 1, unit_mass_kg: {unidade: 0.33, caixa: 8.0}}
+      - {name: chá pronto, origin: PREMISSA_PROJETO, nova: 4}
+      - {name: bebida de soja, origin: PREMISSA_PROJETO, nova: 4, allergen: true}

@@ -1,0 +1,286 @@
+==================================================
+FASE 2 PARTE 2 — ROTAS, DOCKER E DEVSECOPS
+==================================================
+
+Checkpoint 2 do projeto: Dockerfile + Compose, pipeline GitHub Actions
+funcional e relatórios SAST (Bandit e Trivy).
+
+Esta é a segunda parte da Fase 2. A Parte 1 entregou banco, API, motor
+de match, análise semântica e interface operacional mínima.
+
+Execute somente a PARTE 2. Não avance para a Fase 3.
+
+Leia:
+
+- AGENTS.md
+- docs/data/ e documentação criada na Fase 2 Parte 1
+- security/STRIDE.md
+- código da API, do motor de match e da interface (Parte 1)
+
+PRIORIDADE DENTRO DESTA PARTE
+Os itens 2, 3, 4 e 5 (Docker, CI/CD, segurança e STRIDE) são os
+entregáveis do Checkpoint 2 e têm prioridade. A roteirização (item 1)
+é o item mais adiável: se o prazo apertar, conclua os demais primeiro
+e registre a roteirização como pendência REAL, sem apresentá-la como
+concluída.
+
+Problema: conectar DOADOR → ONG. Fora de escopo: distribuição da ONG
+para o beneficiário final.
+
+==================================================
+0. CORREÇÃO DE PORTABILIDADE HERDADA DA PARTE 1
+==================================================
+
+Defeito encontrado ao rodar a Parte 1 no Windows: o comando
+
+  streamlit run app/streamlit_app.py
+
+falha com "ModuleNotFoundError: No module named 'app'". Causa: o
+Streamlit coloca no caminho de busca apenas a pasta do script (app/),
+e não a raiz do projeto; o arquivo faz "from app.api_client import
+...". O script de validação em shell mascarava o problema ao definir
+o caminho por fora.
+
+Corrigir DENTRO do código, para funcionar em qualquer sistema e sem
+depender de variável de ambiente nem de "python -m":
+
+- em app/streamlit_app.py, antes dos imports do projeto, inserir a
+  raiz do projeto em sys.path de forma robusta (a partir de
+  Path(__file__).resolve().parent.parent), sem duplicar a entrada;
+- conferir se outros pontos de entrada (scripts/, api/) dependem do
+  diretório atual ou de PYTHONPATH e tratar da mesma forma;
+- manter o comportamento no Docker e nos testes.
+
+Validação obrigatória:
+- teste automatizado que importa o módulo da interface a partir de um
+  diretório de trabalho diferente da raiz, sem PYTHONPATH definido;
+- executar "streamlit run app/streamlit_app.py" a partir da raiz, sem
+  "python -m" e sem PYTHONPATH, e confirmar que a página carrega;
+- registrar a correção no relatório final e em docs/.
+
+Se esta correção sozinha não bastar para o Windows (por exemplo, por
+causa de scripts .sh), registrar o que continua exclusivo de Linux
+como pendência REAL e documentar o equivalente para Windows
+(PowerShell) no README.
+
+==================================================
+1. ROTEIRIZAÇÃO DAS COLETAS
+==================================================
+
+Criar, em migration Alembic própria, as tabelas:
+
+vehicles
+routes
+route_stops
+
+todas com data_origin (PUBLIC | SIMULATED | USER_ENTERED).
+
+Problema: roteirização de veículos com capacidade e janelas de
+tempo. O veículo sai de uma base, coleta em vários doadores e entrega
+à ONG.
+
+Restrições:
+- capacidade do veículo em kg;
+- janela de retirada de cada doador;
+- horário-limite de entrega = validade do lote menos margem de
+  segurança configurável;
+- compatibilidade de refrigeração (lote refrigerado só em veículo
+  refrigerado);
+- capacidade de recebimento da ONG de destino.
+
+Implementação:
+- solver: Google OR-Tools (verificar licença Apache 2.0 e registrar);
+- matriz de distâncias/tempos com a mesma metodologia da geolocalização
+  da Parte 1 (haversine, fator de desvio e velocidade configurados);
+- escopo inicial: uma ONG como destino e poucos doadores no mesmo
+  município; extensões documentadas como pendência;
+- rota por malha viária real (OSRM/OpenStreetMap, licença ODbL) fica
+  como extensão, a menos que a Fase 0 a tenha aprovado;
+- baseline obrigatório: vizinho mais próximo. Comparar com o solver
+  em km totais, tempo total e lotes entregues antes da validade.
+
+Dados: frota, janelas e tempos vêm das premissas SIMULADAS da Fase 1
+(seção 13.2). Todo resultado de rota é rotulado como simulação,
+salvo uso real registrado.
+
+Persistir em routes e route_stops, com data_origin, versão do
+algoritmo e parâmetros usados.
+
+Endpoints:
+
+POST   /api/v1/routes/plan        (planeja rota de coleta)
+GET    /api/v1/routes/{id}
+
+Testes: restrições respeitadas (capacidade, janela, validade,
+refrigeração), baseline x solver, contrato dos endpoints.
+
+==================================================
+2. DOCKER
+==================================================
+
+Criar:
+
+Dockerfile API
+Dockerfile frontend (Streamlit da Parte 1)
+Docker Compose
+
+Serviços:
+
+api
+frontend
+postgres
+
+Boas práticas: imagem enxuta, usuário não-root, sem segredos na
+imagem, variáveis via .env (com .env.example sem credenciais).
+
+Migrations executadas de forma reprodutível na subida do ambiente, e
+dados públicos e simulados carregados por comando documentado, sem
+edição manual de código.
+
+==================================================
+3. CI/CD E SEGURANÇA AUTOMATIZADA
+==================================================
+
+GitHub Actions funcional:
+
+lint
+tests
+type check se adotado
+Bandit (SAST do código Python)
+Trivy (imagens e dependências)
+dependency scan
+secret scan
+
+Gerar relatórios em:
+
+security/reports/
+
+Registrar o estado ANTES e DEPOIS da correção das vulnerabilidades
+(achados, severidade, o que foi corrigido), pois o dashboard
+exibirá "vulnerabilidades mitigadas" a partir desses relatórios.
+
+Não suprimir alertas sem justificativa registrada.
+
+==================================================
+4. STRIDE (ATUALIZAÇÃO)
+==================================================
+
+Revisar e atualizar security/STRIDE.md criado na Fase 1, agora com a
+arquitetura real (API, interface, banco, ciclo do match, containers e
+CI/CD):
+
+- API;
+- usuários (doadores e ONGs) e autenticação mínima da interface;
+- PostgreSQL;
+- datasets e pipelines;
+- modelo e parser;
+- rotas de coleta;
+- administração;
+- containers e CI/CD;
+- deploy.
+
+Incluir obrigatoriamente o risco de DIVULGAÇÃO DE INFORMAÇÃO
+identificado ao validar a Parte 1: a API e a interface entregam a
+qualquer perfil autenticado os scores internos da IA (ML_SCORE,
+BUSINESS_RULE_SCORE, DISTANCE_SCORE, FINAL_SCORE) e o ranking de ONGs,
+inclusive ao doador e, no caso da ONG, a classificação das outras ONGs.
+Registrar como mitigação PENDENTE (a ser implementada na Fase 3 Parte 1,
+seção 3: esquemas de resposta por perfil aplicados na API, e não só
+na tela). Não implementar a correção nesta parte; só registrar, com
+severidade, impacto e a mitigação planejada.
+
+Marcar cada mitigação como implementada, parcial ou pendente.
+
+==================================================
+VALIDAÇÃO
+==================================================
+
+Executar:
+
+docker compose up
+
+e testar o fluxo completo da aplicação, incluindo a interface:
+
+doador cadastra doação → parser extrai campos → doador confirma →
+match gerado → ranking de ONGs explicado → ONG aceita/recusa →
+timestamps registrados → (se concluída) rota de coleta planejada.
+
+Para demonstrar o fluxo, use apenas:
+- registros do simulador documentado, marcados SIMULATED; ou
+- entradas manuais reais.
+Não insira doações fictícias fora dessas duas vias e nunca as marque
+como USER_ENTERED.
+
+Finalizar somente com:
+
+[ ] correção do streamlit_app.py (importação sem PYTHONPATH) validada
+[ ] Docker funcionando (api, frontend, postgres)
+[ ] docker compose up com o fluxo completo funcionando
+[ ] pipeline CI/CD verde
+[ ] relatórios Bandit e Trivy gerados (antes e depois)
+[ ] STRIDE atualizado
+[ ] roteirização com baseline e comparação (ou registrada como
+    pendência REAL)
+[ ] testes passando
+
+IMPORTANTE:
+
+Execute esta parte de ponta a ponta.
+
+Leia primeiro o AGENTS.md e toda a documentação relevante existente.
+
+Analise → implemente → execute → teste → corrija → teste novamente.
+
+Não solicite confirmação entre pequenas etapas técnicas.
+
+Não encerre após apenas escrever o código.
+
+REGRA DE DADOS: REAL vs SIMULADO
+
+Dados REAIS (ONGs, território, indicadores, produtos, referências)
+nunca podem ser inventados.
+
+Dados SIMULADOS são permitidos SOMENTE para doadores, lotes de doação
+e desfechos de match, gerados pelo simulador documentado, reprodutível
+e versionado, e sempre com data_origin = SIMULATED.
+
+É terminantemente proibido:
+- Faker ou valores aleatórios sem premissa documentada;
+- mocks de negócio;
+- dados simulados gravados como reais ou como USER_ENTERED;
+- apresentar dado simulado como se fosse real;
+- apresentar métrica obtida em dado simulado como desempenho no mundo real;
+- dados gerados por IA apresentados como dados reais;
+- dados de pessoas físicas, reais ou fictícios.
+
+Se uma fonte REAL não fornecer os dados necessários, documente a
+limitação e procure outra fonte REAL E PÚBLICA. Se não houver fonte
+adequada, trate a lacuna por simulação documentada ou deixe a
+funcionalidade pendente. Nunca preencha a lacuna em silêncio.
+
+Não invente métricas, resultados de IA, fontes, licenças ou números.
+
+Somente finalize esta parte quando:
+
+- todos os requisitos executáveis desta parte tiverem sido implementados;
+- os dados utilizados tiverem origem verificável;
+- as licenças tiverem sido registradas;
+- o código estiver executando;
+- os testes relevantes tiverem sido executados;
+- erros encontrados tiverem sido investigados e corrigidos;
+- nenhuma informação fictícia estiver sendo apresentada como real.
+
+Ao final apresente:
+
+1. alterações realizadas;
+2. arquivos criados/modificados;
+3. fontes de dados usadas;
+4. licenças;
+5. quantidade REAL de registros processados e quantidade SIMULADA importada;
+6. testes executados e resultados;
+7. métricas do modelo (rotuladas como calculadas sobre dados simulados);
+8. resultado dos scans Bandit/Trivy (antes e depois);
+9. pendências reais;
+10. próximo passo recomendado.
+
+Não avance automaticamente para a próxima fase.

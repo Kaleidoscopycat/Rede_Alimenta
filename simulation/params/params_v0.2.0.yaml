@@ -1,0 +1,112 @@
+# params v0.2.0 — parâmetros do simulador Doador -> ONG (Rede Alimenta IA).
+# Cada parâmetro: value | range (sorteado por run, uniforme) + type (REAL | REF | PREMISSA) + source + why.
+# REAL = calculado de fonte real em tempo de execução; REF = referência publicada citada; PREMISSA = sem fonte (intervalo = incerteza).
+# Nenhuma premissa é apresentada como dado de fonte. Revalidar quando surgir fonte (docs/data/DATA_SIMULATION.md).
+version: "0.2.0"
+general:
+  meal_kg:        {value: 0.4, type: PREMISSA, source: "AGENTS.md (premissa da equipe)", why: "refeicoes_equiv = kg / 0,4; sensibilidade 0,3-0,6"}
+  period_start:   {value: "2025-10-01", type: PREMISSA, source: "projeto", why: "12 meses terminando em 2026-09-30 (divisão temporal train/val/test)"}
+  period_days:    {value: 365, type: PREMISSA, source: "projeto", why: "janela simulada de 1 ano (sazonalidade RBBA = 1 ano)"}
+  k_candidates:   {value: 15, type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.7", why: "K ONGs elegíveis mais próximas"}
+  radius_km:      {value: 150.0, type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.7", why: "raio máximo de candidatas (linha reta)"}
+  pool_cap:       {value: 6000, type: PREMISSA, source: "implementação", why: "limite do conjunto de candidatas por município (memória); empates de distância desfeitos por sorteio"}
+donors:
+  type_weights:   {value: {SUPERMERCADO: 0.30, RESTAURANTE: 0.22, PADARIA: 0.18, ATACADISTA_CEASA: 0.07, INDUSTRIA_ALIMENTOS: 0.08, PRODUTOR_HORTIFRUTI: 0.15}, type: PREMISSA, source: "CANDIDATES D1 (CNAE-alvo); CNPJ não obtido", why: "trocar por contagem de estabelecimentos por CNAE quando CNPJ for obtido"}
+  size_probs:     {value: {SUPERMERCADO: {PEQUENO: 0.35, MEDIO: 0.45, GRANDE: 0.20}, RESTAURANTE: {PEQUENO: 0.60, MEDIO: 0.32, GRANDE: 0.08}, PADARIA: {PEQUENO: 0.70, MEDIO: 0.27, GRANDE: 0.03}, ATACADISTA_CEASA: {PEQUENO: 0.20, MEDIO: 0.45, GRANDE: 0.35}, INDUSTRIA_ALIMENTOS: {PEQUENO: 0.25, MEDIO: 0.45, GRANDE: 0.30}, PRODUTOR_HORTIFRUTI: {PEQUENO: 0.65, MEDIO: 0.28, GRANDE: 0.07}}, type: PREMISSA, source: "-", why: "trocar pelo porte do CNPJ"}
+  size_kg_mult:   {value: {PEQUENO: 0.5, MEDIO: 1.0, GRANDE: 2.5}, type: PREMISSA, source: "-", why: "multiplicador do tamanho do lote por porte (ordem de grandeza)"}
+  lots_weekly_weight: {value: {PEQUENO: 1.0, MEDIO: 2.0, GRANDE: 4.0}, type: PREMISSA, source: "-", why: "frequência relativa de lotes por porte (calibrada p/ R1 só como escala)"}
+  geo_pop_exponent: {value: 1.0, type: REAL, source: "IBGE SIDRA 6579 (população 2026) como PROXY", why: "doadores ∝ população (donor_geo_basis=POPULACAO_PROXY); densidade de estabelecimentos desconhecida (CNPJ pendente)"}
+  geo_pop_exponent_produtor: {range: [0.4, 0.8], type: PREMISSA, source: "-", why: "produtores relativamente mais presentes em municípios menores"}
+  affinity:       {value: {SUPERMERCADO:   {HORT_FOLHOSAS: 1.0, HORT_RAIZES: 1.0, HORT_FRUTOS: 1.0, FRUTAS: 1.0, PANIFICADOS: 0.8, CARNES_PESCADOS: 0.8, LATICINIOS_OVOS: 1.0, REFEICOES_PRONTAS: 0.3, GRAOS_CEREAIS: 0.6, INDUSTRIALIZADOS: 0.8, BEBIDAS: 0.5},
+                              RESTAURANTE:   {HORT_FOLHOSAS: 0.6, HORT_RAIZES: 0.5, HORT_FRUTOS: 0.5, FRUTAS: 0.4, PANIFICADOS: 0.1, CARNES_PESCADOS: 0.4, LATICINIOS_OVOS: 0.3, REFEICOES_PRONTAS: 1.0, GRAOS_CEREAIS: 0.1, INDUSTRIALIZADOS: 0.1, BEBIDAS: 0.1},
+                              PADARIA:       {HORT_FOLHOSAS: 0.0, HORT_RAIZES: 0.0, HORT_FRUTOS: 0.0, FRUTAS: 0.05, PANIFICADOS: 1.0, CARNES_PESCADOS: 0.0, LATICINIOS_OVOS: 0.3, REFEICOES_PRONTAS: 0.2, GRAOS_CEREAIS: 0.05, INDUSTRIALIZADOS: 0.1, BEBIDAS: 0.2},
+                              ATACADISTA_CEASA: {HORT_FOLHOSAS: 1.0, HORT_RAIZES: 1.0, HORT_FRUTOS: 1.0, FRUTAS: 1.0, PANIFICADOS: 0.1, CARNES_PESCADOS: 0.4, LATICINIOS_OVOS: 0.4, REFEICOES_PRONTAS: 0.0, GRAOS_CEREAIS: 1.0, INDUSTRIALIZADOS: 0.8, BEBIDAS: 0.8},
+                              INDUSTRIA_ALIMENTOS: {HORT_FOLHOSAS: 0.0, HORT_RAIZES: 0.0, HORT_FRUTOS: 0.0, FRUTAS: 0.0, PANIFICADOS: 0.4, CARNES_PESCADOS: 0.3, LATICINIOS_OVOS: 0.5, REFEICOES_PRONTAS: 0.1, GRAOS_CEREAIS: 0.8, INDUSTRIALIZADOS: 1.0, BEBIDAS: 1.0},
+                              PRODUTOR_HORTIFRUTI: {HORT_FOLHOSAS: 1.0, HORT_RAIZES: 1.0, HORT_FRUTOS: 1.0, FRUTAS: 1.0, PANIFICADOS: 0.0, CARNES_PESCADOS: 0.0, LATICINIOS_OVOS: 0.1, REFEICOES_PRONTAS: 0.0, GRAOS_CEREAIS: 0.2, INDUSTRIALIZADOS: 0.0, BEBIDAS: 0.0}},
+                   type: PREMISSA, source: "-", why: "afinidade tipo de doador x categoria (qualitativa; define quem doa o quê)"}
+  pickup_days_n:  {range: [3, 7], type: PREMISSA, source: "-", why: "nº de dias da semana com retirada (DATA_SIMULATION_SPEC §3.1)"}
+  pickup_start_h: {range: [6, 12], type: PREMISSA, source: "DATA_SIMULATION_SPEC §3.1", why: "início da janela de retirada"}
+  pickup_dur_h:   {range: [2, 10], type: PREMISSA, source: "DATA_SIMULATION_SPEC §3.1", why: "duração da janela de retirada"}
+  loading_min:    {range: [10, 45], type: PREMISSA, source: "DATA_SIMULATION_SPEC §3.1", why: "tempo de carga"}
+lots:
+  kg_median:      {value: {HORT_FOLHOSAS: 60, HORT_RAIZES: 250, HORT_FRUTOS: 150, FRUTAS: 200, PANIFICADOS: 40, CARNES_PESCADOS: 120, LATICINIOS_OVOS: 150, REFEICOES_PRONTAS: 50, GRAOS_CEREAIS: 400, INDUSTRIALIZADOS: 300, BEBIDAS: 250}, type: PREMISSA, source: "âncora agregada RBBA 411,7 t/relatório/ano (só ordem de grandeza)", why: "forma log-normal sem fonte"}
+  kg_sigma:       {range: [0.7, 1.1], type: PREMISSA, source: "-", why: "dispersão log-normal do tamanho do lote"}
+  kg_bounds:      {value: [5, 5000], type: PREMISSA, source: "DATA_SIMULATION_SPEC §3.2", why: "truncamento do tamanho do lote (kg)"}
+  validity_scale: {range: [0.7, 1.3], type: PREMISSA, source: "DATA_SIMULATION_SPEC §3.2", why: "sorteio ±30% por run dos intervalos de vida útil (vida útil SEM fonte; âncoras só limitam)"}
+  p_frozen_meat:  {range: [0.35, 0.55], type: PREMISSA, source: "G1 (-18 C)", why: "fração de cárneos congelados"}
+  weekday_weights: {value: [1.0, 1.0, 1.0, 1.0, 1.0, 0.6, 0.15], type: PREMISSA, source: "-", why: "intensidade de criação de lotes seg..dom"}
+  hour_weights:   {value: {6: 0.5, 7: 1, 8: 1.5, 9: 1.5, 10: 1.5, 11: 1.2, 12: 1.0, 13: 1.0, 14: 1.2, 15: 1.3, 16: 1.5, 17: 1.5, 18: 1.0, 19: 0.7, 20: 0.4}, type: PREMISSA, source: "-", why: "hora de registro do lote (fechamento de loja/cozinha)"}
+  seasonality:    {value: "rbba_referencia.json:mensal", type: REAL, source: "RBBA 2025 (kg recebidos por mês)", why: "índice multiplicativo por mês (1 ano; cobertura única)"}
+  nova_targets:   {value: "rbba_referencia.json:classificacao_nova", type: REAL, source: "RBBA 2025 (kg por grupo NOVA)", why: "alvo agregado 88,2/1,3/4,5/6,0% (viés de seleção: bancos medem o que RECEBERAM; mapeamento produto->NOVA é premissa)"}
+  hort_share_alto:  {range: [0.60, 0.70], type: REF, source: "composição de compras do PAA 63% (2018) / 69% (2020) — Conab 2021", why: "refere-se a compras agrícolas, não a doações"}
+  hort_share_baixo: {range: [0.30, 0.40], type: PREMISSA, source: "-", why: "cenário alternativo"}
+texts:
+  frac_validade_ausente:   {range: [0.10, 0.25], type: PREMISSA, source: "DATA_SIMULATION_SPEC §6", why: "casos difíceis de propósito"}
+  frac_ambigua:            {range: [0.03, 0.10], type: PREMISSA, source: "DATA_SIMULATION_SPEC §6", why: "validade ambígua"}
+  frac_inconsistente:      {range: [0.02, 0.05], type: PREMISSA, source: "DATA_SIMULATION_SPEC §6", why: "validade inconsistente com a categoria"}
+  frac_vago:               {range: [0.03, 0.08], type: PREMISSA, source: "DATA_SIMULATION_SPEC §6", why: "texto vago"}
+  frac_duas_categorias:    {range: [0.03, 0.08], type: PREMISSA, source: "DATA_SIMULATION_SPEC §6", why: "produtos de duas categorias"}
+  p_temp_mention:          {range: [0.35, 0.55], type: PREMISSA, source: "-", why: "doador menciona temperatura"}
+  p_allergen_mention:      {range: [0.08, 0.16], type: PREMISSA, source: "-", why: "doador menciona alérgeno"}
+  p_typo:                  {range: [0.10, 0.25], type: PREMISSA, source: "-", why: "probabilidade de erro de digitação por texto"}
+  p_family_reserved:       {value: 0.2, type: PREMISSA, source: "DATA_SIMULATION_SPEC §6", why: "fração de textos da família reservada (F4), fora do treino"}
+ongs:
+  cap_median_kg_dia: {value: {BANCO_ALIMENTOS_RBBA: 1100, OSC_ASSISTENCIA: 60}, type: PREMISSA, source: "âncora: RBBA 411,7 t/ano ≈ 1,13 t/dia por banco (só banco)", why: "OSC sem fonte"}
+  cap_sigma:         {value: {BANCO_ALIMENTOS_RBBA: 0.7, OSC_ASSISTENCIA: 1.0}, type: PREMISSA, source: "-", why: "dispersão"}
+  p_camara_fria:     {value: {BANCO_ALIMENTOS_RBBA: [0.55, 0.85], OSC_ASSISTENCIA: [0.05, 0.20]}, type: PREMISSA, source: "-", why: "câmara fria efetiva (latente)"}
+  afinidade_mu_banco: {value: {HORT_FOLHOSAS: 0.4, HORT_RAIZES: 0.5, HORT_FRUTOS: 0.4, FRUTAS: 0.5, PANIFICADOS: 0.0, CARNES_PESCADOS: 0.0, LATICINIOS_OVOS: 0.1, REFEICOES_PRONTAS: -0.8, GRAOS_CEREAIS: 0.4, INDUSTRIALIZADOS: 0.2, BEBIDAS: 0.1}, type: PREMISSA, source: "RBBA: 88% do volume é NOVA 1 (qualitativo)", why: "preferência média de bancos"}
+  afinidade_mu_osc:   {value: {HORT_FOLHOSAS: -0.3, HORT_RAIZES: 0.2, HORT_FRUTOS: -0.1, FRUTAS: 0.0, PANIFICADOS: 0.2, CARNES_PESCADOS: -0.6, LATICINIOS_OVOS: -0.4, REFEICOES_PRONTAS: -0.2, GRAOS_CEREAIS: 0.7, INDUSTRIALIZADOS: 0.5, BEBIDAS: 0.2}, type: PREMISSA, source: "-", why: "OSC tipicamente sem estrutura para perecíveis (premissa)"}
+  afinidade_sigma:   {range: [0.5, 0.9], type: PREMISSA, source: "-", why: "heterogeneidade entre ONGs"}
+  sigma_u:           {range: [0.4, 0.8], type: PREMISSA, source: "DATA_SIMULATION_SPEC §5", why: "efeito aleatório da ONG (não observável)"}
+  sigma_v:           {range: [0.3, 0.7], type: PREMISSA, source: "DATA_SIMULATION_SPEC §5", why: "efeito aleatório do lote (não observável)"}
+  open_h:            {range: [7, 10], type: PREMISSA, source: "DATA_SIMULATION_SPEC §3.4", why: "abertura real"}
+  close_h:           {range: [15, 19], type: PREMISSA, source: "DATA_SIMULATION_SPEC §3.4", why: "fechamento real"}
+  p_sabado:          {range: [0.2, 0.4], type: PREMISSA, source: "-", why: "ONG funciona aos sábados"}
+  p_domingo:         {range: [0.02, 0.08], type: PREMISSA, source: "-", why: "ONG funciona aos domingos"}
+  eventual_vehicle_median_kg: {range: [250, 500], type: PREMISSA, source: "-", why: "veículo eventual de ONG sem frota (latente)"}
+  eventual_vehicle_sigma: {value: 0.6, type: PREMISSA, source: "-", why: "dispersão"}
+  eventual_vehicle_p_refrig: {range: [0.02, 0.08], type: PREMISSA, source: "-", why: "-"}
+  disp_beta:         {value: [4.0, 2.0], type: PREMISSA, source: "-", why: "disponibilidade de coleta ~ Beta(4,2)"}
+declared:
+  cap_bias:        {range: [0.0, 0.4], type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.3", why: "viés positivo (ONGs declaram mais do que operam)", scenario_override: {fiel: [0.0, 0.1], otimista: [0.3, 0.7]}}
+  cap_sigma:       {range: [0.2, 0.6], type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.3", why: "ruído do declarado", scenario_override: {fiel: [0.1, 0.3], otimista: [0.3, 0.7]}}
+  p_frio_fp:       {range: [0.05, 0.25], type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.3", why: "declara câmara fria sem ter operante", scenario_override: {fiel: [0.02, 0.08], otimista: [0.2, 0.4]}}
+  p_frio_fn:       {range: [0.0, 0.10], type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.3", why: "-"}
+  p_cat_extra:     {range: [0.10, 0.30], type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.3", why: "categorias extras declaradas (otimismo)"}
+  p_cat_omit:      {range: [0.05, 0.15], type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.3", why: "categorias omitidas"}
+  aff_accept_threshold: {value: 0.2, type: PREMISSA, source: "-", why: "afinidade >= limiar => categoria declarada aceita"}
+  sched_shift_h:   {value: 1.0, type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.3", why: "deslocamento máx. do horário declarado"}
+  p_sched_unmet:   {range: [0.05, 0.20], type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.3", why: "janela declarada que a ONG não cumpre"}
+  cap_bands_kg:    {value: [50, 150, 500, 1500, 5000], type: PREMISSA, source: "-", why: "faixas de capacidade (cadastro)"}
+fleet:
+  p_has_vehicle:   {value: {BANCO_ALIMENTOS_RBBA: [0.5, 0.9], OSC_ASSISTENCIA: [0.05, 0.30]}, type: PREMISSA, source: "RBBA: função 'motorista' = 99 registros (apoio qualitativo)", why: "posse de veículo"}
+  vehicle_types:   {value: {UTILITARIO: {cap: [200, 500], p_refrig: [0.02, 0.10]}, VAN_FURGAO: {cap: [600, 1200], p_refrig: [0.10, 0.35]}, CAMINHAO_BAU_MEDIO: {cap: [2000, 4000], p_refrig: [0.20, 0.50]}, CAMINHAO_BAU_GRANDE: {cap: [6000, 12000], p_refrig: [0.30, 0.60]}}, type: PREMISSA, source: "sem fonte lida — validar com operadores", why: "ordens de grandeza"}
+  type_probs:      {value: {BANCO_ALIMENTOS_RBBA: {UTILITARIO: 0.15, VAN_FURGAO: 0.35, CAMINHAO_BAU_MEDIO: 0.35, CAMINHAO_BAU_GRANDE: 0.15}, OSC_ASSISTENCIA: {UTILITARIO: 0.60, VAN_FURGAO: 0.35, CAMINHAO_BAU_MEDIO: 0.05, CAMINHAO_BAU_GRANDE: 0.0}}, type: PREMISSA, source: "-", why: "-"}
+  fator_uso_efetivo: {range: [0.7, 1.0], type: PREMISSA, source: "DATA_SIMULATION_SPEC §4.4", why: "capacidade efetiva = declarada x fator (latente)"}
+logistics:
+  detour:          {range: [1.2, 1.5], type: PREMISSA, source: "faixa usual — NÃO verificada com fonte", why: "reta -> via"}
+  speed_short_kmh: {range: [15, 30], type: PREMISSA, source: "-", why: "<= 15 km"}
+  speed_long_kmh:  {range: [40, 70], type: PREMISSA, source: "-", why: "> 15 km"}
+  service_min:     {range: [15, 45], type: PREMISSA, source: "-", why: "carga/descarga"}
+  resp_median_min: {value: {BANCO_ALIMENTOS_RBBA: [15, 90], OSC_ASSISTENCIA: [60, 360]}, type: PREMISSA, source: "-", why: "mediana do tempo de resposta (min de horário comercial)"}
+  resp_sigma:      {range: [0.8, 1.2], type: PREMISSA, source: "-", why: "log-normal"}
+  p_sem_resposta:  {range: [0.05, 0.25], type: PREMISSA, source: "DATA_SIMULATION_SPEC §3.4", why: "SEM_RESPOSTA = não aceite"}
+  p_sem_resposta_fora_horario: {range: [0.05, 0.15], type: PREMISSA, source: "-", why: "acréscimo se proposta chega com a ONG fechada"}
+  max_resp_business_min: {value: 3000, type: PREMISSA, source: "-", why: "resposta acima de ~50 h de horário comercial (~6 dias úteis) é tratada como SEM_RESPOSTA (corta a cauda do log-normal)"}
+  platform_latency_min: {value: [1, 10], type: PREMISSA, source: "-", why: "atraso proposta após registro do lote"}
+outcome:
+  beta_apt:        {range: [0.4, 0.8], type: PREMISSA, source: "sinal por premissa; magnitude sem fonte", why: "aptidão alimentar"}
+  beta_cat:        {range: [0.5, 1.0], type: PREMISSA, source: "idem", why: "afinidade pela categoria"}
+  beta_cap:        {range: [0.6, 1.4], type: PREMISSA, source: "idem", why: "- log(1+kg/capacidade efetiva)"}
+  beta_frio:       {range: [-1.8, -0.9], type: PREMISSA, source: "idem", why: "exige frio e ONG sem câmara efetiva"}
+  beta_banco:      {range: [0.3, 0.9], type: PREMISSA, source: "idem", why: "efeito de ser banco de alimentos"}
+  beta_dist:       {range: [-0.30, -0.08], type: PREMISSA, source: "idem", why: "efeito de log(1+dist_km) na aceitação"}
+  accept_base_rate: {value: {baixa: [0.15, 0.25], media: [0.30, 0.45], alta: [0.50, 0.65]}, type: PREMISSA, source: "DATA_SIMULATION_SPEC §3.4", why: "ESCALA DE CENÁRIO, não estimativa (sem taxa real em fonte pública); beta0 é calibrado para atingi-la"}
+  gamma0:          {range: [0.7, 1.4], type: PREMISSA, source: "-", why: "log das horas até a retirada (mediana ≈ 2-4 h)"}
+  gamma_dist:      {range: [0.25, 0.45], type: PREMISSA, source: "-", why: "log(1+dist*desvio)"}
+  gamma_disp:      {range: [0.5, 1.1], type: PREMISSA, source: "-", why: "1 - disponibilidade"}
+  gamma_dia:       {range: [0.15, 0.45], type: PREMISSA, source: "-", why: "fim de semana"}
+  gamma_hr:        {range: [0.3, 0.8], type: PREMISSA, source: "-", why: "hora do dia (0-1)"}
+  sigma_T:         {range: [0.5, 0.8], type: PREMISSA, source: "-", why: "ruído log-normal do tempo até retirada"}
+  p_noshow:        {range: [0.03, 0.10], type: PREMISSA, source: "-", why: "falha aleatória de coleta"}
+  cold_fail_rate_per_h: {range: [0.5, 1.2], type: PREMISSA, source: "-", why: "falha de cadeia fria sem veículo refrigerado (por hora de deslocamento)"}

@@ -1,0 +1,21 @@
+{
+  "n_rankings": 200,
+  "ms_total": {
+    "p50": 15.04,
+    "p95": 28.71,
+    "max": 30.97
+  },
+  "ms_ml": {
+    "p50": 7.89,
+    "p95": 9.02
+  },
+  "ms_elegibilidade": {
+    "p50": 2.35,
+    "p95": 9.87
+  },
+  "elegiveis_mediana": 635,
+  "n_orgs_indexadas": 54590,
+  "ambiente": "sandbox local (PostgreSQL embutido, índice em memória, 1 processo, sem rede); medida de ENGENHARIA, não de produção",
+  "origem_dos_dados": "doadores SIMULATED; ONGs reais com perfil declarado SIMULATED",
+  "forma_da_doacao": "FRUTAS 50 kg, 96 h de validade, sem refrigeração, janela 08–17 h seg–sex"
+}

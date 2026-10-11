@@ -1,0 +1,472 @@
+==================================================
+FASE 2 PARTE 1 — PLATAFORMA, API E MOTOR DE MATCH
+==================================================
+
+A Fase 2 foi dividida em duas partes:
+- PARTE 1 (este documento): banco, organizações reais, motor de match,
+  ciclo do match em tempo real, análise semântica na entrada, API e
+  interface operacional mínima.
+- PARTE 2: roteirização das coletas, Docker, CI/CD, segurança
+  automatizada (Bandit e Trivy) e atualização do STRIDE.
+
+Execute somente a PARTE 1. Não avance para a Parte 2.
+
+Leia:
+
+- AGENTS.md
+- docs/data/ (relatórios de viabilidade, fontes e simulação)
+- security/STRIDE.md (criado na Fase 1)
+- artefatos do modelo e do parser da Fase 1
+
+Agora transformar a IA em uma aplicação que conecta DOADOR → ONG.
+Fora de escopo: distribuição da ONG para o beneficiário final.
+
+Ambiente: PostgreSQL local (instalação local ou contêiner avulso).
+O Docker Compose completo é entregue na Parte 2.
+
+==================================================
+0. PRÉ-CHECAGENS E LIMITAÇÕES HERDADAS DA FASE 1
+==================================================
+
+Antes de implementar, execute e registre o resultado em
+docs/FASE2_P1_PRECHECK.md:
+
+a) PostgreSQL: verificar se há instância local acessível (ou
+   contêiner avulso). Se não houver, subir um contêiner PostgreSQL
+   avulso e documentar o comando. Não prosseguir sem banco.
+
+b) Pendências da Fase 1 que NÃO bloqueiam esta parte, mas devem ser
+   respeitadas e visíveis na documentação e na interface:
+
+   - Conjunto MANUALLY_LABELED: o arquivo PROVISORIO_rascunho_ia.csv
+     é um rascunho gerado por IA e NÃO é rotulagem manual. Não usá-lo
+     como teste de desempenho nem tratá-lo como MANUALLY_LABELED. O
+     limiar de confiança do parser (τ) foi calibrado sobre texto
+     SIMULADO: informar isso na resposta do parser, na interface e na
+     documentação ("limiar calibrado sobre texto simulado").
+   - Simulador: as verificações R1 (falha) e R6 (pessimista) da Fase 1
+     continuam abertas. Dados simulados podem ser importados, sempre
+     SIMULATED, mas registrar a limitação conhecida em
+     docs/data/DATA_SIMULATION.md e exibir na interface um aviso
+     "dados simulados com limitações conhecidas". Não apresentar taxas
+     de aceite ou volumes simulados como se representassem o mundo real.
+   - Licenças não confirmadas (IPEA/OSC, RBBA, IBGE, CNPJ, centroides):
+     registros dessas fontes mantêm o status NEEDS_REVIEW e não devem
+     ser tratados como liberados para publicação. Listar em
+     docs/data/ as confirmações pendentes (a Fase 3 depende delas
+     para o deploy público).
+
+==================================================
+0.1 AUTENTICAÇÃO MÍNIMA (OBRIGATÓRIA NA API)
+==================================================
+
+Todos os endpoints de escrita e de dados de doações/matches exigem
+autenticação aplicada na própria API (não apenas na interface):
+
+- token por usuário (ex.: API key ou JWT) com perfil DONOR, ORG ou
+  ADMIN, validado por dependência do FastAPI;
+- autorização por perfil e por dono do recurso (um doador só vê e
+  altera suas doações; uma ONG só vê e responde propostas dirigidas a
+  ela);
+- segredos e tokens apenas por variáveis de ambiente; nada no código
+  ou no repositório; .env.example sem valores reais;
+- armazenar apenas hash dos tokens;
+- exceções públicas: /health, /ready e a documentação OpenAPI;
+- registrar em audit_logs falhas de autenticação/autorização sem
+  gravar o token;
+- testes: acesso sem token (401), perfil errado ou recurso de outro
+  usuário (403), acesso permitido.
+
+TLS e rate limit ficam para a Parte 2 e a Fase 3. Registrar ambos em
+security/STRIDE.md como mitigação PENDENTE, junto com a limitação do
+esquema de token escolhido.
+
+==================================================
+1. POSTGRESQL
+==================================================
+
+Implementar PostgreSQL com SQLAlchemy + Alembic.
+
+Criar entidades adequadas, por exemplo:
+
+donors
+donor_locations
+organizations
+organization_locations
+food_categories
+public_data_sources
+public_dataset_versions
+public_indicators
+donations
+donation_items
+matches
+match_events
+ml_predictions
+audit_logs
+users
+
+As tabelas de roteirização (vehicles, routes, route_stops) são criadas
+na Parte 2, em migration própria.
+
+Toda tabela que mistura registros de origens diferentes (donors,
+donations, donation_items, matches) deve ter a coluna:
+
+data_origin  (PUBLIC | SIMULATED | USER_ENTERED)
+
+Dados simulados da Fase 1 podem ser importados para o banco, SEMPRE
+com data_origin = SIMULATED, generator_version e dataset_version.
+Nenhum registro simulado pode ser gravado como USER_ENTERED.
+
+Não criar registros falsos fora do simulador documentado.
+
+Registros USER_ENTERED (doações reais cadastradas via API) podem
+inicialmente não existir. Isso é CORRETO. Não preencher para deixar o
+dashboard bonito.
+
+Doadores são pessoas jurídicas. Não armazenar dados de pessoas físicas
+além do mínimo necessário para autenticação de usuários.
+
+==================================================
+2. ORGANIZAÇÕES REAIS
+==================================================
+
+Importar somente instituições provenientes de fontes públicas reais
+e licenciadas.
+
+Cada organização importada deve manter:
+
+source
+source_record_id
+source_url
+last_verified_at
+
+Não tratar uma entidade pública encontrada em um dataset
+automaticamente como cliente da Rede Alimenta.
+
+Ela é apenas um registro proveniente de fonte pública, até que passe
+por cadastro/aceite na plataforma.
+
+==================================================
+3. MOTOR DE MATCH DOADOR → ONG
+==================================================
+
+Implementar mecanismo híbrido.
+
+Entrada: uma doação (lote do doador).
+Saída: ONGs candidatas ranqueadas, com explicação.
+
+O ranking poderá considerar:
+
+- distância doador-ONG;
+- probabilidade de aceite/coleta prevista pela IA;
+- categoria de alimento compatível com a ONG;
+- perecibilidade e tempo até a validade;
+- necessidade de refrigeração x capacidade da ONG;
+- capacidade de recebimento (volume) da ONG;
+- janela de coleta e horário de funcionamento;
+- indicadores regionais;
+- restrições operacionais.
+
+Separar claramente:
+
+ML_SCORE
+BUSINESS_RULE_SCORE
+DISTANCE_SCORE
+FINAL_SCORE
+
+Não esconder regras dentro do modelo.
+
+Regras de elegibilidade eliminatórias (ex.: tempo de deslocamento
+maior que o prazo de validade; refrigeração exigida e indisponível)
+devem ser explícitas, testáveis e registradas na resposta.
+
+As regras e o modelo usam apenas a capacidade e a refrigeração
+DECLARADAS da ONG (observáveis, rotuladas SIMULATED enquanto não
+houver cadastro real), nunca os atributos latentes do simulador.
+
+Registrar timestamps de cada etapa (doação registrada, match
+proposto, ONG respondeu, coleta concluída) para permitir calcular o
+tempo médio de match.
+
+==================================================
+3.1 CRUZAMENTO DOADOR x ONG EM TEMPO REAL
+==================================================
+
+Pipeline de uma doação:
+
+1. filtro de elegibilidade (regras eliminatórias): refrigeração,
+   categoria aceita, capacidade de recebimento, horário de
+   funcionamento, tempo de deslocamento + janela de coleta menor que
+   o prazo de validade;
+2. candidatos geográficos (seção 4);
+3. ML_SCORE (modelo da Fase 1) + BUSINESS_RULE_SCORE + DISTANCE_SCORE
+   → FINAL_SCORE;
+4. proposta à ONG mais bem ranqueada.
+
+"Tempo real" significa duas coisas, e ambas devem ser medidas:
+- latência do ranking: features das ONGs em memória e busca espacial
+  (ex.: BallTree haversine), registrando a latência por requisição;
+- ciclo operacional, com máquina de estados registrada em
+  match_events (timestamp de cada transição):
+  PROPOSED → ACCEPTED | DECLINED | EXPIRED → próxima candidata →
+  COLLECTED | FAILED.
+  Recusa ou ausência de resposta dentro do prazo aciona a próxima
+  ONG do ranking automaticamente. Usar tarefas em segundo plano do
+  FastAPI e polling na interface; não introduzir filas externas sem
+  necessidade.
+
+Concorrência e capacidade:
+- reservar a capacidade da ONG dentro de transação, para que duas
+  doações simultâneas não ocupem a mesma capacidade;
+- quando vários lotes pendentes chegarem na mesma janela, comparar a
+  escolha gulosa (um lote por vez) com a atribuição ótima em lote
+  (ex.: scipy.optimize.linear_sum_assignment) e registrar a
+  diferença.
+
+O tempo médio de match do dashboard vem dos timestamps de
+match_events. Informar se vem de execuções simuladas ou de uso real.
+
+==================================================
+3.2 ANÁLISE SEMÂNTICA NA ENTRADA DA DOAÇÃO
+==================================================
+
+Integrar à API o parser de tipo, perecibilidade e validade criado na
+Fase 1 (seção 12), carregando o artefato versionado do modelo.
+
+Fluxo:
+
+POST /api/v1/donations/parse
+  entrada: descrição em texto livre do lote;
+  saída: campos extraídos (categoria, perecibilidade, refrigeração,
+  dias até a validade, quantidade, unidade), validity_source,
+  confiança por campo, alertas de inconsistência, parser_version.
+
+POST /api/v1/donations
+  aceita o texto livre e/ou os campos estruturados;
+  campos com confiança abaixo do limiar ficam com status
+  PENDING_CONFIRMATION e o match só é gerado depois da confirmação
+  do doador (ou da correção dos campos).
+
+Regras:
+
+- o doador pode sempre corrigir os campos extraídos; guardar o valor
+  extraído, o valor final e quem decidiu (para auditoria e para
+  futuro retreino com dados reais);
+- validade vencida ou ausente sem possibilidade de inferência
+  bloqueia o match, por regra explícita e testável;
+- a API nunca afirma que o alimento é próprio para consumo;
+- toda resposta do parser informa a origem dos dados de treino do
+  modelo (data_origin = SIMULATED), seu parser_version e que o limiar
+  de confiança foi calibrado sobre texto simulado;
+- registrar em ml_predictions as saídas do parser, com confiança;
+- respostas corrigidas pelos doadores, quando existirem, são dados
+  USER_ENTERED e ficam separadas dos simulados.
+
+Testes: extração de datas em formatos variados, texto sem validade,
+inconsistência categoria x validade, limiar de confiança, bloqueio de
+lote vencido e contrato dos endpoints.
+
+==================================================
+4. GEOLOCALIZAÇÃO
+==================================================
+
+Usar coordenadas reais de ONGs e municípios (fonte pública).
+
+Calcular distância usando metodologia documentada (ex.: Haversine),
+deixando claro que é distância em linha reta, e não rota.
+
+Recomendação geográfica:
+- gerar candidatos com índice espacial dentro de um raio viável
+  (BallTree haversine; PostGIS apenas se justificado);
+- estimar tempo de deslocamento com o fator de desvio e a velocidade
+  média configurados (premissas documentadas na Fase 1);
+- exibir location_precision de cada ONG na resposta e na explicação,
+  avisando quando a distância usa centroide de município;
+- o DISTANCE_SCORE considera a distância e a folga entre o tempo de
+  deslocamento e o prazo de validade.
+
+Não usar coordenadas inventadas quando uma organização não possuir
+posição conhecida.
+
+Nesse caso marcar localização como ausente e tratar a ONG como
+não ranqueável por distância, de forma explícita.
+
+Coordenadas de doadores simulados vêm do simulador (data_origin =
+SIMULATED).
+
+==================================================
+5. ENDPOINTS
+==================================================
+
+Implementar API versionada.
+
+Exemplo:
+
+GET    /api/v1/organizations
+GET    /api/v1/organizations/{id}
+
+GET    /api/v1/public-data/sources
+
+POST   /api/v1/donors
+GET    /api/v1/donors/{id}
+
+POST   /api/v1/donations/parse    (análise semântica do texto livre)
+POST   /api/v1/donations
+GET    /api/v1/donations/{id}
+PATCH  /api/v1/donations/{id}/confirm   (doador confirma/corrige campos)
+
+POST   /api/v1/matches            (gera ranking para uma doação)
+GET    /api/v1/matches/{id}
+POST   /api/v1/matches/{id}/respond   (aceite/recusa da ONG)
+GET    /api/v1/matches/{id}/events    (histórico de estados e tempos)
+
+POST   /api/v1/predictions
+GET    /api/v1/model/info
+
+GET    /health
+GET    /ready
+
+Os endpoints de rotas (/api/v1/routes/...) ficam para a Parte 2.
+
+==================================================
+6. INTERFACE OPERACIONAL MÍNIMA (STREAMLIT)
+==================================================
+
+Criar o frontend operacional em Streamlit. Dashboards, mapas e KPIs
+ficam para a Fase 3, que expande este esqueleto.
+
+Páginas:
+
+A) Cadastrar doação (doador)
+   - texto livre do lote → chamada a /donations/parse;
+   - campos extraídos editáveis, com confiança e alertas de
+     inconsistência; campos pendentes destacados;
+   - confirmação do doador → geração do match;
+   - ranking de ONGs com explicação: ML_SCORE, BUSINESS_RULE_SCORE,
+     DISTANCE_SCORE e FINAL_SCORE separados, regras eliminatórias
+     aplicadas, location_precision e aviso de distância aproximada.
+
+B) Responder proposta (ONG)
+   - lista de propostas pendentes da ONG, com dados do lote;
+   - aceitar ou recusar; atualização por polling;
+   - histórico de estados do match (match_events).
+
+Regras da interface:
+- o frontend conversa apenas com a API HTTP e nunca acessa o banco;
+- selo de origem visível em toda tela (SIMULADO ou USER_ENTERED);
+- identificação do doador e da ONG por autenticação mínima definida e
+  documentada (ex.: token por usuário), sem credenciais no código,
+  com a limitação registrada;
+- não inventar doações ou ONGs para preencher a tela: usar registros
+  do simulador (SIMULATED) ou entradas reais manuais;
+- sem registros de negócio fictícios nos testes da tela.
+
+==================================================
+7. TESTES
+==================================================
+
+Criar testes para:
+
+- migrations e modelos (SQLAlchemy);
+- importação de organizações reais e de dados simulados
+  (data_origin preservado);
+- filtro de elegibilidade e scores separados;
+- máquina de estados do match e reserva de capacidade;
+- parser integrado à API;
+- geolocalização (distância, location_precision, coordenada ausente);
+- contrato dos endpoints (OpenAPI);
+- fluxo consumido pela interface (cadastrar → match → resposta).
+
+==================================================
+VALIDAÇÃO
+==================================================
+
+Executar a API e o Streamlit localmente, com PostgreSQL local, e
+testar o fluxo completo:
+
+doador cadastra doação → parser extrai campos → doador confirma →
+match gerado → ranking de ONGs explicado → ONG aceita/recusa →
+timestamps registrados.
+
+Para demonstrar o fluxo, use apenas:
+- registros do simulador documentado, marcados SIMULATED; ou
+- entradas manuais reais.
+Não insira doações fictícias fora dessas duas vias e nunca as marque
+como USER_ENTERED.
+
+Finalizar somente com:
+
+[ ] pré-checagens executadas e registradas (PostgreSQL, limitações)
+[ ] autenticação por perfil aplicada na API, com testes 401/403
+[ ] migrations funcionando
+[ ] banco funcionando
+[ ] organizações reais importadas com rastreabilidade
+[ ] dados simulados importados com data_origin = SIMULATED
+[ ] API funcionando (sem rotas de coleta)
+[ ] parser semântico integrado à API (parse, confirmação, bloqueio)
+[ ] match engine funcionando (scores separados)
+[ ] ciclo do match em tempo real (estados, reserva de capacidade,
+    próxima candidata em caso de recusa) com latência medida
+[ ] interface operacional mínima funcionando (páginas A e B)
+[ ] testes passando
+
+IMPORTANTE:
+
+Execute esta parte de ponta a ponta.
+
+Leia primeiro o AGENTS.md e toda a documentação relevante existente.
+
+Analise → implemente → execute → teste → corrija → teste novamente.
+
+Não solicite confirmação entre pequenas etapas técnicas.
+
+Não encerre após apenas escrever o código.
+
+REGRA DE DADOS: REAL vs SIMULADO
+
+Dados REAIS (ONGs, território, indicadores, produtos, referências)
+nunca podem ser inventados.
+
+Dados SIMULADOS são permitidos SOMENTE para doadores, lotes de doação
+e desfechos de match, gerados pelo simulador documentado, reprodutível
+e versionado, e sempre com data_origin = SIMULATED.
+
+É terminantemente proibido:
+- Faker ou valores aleatórios sem premissa documentada;
+- mocks de negócio;
+- dados simulados gravados como reais ou como USER_ENTERED;
+- apresentar dado simulado como se fosse real;
+- apresentar métrica obtida em dado simulado como desempenho no mundo real;
+- dados gerados por IA apresentados como dados reais;
+- dados de pessoas físicas, reais ou fictícios.
+
+Se uma fonte REAL não fornecer os dados necessários, documente a
+limitação e procure outra fonte REAL E PÚBLICA. Se não houver fonte
+adequada, trate a lacuna por simulação documentada ou deixe a
+funcionalidade pendente. Nunca preencha a lacuna em silêncio.
+
+Não invente métricas, resultados de IA, fontes, licenças ou números.
+
+Somente finalize esta parte quando:
+
+- todos os requisitos executáveis desta parte tiverem sido implementados;
+- os dados utilizados tiverem origem verificável;
+- as licenças tiverem sido registradas;
+- o código estiver executando;
+- os testes relevantes tiverem sido executados;
+- erros encontrados tiverem sido investigados e corrigidos;
+- nenhuma informação fictícia estiver sendo apresentada como real.
+
+Ao final apresente:
+
+1. alterações realizadas;
+2. arquivos criados/modificados;
+3. fontes de dados usadas;
+4. licenças;
+5. quantidade REAL de registros processados e quantidade SIMULADA importada;
+6. testes executados e resultados;
+7. métricas do modelo (rotuladas como calculadas sobre dados simulados);
+8. pendências reais;
+9. próximo passo recomendado.
+
+Não avance automaticamente para a Fase 2 Parte 2.

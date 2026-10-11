@@ -1,0 +1,212 @@
+{
+ "ano": 2025,
+ "kpis": {
+  "bancos": 362,
+  "aderidos": 208,
+  "municipios": 176,
+  "ufs": 27,
+  "relatorios": 161,
+  "kg_recebidos": 66285063.38,
+  "kg_doados": 62483403.16,
+  "kg_perdidos": 3215754.25,
+  "pct_perda": 0.04851401033690918,
+  "pessoas_atendidas": 5167799,
+  "instituicoes": 11071,
+  "bancos_perdas": 78,
+  "bancos_acoes": 119,
+  "bancos_projetos": 60,
+  "registros_descartados": 0
+ },
+ "mensal": [
+  {
+   "mes": "Jan",
+   "recebido": 5244552.86,
+   "doado": 4840828.54
+  },
+  {
+   "mes": "Fev",
+   "recebido": 5352755.31,
+   "doado": 5039820.38
+  },
+  {
+   "mes": "Mar",
+   "recebido": 5207349.85,
+   "doado": 4854757.45
+  },
+  {
+   "mes": "Abr",
+   "recebido": 5254775.23,
+   "doado": 4919383.12
+  },
+  {
+   "mes": "Mai",
+   "recebido": 5721468.83,
+   "doado": 5390808.16
+  },
+  {
+   "mes": "Jun",
+   "recebido": 5201945.36,
+   "doado": 4881912.03
+  },
+  {
+   "mes": "Jul",
+   "recebido": 5533178.45,
+   "doado": 5191874.12
+  },
+  {
+   "mes": "Ago",
+   "recebido": 5009493.04,
+   "doado": 4770085.92
+  },
+  {
+   "mes": "Set",
+   "recebido": 5752836.8,
+   "doado": 5348430.5
+  },
+  {
+   "mes": "Out",
+   "recebido": 6107488.39,
+   "doado": 5880886.74
+  },
+  {
+   "mes": "Nov",
+   "recebido": 6093521.11,
+   "doado": 5749917.39
+  },
+  {
+   "mes": "Dez",
+   "recebido": 5805698.15,
+   "doado": 5614698.81
+  }
+ ],
+ "origens": [
+  {
+   "categoria": "Perdas e Desperdícios",
+   "valor": 36332726.06,
+   "pct": 0.5481284049124492
+  },
+  {
+   "categoria": "PAA",
+   "valor": 7961707.05,
+   "pct": 0.12011313928082118
+  },
+  {
+   "categoria": "Campanhas Eventuais",
+   "valor": 5956617.31,
+   "pct": 0.08986364357610725
+  },
+  {
+   "categoria": "Hortas Urbanas e Periurbanas",
+   "valor": 4582112.75,
+   "pct": 0.06912737977983963
+  },
+  {
+   "categoria": "Doadores Diversos",
+   "valor": 1374785.85,
+   "pct": 0.020740507437076845
+  },
+  {
+   "categoria": "Alimentos Recebidos",
+   "valor": 1299830.06,
+   "pct": 0.01960969777683269
+  },
+  {
+   "categoria": "Doações de outros Bancos de Alimentos",
+   "valor": 1135147.15,
+   "pct": 0.017125232927551286
+  },
+  {
+   "categoria": "Agricultor Rural",
+   "valor": 1075641.01,
+   "pct": 0.016227502172450965
+  },
+  {
+   "categoria": "Alimentos recebidos do Desperdício",
+   "valor": 778285.3,
+   "pct": 0.011741488358217814
+  },
+  {
+   "categoria": "Fazendas, supermercados e distribuidores alimentícios",
+   "valor": 437014.51,
+   "pct": 0.006592956055494383
+  },
+  {
+   "categoria": "Outras origens",
+   "valor": 5351196.33,
+   "pct": 0.08073004772315871
+  }
+ ],
+ "classificacao_nova": [
+  {
+   "categoria": "Alimentos in natura e/ou minimamente processados",
+   "valor": 56095026.629999995,
+   "pct": 0.8822997469413588
+  },
+  {
+   "categoria": "Ingredientes Culinários",
+   "valor": 819607.97,
+   "pct": 0.01289133721768091
+  },
+  {
+   "categoria": "Alimentos Processados",
+   "valor": 2858407.35,
+   "pct": 0.04495892475807387
+  },
+  {
+   "categoria": "Alimentos Ultraprocessados",
+   "valor": 3805154.49,
+   "pct": 0.05984999108288641
+  }
+ ],
+ "modalidades": [
+  {
+   "categoria": "Público Municipal",
+   "valor": 110,
+   "pct": 0.5288461538461539
+  },
+  {
+   "categoria": "SESC",
+   "valor": 86,
+   "pct": 0.41346153846153844
+  },
+  {
+   "categoria": "OSC",
+   "valor": 8,
+   "pct": 0.038461538461538464
+  },
+  {
+   "categoria": "Público Estadual",
+   "valor": 2,
+   "pct": 0.009615384615384616
+  },
+  {
+   "categoria": "Público Federal",
+   "valor": 1,
+   "pct": 0.004807692307692308
+  },
+  {
+   "categoria": "Público Distrital",
+   "valor": 1,
+   "pct": 0.004807692307692308
+  }
+ ],
+ "perdas_momento": [
+  {
+   "categoria": "Pós-triagem",
+   "valor": 1499538.45,
+   "pct": 0.4663100266446044
+  },
+  {
+   "categoria": "Pré-triagem",
+   "valor": 1342424.83,
+   "pct": 0.41745255564849215
+  },
+  {
+   "categoria": "Não definido",
+   "valor": 373790.97,
+   "pct": 0.11623741770690343
+  }
+ ],
+ "data_origin": "PUBLIC",
+ "source_id": "rbba_resumo"
+}

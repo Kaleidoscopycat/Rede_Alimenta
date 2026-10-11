@@ -1,0 +1,81 @@
+======================================================================
+VALIDAÇÃO PROGRAMÁTICA — FASE 0 (revisada: DOADOR -> ONG)
+Execução (UTC): 2026-10-03T02:00:58+00:00
+======================================================================
+
+--- 0. Checksums RAW (sha256) ---
+14 arquivos RAW registrados em data/metadata/raw_checksums.json
+[OK] RAW INALTERADO em relação aos checksums da execução anterior (diferenças: [])
+
+--- 1. IBGE: municípios e população ---
+[OK] IBGE municípios = 5571 (únicos 5571)
+[OK] População 2026 com valor numérico para 5571 municípios
+[OK] Soma da população = 214,211,951
+
+--- 2. Coordenadas de município (compilação de terceiros; ver DATA_SOURCE_CANDIDATES) ---
+[OK] Centroides cobrem exatamente os 5.571 códigos IBGE (interseção total)
+[OK] Todas as coordenadas dentro do retângulo do Brasil
+
+--- 3. RBBA ---
+[OK] RBBA pontos georreferenciados = 192
+[OK] Identificadores RBBA únicos
+[OK] Todos os 192 bancos casam com um município IBGE (não casados: [])
+Distância ponto RBBA x centroide do município (km): mediana=1.7 p90=6.2 máx=5492.1
+[OK] Pontos RBBA com coordenada incoerente (>100 km do próprio município) = 2 -> ['BA000038', 'BA000307']
+   ANOMALIA RAW (não corrigida no RAW): {'id': 'BA000038', 'nome': 'Banco de Alimentos Imperatriz', 'cidade': 'Imperatriz', 'uf': 'MA', 'lat_rbba': -54.91004, 'lon_rbba': -47.459722, 'dist_km_ao_centroide': 5492.1}
+   ANOMALIA RAW (não corrigida no RAW): {'id': 'BA000307', 'nome': 'Banco  de Alimentos Municipal de Três Corações', 'cidade': 'Três Corações', 'uf': 'MG', 'lat_rbba': 21.718309, 'lon_rbba': -45.261494, 'dist_km_ao_centroide': 4827.0}
+geo_quality dos 192 pontos RBBA: {'OK': 187, 'SUSPEITA': 2, 'REVISAR': 3}
+[OK] geo_quality RBBA: SUSPEITA=2, REVISAR=3, OK=187 (obtido {'OK': 187, 'SUSPEITA': 2, 'REVISAR': 3})
+[OK] KPI pct_perda = kg_perdidos/kg_recebidos
+
+--- 4. PAA (MDS) ---
+[OK] PAA compra c/ doação simultânea: 49627 linhas
+[OK] PAA kg: sem nulos e sem negativos
+kg e nº de registros por ano (cobertura de registros varia muito entre anos):
+               sum  count
+ano                      
+2021  6.345137e+07  13270
+2022  2.172500e+07   4752
+2023  4.752717e+07   6734
+2024  5.729041e+07  12329
+2025  2.701417e+07   8064
+2026  1.577889e+07   4478
+Índice sazonal PAA (kg/mês ÷ média; 2021-2025; PROXY de sazonalidade de oferta agrícola):
+mes
+1     0.532
+2     0.537
+3     0.687
+4     0.943
+5     1.262
+6     1.150
+7     1.243
+8     1.295
+9     1.070
+10    1.210
+11    1.280
+12    0.791
+[OK] PAA: todo codigo_ibge (6 díg.) existe no IBGE
+PAA compra c/ doação simultânea: 3781 municípios distintos com execução em 2021-2026 (cobertura parcial real, não falha)
+
+--- 5. IPEA / Mapa das OSCs — leitura COMPLETA em chunks ---
+[OK] OSC: linhas lidas (100% do arquivo) = 960,315
+id_osc duplicados=0 | CNPJ duplicados=0 | sem município=32 | CNPJ com >14 dígitos=0
+[OK] OSC: id_osc único
+[OK] OSC: todos os códigos de município existem no IBGE (fora do IBGE: 0)
+[OK] OSC: todos os municípios têm centroide (distância ONG-doador calculável)
+Municípios distintos com ao menos 1 OSC: 5570 de 5571
+OSC por área de atuação (flag=1): {'Habitação': 385, 'Saúde': 24046, 'Cultura e recreação': 106487, 'Educação e pesquisa': 37327, 'Assistência social': 54398, 'Religião': 296137, 'Associações patronais, profissionais e de produtores rurais': 41460, 'Meio ambiente e proteção animal': 641, 'Desenvolvimento e defesa de direitos': 323020, 'Outros': 20603, 'Outras atividades associativas': 134783}
+OSC com 'Assistência social' (área ou subárea): 54,398 em 4421 municípios
+OSC candidatas a receptor (Assistência social OU centros/associações comunitárias): 54,420 em 4421 municípios
+[OK] Existe universo real de ONGs candidatas
+[OK] Toda OSC de 'Assistência social' tem município (nenhuma cai em location_precision=NONE)
+location_precision esperado: RBBA EXACT=190, RBBA MUNICIPALITY_CENTROID=2, OSC MUNICIPALITY_CENTROID=960,283, OSC NONE=32
+
+--- 6. Regras de escopo ---
+[OK] OSC: nenhuma coluna de CPF/sócio/pessoa física no arquivo
+[OK] OSC: nenhuma coluna de beneficiário final
+Nenhum dado simulado foi gerado por este script.
+
+======================================================================
+RESULTADO: TODOS OS TESTES PASSARAM
+======================================================================

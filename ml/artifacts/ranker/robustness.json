@@ -1,0 +1,337 @@
+{
+  "rotulo": "calculada sobre dados SIMULADOS (não representa desempenho no mundo real)",
+  "por_tag": {
+    "rb_s1": {
+      "taxa_target": 0.191922298392959,
+      "modelo_HGB": {
+        "mrr": 0.6307805289948147,
+        "top1_hit_rate": 0.46766917293233085,
+        "top3_hit_rate": 0.7360902255639098,
+        "ndcg@3": 0.4464943176700205,
+        "n_lotes_avaliaveis": 1330
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.4673817222877373,
+        "top1_hit_rate": 0.2699248120300752,
+        "top3_hit_rate": 0.5736842105263158,
+        "ndcg@3": 0.2861013762728405,
+        "n_lotes_avaliaveis": 1330
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.5480028659727908,
+        "top1_hit_rate": 0.3601503759398496,
+        "top3_hit_rate": 0.6819548872180451,
+        "ndcg@3": 0.36696149248960963,
+        "n_lotes_avaliaveis": 1330
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.444480847056035,
+        "top1_hit_rate": 0.24210526315789474,
+        "top3_hit_rate": 0.5428571428571428,
+        "ndcg@3": 0.2689654874752617,
+        "n_lotes_avaliaveis": 1330
+      }
+    },
+    "rb_s2": {
+      "taxa_target": 0.2274350221684127,
+      "modelo_HGB": {
+        "mrr": 0.6894620882992976,
+        "top1_hit_rate": 0.5433403805496829,
+        "top3_hit_rate": 0.7984496124031008,
+        "ndcg@3": 0.5005272351170601,
+        "n_lotes_avaliaveis": 1419
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.48834507439158603,
+        "top1_hit_rate": 0.30021141649048627,
+        "top3_hit_rate": 0.587737843551797,
+        "ndcg@3": 0.3088504123037621,
+        "n_lotes_avaliaveis": 1419
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.5712936953423211,
+        "top1_hit_rate": 0.383368569415081,
+        "top3_hit_rate": 0.7019027484143763,
+        "ndcg@3": 0.3874243530794945,
+        "n_lotes_avaliaveis": 1419
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.48066919573262074,
+        "top1_hit_rate": 0.2748414376321353,
+        "top3_hit_rate": 0.6018322762508809,
+        "ndcg@3": 0.3025510705873167,
+        "n_lotes_avaliaveis": 1419
+      }
+    },
+    "rb_s3": {
+      "taxa_target": 0.12906912565716483,
+      "modelo_HGB": {
+        "mrr": 0.6084756696295157,
+        "top1_hit_rate": 0.44534412955465585,
+        "top3_hit_rate": 0.7101214574898785,
+        "ndcg@3": 0.442275077949632,
+        "n_lotes_avaliaveis": 1235
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.36287894067246296,
+        "top1_hit_rate": 0.17732793522267207,
+        "top3_hit_rate": 0.4307692307692308,
+        "ndcg@3": 0.2050117568193682,
+        "n_lotes_avaliaveis": 1235
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.475522415056828,
+        "top1_hit_rate": 0.2720647773279352,
+        "top3_hit_rate": 0.5862348178137652,
+        "ndcg@3": 0.3215567651884635,
+        "n_lotes_avaliaveis": 1235
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.3798899031692554,
+        "top1_hit_rate": 0.17246963562753037,
+        "top3_hit_rate": 0.4591093117408907,
+        "ndcg@3": 0.2207079495121014,
+        "n_lotes_avaliaveis": 1235
+      }
+    },
+    "rb_s4": {
+      "taxa_target": 0.15382170754417168,
+      "modelo_HGB": {
+        "mrr": 0.6337267575498094,
+        "top1_hit_rate": 0.4715909090909091,
+        "top3_hit_rate": 0.7467532467532467,
+        "ndcg@3": 0.45251327150967746,
+        "n_lotes_avaliaveis": 1232
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.3998464085517657,
+        "top1_hit_rate": 0.19886363636363635,
+        "top3_hit_rate": 0.49512987012987014,
+        "ndcg@3": 0.23554347720319552,
+        "n_lotes_avaliaveis": 1232
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.5026397529238439,
+        "top1_hit_rate": 0.3027597402597403,
+        "top3_hit_rate": 0.627435064935065,
+        "ndcg@3": 0.3357582591627876,
+        "n_lotes_avaliaveis": 1232
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.40707197744535406,
+        "top1_hit_rate": 0.1939935064935065,
+        "top3_hit_rate": 0.512987012987013,
+        "ndcg@3": 0.24208844350342065,
+        "n_lotes_avaliaveis": 1232
+      }
+    },
+    "rb_s5": {
+      "taxa_target": 0.19918319915526478,
+      "modelo_HGB": {
+        "mrr": 0.6815338777200091,
+        "top1_hit_rate": 0.5386861313868613,
+        "top3_hit_rate": 0.7875912408759124,
+        "ndcg@3": 0.49075330298929326,
+        "n_lotes_avaliaveis": 1370
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.46392394912467905,
+        "top1_hit_rate": 0.272992700729927,
+        "top3_hit_rate": 0.5693430656934306,
+        "ndcg@3": 0.2857855184696181,
+        "n_lotes_avaliaveis": 1370
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.545004194912954,
+        "top1_hit_rate": 0.3532846715328467,
+        "top3_hit_rate": 0.6802919708029197,
+        "ndcg@3": 0.36454162773472387,
+        "n_lotes_avaliaveis": 1370
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.4593008026037223,
+        "top1_hit_rate": 0.2562043795620438,
+        "top3_hit_rate": 0.5671532846715328,
+        "ndcg@3": 0.2776978033856419,
+        "n_lotes_avaliaveis": 1370
+      }
+    },
+    "sc_acc_baixa": {
+      "taxa_target": 0.09834221995938075,
+      "modelo_HGB": {
+        "mrr": 0.6283514562360716,
+        "top1_hit_rate": 0.4665991902834008,
+        "top3_hit_rate": 0.7206477732793523,
+        "ndcg@3": 0.468581326793528,
+        "n_lotes_avaliaveis": 988
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.36817258315234025,
+        "top1_hit_rate": 0.18218623481781376,
+        "top3_hit_rate": 0.42813765182186236,
+        "ndcg@3": 0.2173126902339497,
+        "n_lotes_avaliaveis": 988
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.49970350162657856,
+        "top1_hit_rate": 0.3006072874493927,
+        "top3_hit_rate": 0.6214574898785425,
+        "ndcg@3": 0.35975655152277064,
+        "n_lotes_avaliaveis": 988
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.35727417544219164,
+        "top1_hit_rate": 0.15789473684210525,
+        "top3_hit_rate": 0.4251012145748988,
+        "ndcg@3": 0.207474769215891,
+        "n_lotes_avaliaveis": 988
+      }
+    },
+    "sc_acc_alta": {
+      "taxa_target": 0.23482176737126403,
+      "modelo_HGB": {
+        "mrr": 0.7305027551172926,
+        "top1_hit_rate": 0.5961820851688693,
+        "top3_hit_rate": 0.8355359765051396,
+        "ndcg@3": 0.5428579669571838,
+        "n_lotes_avaliaveis": 1362
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.5090273896441297,
+        "top1_hit_rate": 0.3142437591776799,
+        "top3_hit_rate": 0.6328928046989721,
+        "ndcg@3": 0.332817549565815,
+        "n_lotes_avaliaveis": 1362
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.5819251518590726,
+        "top1_hit_rate": 0.3920704845814978,
+        "top3_hit_rate": 0.7261380323054332,
+        "ndcg@3": 0.4168274402268558,
+        "n_lotes_avaliaveis": 1362
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.5055455659530549,
+        "top1_hit_rate": 0.3076358296622614,
+        "top3_hit_rate": 0.6270190895741556,
+        "ndcg@3": 0.3299467034337965,
+        "n_lotes_avaliaveis": 1362
+      }
+    },
+    "sc_hf_baixo": {
+      "taxa_target": 0.1484147683165884,
+      "modelo_HGB": {
+        "mrr": 0.6890397338510547,
+        "top1_hit_rate": 0.5447087776866284,
+        "top3_hit_rate": 0.7875307629204266,
+        "ndcg@3": 0.5284966658493505,
+        "n_lotes_avaliaveis": 1219
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.40782151491749524,
+        "top1_hit_rate": 0.21821164889253486,
+        "top3_hit_rate": 0.4889253486464315,
+        "ndcg@3": 0.24406284179931914,
+        "n_lotes_avaliaveis": 1219
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.546718305393449,
+        "top1_hit_rate": 0.3675143560295324,
+        "top3_hit_rate": 0.6595570139458573,
+        "ndcg@3": 0.38226598329276307,
+        "n_lotes_avaliaveis": 1219
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.4261889532398146,
+        "top1_hit_rate": 0.24118129614438064,
+        "top3_hit_rate": 0.5004101722723544,
+        "ndcg@3": 0.2553445099337166,
+        "n_lotes_avaliaveis": 1219
+      }
+    },
+    "sc_decl_fiel": {
+      "taxa_target": 0.1843411804083454,
+      "modelo_HGB": {
+        "mrr": 0.6827194447343702,
+        "top1_hit_rate": 0.5276119402985074,
+        "top3_hit_rate": 0.8044776119402985,
+        "ndcg@3": 0.5106561025037015,
+        "n_lotes_avaliaveis": 1340
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.4380358820284193,
+        "top1_hit_rate": 0.24701492537313433,
+        "top3_hit_rate": 0.5246268656716417,
+        "ndcg@3": 0.2587471382937249,
+        "n_lotes_avaliaveis": 1340
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.5624354894690716,
+        "top1_hit_rate": 0.38283582089552237,
+        "top3_hit_rate": 0.6723880597014925,
+        "ndcg@3": 0.39066828681551247,
+        "n_lotes_avaliaveis": 1340
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.44827720372496493,
+        "top1_hit_rate": 0.25671641791044775,
+        "top3_hit_rate": 0.5358208955223881,
+        "ndcg@3": 0.2676632378949401,
+        "n_lotes_avaliaveis": 1340
+      }
+    },
+    "sc_decl_otimista": {
+      "taxa_target": 0.16984110987940476,
+      "modelo_HGB": {
+        "mrr": 0.6458261090479935,
+        "top1_hit_rate": 0.48024316109422494,
+        "top3_hit_rate": 0.7644376899696048,
+        "ndcg@3": 0.457493851854479,
+        "n_lotes_avaliaveis": 1316
+      },
+      "baseline_ong_mais_proxima": {
+        "mrr": 0.42772427462777013,
+        "top1_hit_rate": 0.22644376899696048,
+        "top3_hit_rate": 0.526595744680851,
+        "ndcg@3": 0.25348345276883577,
+        "n_lotes_avaliaveis": 1316
+      },
+      "baseline_regra_distancia_categoria": {
+        "mrr": 0.5208383118907435,
+        "top1_hit_rate": 0.3161094224924012,
+        "top3_hit_rate": 0.6557750759878419,
+        "ndcg@3": 0.35207373188765767,
+        "n_lotes_avaliaveis": 1316
+      },
+      "baseline_aleatorio": {
+        "mrr": 0.44186925662989496,
+        "top1_hit_rate": 0.23632218844984804,
+        "top3_hit_rate": 0.5357142857142857,
+        "ndcg@3": 0.26050492915194773,
+        "n_lotes_avaliaveis": 1316
+      }
+    }
+  },
+  "misspecificacao_MRR": {
+    "treino=rb_s1": {
+      "rb_s2": 0.680381745339462,
+      "rb_s3": 0.5840606087569651,
+      "rb_s4": 0.6252035189738111,
+      "rb_s5": 0.6605044327124618,
+      "sc_acc_baixa": 0.6125813176926537,
+      "sc_acc_alta": 0.7189701512388736,
+      "sc_hf_baixo": 0.6737079778302092,
+      "sc_decl_fiel": 0.6720392853415241,
+      "sc_decl_otimista": 0.6234894221786319
+    }
+  },
+  "seeds": {
+    "mrr_modelo_media": 0.6487957844386892,
+    "mrr_modelo_dp": 0.035010240215151665,
+    "mrr_regra_media": 0.5284925848417477,
+    "mrr_regra_dp": 0.03859866319659529,
+    "ganho_sobre_regra_min": 0.08277766302202394,
+    "modelo_vence_regra_em_todas": true
+  },
+  "misspecificacao_nota": "Modelo treinado no cenário-base (rb_s1) e avaliado em cenários com parâmetros do simulador diferentes: mede dependência das premissas do gerador."
+}

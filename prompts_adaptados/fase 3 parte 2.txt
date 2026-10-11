@@ -1,0 +1,361 @@
+==================================================
+FASE 3 PARTE 2 — DASHBOARD, DEPLOY EM NUVEM E DEFESA
+==================================================
+
+Checkpoint 3 do projeto: URL pública (Render ou Hugging Face), banco
+em nuvem (Supabase ou MongoDB Atlas), README completo e Pitch final.
+
+Esta é a segunda parte da Fase 3. A Parte 1 entregou a doação com
+vários itens, a visibilidade por perfil aplicada na API e a interface
+simplificada de doador e ONG.
+
+Execute somente a PARTE 2. Pré-requisito: Fase 3 Parte 1 concluída
+(perfis DONOR, ORG e ADMIN funcionando). Não reabra o desenho da
+Parte 1; se encontrar defeito nela, corrija e registre.
+
+Problema: conectar DOADOR → ONG. Fora de escopo: ONG → beneficiário.
+
+==================================================
+1. STREAMLIT (DASHBOARD DO ADMINISTRADOR)
+==================================================
+
+Criar dashboard profissional para o ADMINISTRADOR e para a demonstração
+da defesa, expandindo o frontend Streamlit existente (visão técnica do
+admin e telas de doador e ONG da Parte 1), sem recriá-lo do zero.
+
+Não criar visual de projeto escolar.
+
+A interface deve ser limpa e preparada para futura transformação
+em produto SaaS.
+
+O dashboard completo é restrito ao perfil ADMIN (token por ambiente,
+nunca no código). Doador e ONG continuam vendo somente as telas da
+Parte 1. As telas de IA, Recomendações e Segurança/Sistema são
+exclusivas do ADMIN. Todas as consultas do dashboard passam pela API
+HTTP, que aplica a autorização por perfil.
+
+==================================================
+TELAS
+==================================================
+
+Perfil de acesso: as telas abaixo são do ADMIN (e do dashboard de
+demonstração da defesa). Doador e ONG veem somente as telas da
+Fase 3 Parte 1.
+
+Overview (indicadores principais)
+
+Doações e matches Doador x ONG
+
+Mapa (calor e localização)
+
+Organizações (ONGs e bancos de alimentos)
+
+Doadores
+
+Dados públicos
+
+Indicadores territoriais
+
+IA (modelo e métricas)
+
+Recomendações (simulador de match: doador informa lote → ranking de ONGs)
+
+Segurança/Sistema (SAST e saúde da aplicação)
+
+==================================================
+2. INDICADORES DEFINIDOS PELO PROJETO
+==================================================
+
+A demonstração deve exibir:
+
+A) Kg de alimentos salvos;
+B) Refeições geradas por região;
+C) Acurácia da IA;
+D) Tempo médio de match Doador x ONG;
+E) Vulnerabilidades mitigadas (SAST).
+
+Formato exigido:
+
+A) Gráficos dinâmicos;
+B) Mapas de calor;
+C) Indicadores de segurança.
+
+==================================================
+3. TRANSPARÊNCIA DE ORIGEM (OBRIGATÓRIO)
+==================================================
+
+Todo indicador, gráfico e mapa deve exibir um selo de origem:
+
+PÚBLICO (histórico, de fonte oficial)
+SIMULADO (gerado pelo simulador documentado)
+MEDIDO (registrado pela própria plataforma, entrada real)
+
+Regras:
+
+- Kg salvos e refeições geradas calculados a partir de doações
+  SIMULADAS devem exibir claramente "Simulação" no título e na legenda.
+  Nunca chamar de "kg salvos" sem o selo de origem.
+- Nunca atribuir à Rede Alimenta uma métrica histórica do PAA ou de
+  qualquer fonte pública.
+- Refeições geradas: converter kg em refeições usando a PREMISSA DA
+  EQUIPE de 0,4 kg por refeição (refeições = kg / 0,4). Tratar como
+  premissa de projeto, e não como dado de fonte pública: guardar o
+  valor em configuração (não fixo no código), exibir a premissa na
+  tela e na documentação, e manter o selo de origem do kg que deu
+  origem ao cálculo (SIMULADO ou MEDIDO).
+- Acurácia da IA: exibir as métricas reais do modelo (Fase 1),
+  rotuladas como "calculadas sobre dados simulados". Mostrar também
+  a comparação com os baselines.
+- Tempo médio de match: calcular a partir dos timestamps registrados;
+  informar se vem de execuções simuladas ou de uso real.
+- Vulnerabilidades mitigadas: calcular a partir dos relatórios
+  Bandit/Trivy antes e depois (security/reports/).
+- Se não existirem doações com data_origin = USER_ENTERED, mostrar
+  junto aos números simulados: "Nenhuma doação real registrada."
+
+Não mostrar gráfico inventado.
+Não misturar dados SIMULADOS e MEDIDOS no mesmo número sem separação
+visível.
+
+==================================================
+KPIs POSSÍVEIS
+==================================================
+
+Usar somente quando calculáveis, sempre com selo de origem:
+
+- ONGs reais catalogadas;
+- municípios e UFs cobertos;
+- registros públicos processados;
+- doações (simuladas / reais) e kg correspondentes;
+- refeições estimadas por região (com fator documentado);
+- taxa de aceite dos matches;
+- tempo médio de match;
+- performance real do modelo (rotulada);
+- última atualização dos datasets;
+- vulnerabilidades encontradas / mitigadas.
+
+==================================================
+4. MAPA
+==================================================
+
+Exibir ONGs, doadores e indicadores com localização real ou, no caso
+de doadores simulados, localização simulada com selo.
+
+Incluir mapa de calor (ex.: densidade de doações ou refeições por
+região, densidade de ONGs).
+
+Exibir as rotas de coleta planejadas (doadores, ordem das paradas e
+ONG de destino), com selo de origem (SIMULADO ou MEDIDO) e aviso
+quando a distância usa centroide de município ou linha reta.
+
+Tela de logística: comparar estratégias (ONG mais próxima, ranking
+híbrido, ranking híbrido com rota) em km totais, tempo estimado e
+lotes entregues antes da validade, sempre rotulado como simulação.
+Exibir o ciclo do match (proposta, aceite, recusa, expiração) e a
+latência do ranking.
+
+Permitir filtros por:
+
+UF
+município
+tipo de ONG / tipo de doador
+categoria de alimento
+origem do dado (público / simulado / medido)
+período
+
+==================================================
+5. IA NO DASHBOARD
+==================================================
+
+Exibir:
+
+- versão;
+- métricas e comparação com baselines;
+- data do treinamento;
+- datasets utilizados (reais e simulados);
+- explicação de um match (fatores do ranking);
+- feature importance;
+- confiança quando apropriado;
+- limitações, incluindo a circularidade da simulação.
+
+==================================================
+6. SEGURANÇA
+==================================================
+
+Manter no pipeline:
+
+Bandit
+Trivy
+
+Corrigir vulnerabilidades HIGH/CRITICAL quando tecnicamente possível.
+
+Gerar e atualizar relatórios em:
+
+security/reports/
+
+Alimentar o indicador "vulnerabilidades mitigadas" a partir deles.
+
+==================================================
+7. BANCO EM NUVEM
+==================================================
+
+Preparar banco em nuvem: Supabase (PostgreSQL) ou MongoDB Atlas.
+
+Preferir Supabase para manter compatibilidade com o schema
+PostgreSQL/Alembic da Fase 2.
+
+Pode utilizar free tier compatível.
+
+Configuração somente via environment variables.
+
+Nunca commitar credenciais.
+
+==================================================
+8. DEPLOY
+==================================================
+
+Publicar em URL pública (Render ou Hugging Face):
+
+API
+Frontend
+Banco
+
+Criar environments:
+
+development
+production
+
+==================================================
+9. OBSERVABILIDADE
+==================================================
+
+Implementar:
+
+- structured logging;
+- request ID;
+- health check;
+- readiness;
+- exception handlers;
+- logs de ingestão;
+- logs de simulação (seed, versão, quantidade gerada);
+- logs de predição e de match.
+
+Não registrar informações pessoais desnecessárias.
+
+==================================================
+10. TESTE E2E
+==================================================
+
+Testar:
+
+dados públicos
+→ ingestão
+→ banco
+→ API
+→ IA
+→ match Doador x ONG
+→ dashboard
+
+Repetir o trecho doador → match → ONG com os três perfis (DONOR, ORG,
+ADMIN) e conferir, em cada resposta e tela, que a visibilidade da
+Parte 1 (seção 3) foi respeitada.
+
+Usar doações do simulador (SIMULATED) ou entradas reais manuais.
+Não inventar transações fora dessas vias.
+
+==================================================
+11. README E PITCH (ENTREGÁVEIS DO CHECKPOINT 3)
+==================================================
+
+Criar versão completa de:
+
+README.md  (problema, solução, arquitetura, tecnologias, dados reais e
+simulados, IA, segurança, execução local, Docker, deploy, API,
+limitações, licenças)
+
+docs/PITCH.md  (roteiro do pitch final)
+
+A Fase 4 revisa e refina esses documentos.
+
+==================================================
+
+==================================================
+CRITÉRIO DE CONCLUSÃO
+==================================================
+
+[ ] aplicação publicada (URL pública)
+[ ] banco em nuvem
+[ ] dashboard com os 5 indicadores do projeto e selos de origem
+[ ] dashboard restrito ao ADMIN e acessos registrados em audit_logs
+[ ] gráficos dinâmicos e mapa de calor
+[ ] métricas de IA reais e rotuladas
+[ ] Bandit
+[ ] Trivy
+[ ] vulnerabilidades analisadas e mitigadas
+[ ] logs
+[ ] health checks
+[ ] E2E executado (com os três perfis)
+[ ] README completo
+[ ] Pitch final (versão inicial)
+
+IMPORTANTE:
+
+Execute esta fase de ponta a ponta.
+
+Leia primeiro o AGENTS.md e toda a documentação relevante existente.
+
+Analise → implemente → execute → teste → corrija → teste novamente.
+
+Não solicite confirmação entre pequenas etapas técnicas.
+
+Não encerre após apenas escrever o código.
+
+REGRA DE DADOS: REAL vs SIMULADO
+
+Dados REAIS (ONGs, território, indicadores, produtos, referências)
+nunca podem ser inventados.
+
+Dados SIMULADOS são permitidos SOMENTE para doadores, lotes de doação
+e desfechos de match, gerados pelo simulador documentado, reprodutível
+e versionado, e sempre exibidos com o selo SIMULADO.
+
+É terminantemente proibido:
+- Faker ou valores aleatórios sem premissa documentada;
+- mocks de negócio;
+- exibir dado simulado sem o selo de origem;
+- apresentar dado simulado como se fosse real;
+- apresentar métrica obtida em dado simulado como desempenho no mundo real;
+- dados gerados por IA apresentados como dados reais;
+- dados de pessoas físicas, reais ou fictícios.
+
+Se uma fonte REAL não fornecer os dados necessários, documente a
+limitação e procure outra fonte REAL E PÚBLICA. Se não houver fonte
+adequada, trate a lacuna por simulação documentada ou deixe a
+funcionalidade pendente. Nunca preencha a lacuna em silêncio.
+
+Não invente métricas, resultados de IA, fontes, licenças ou números.
+
+Somente finalize esta fase quando:
+
+- todos os requisitos executáveis desta fase tiverem sido implementados;
+- os dados utilizados tiverem origem verificável;
+- as licenças tiverem sido registradas;
+- o código estiver executando;
+- os testes relevantes tiverem sido executados;
+- erros encontrados tiverem sido investigados e corrigidos;
+- nenhuma informação fictícia estiver sendo apresentada como real.
+
+Ao final apresente:
+
+1. alterações realizadas;
+2. arquivos criados/modificados;
+3. fontes de dados usadas;
+4. licenças;
+5. quantidade REAL de registros processados e quantidade SIMULADA exibida;
+6. testes executados e resultados;
+7. métricas do modelo (rotuladas como calculadas sobre dados simulados);
+8. URL pública do deploy;
+9. pendências reais;
+10. próximo passo recomendado.
+
+Não avance automaticamente para a próxima fase.
