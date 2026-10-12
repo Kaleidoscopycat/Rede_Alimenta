@@ -168,14 +168,21 @@ jobs:
           mkdir -p security/reports/ci
           trivy config --format json --output security/reports/ci/trivy-config.json docker
           trivy config --severity HIGH,CRITICAL --exit-code 1 docker
-      - name: Trivy de imagem (relatório completo; falha com CRITICAL corrigível)
+      - name: Trivy de imagem (relatório JSON completo; falha com HIGH/CRITICAL corrigível)
         run: |
+          mkdir -p security/reports/ci
+          # 1) Relatório completo (todas as severidades) das duas imagens, antes de qualquer gate,
+          #    para o artefato sempre ter os dois arquivos mesmo se o gate falhar.
           for img in rede-alimenta-api:local rede-alimenta-frontend:local; do
             n=$(echo "$img" | cut -d: -f1)
             trivy image --format json --output "security/reports/ci/trivy-image-${n}.json" "$img"
-            trivy image --severity HIGH,CRITICAL --ignore-unfixed --format table "$img" || true
-            trivy image --severity CRITICAL --ignore-unfixed --exit-code 1 "$img"
           done
+          # 2) Gate: HIGH/CRITICAL com correção disponível reprovam o job (as duas imagens são avaliadas).
+          rc=0
+          for img in rede-alimenta-api:local rede-alimenta-frontend:local; do
+            trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$img" || rc=1
+          done
+          exit "$rc"
       - name: Sobe banco e migrações
         run: docker compose ${COMPOSE_FILES} up -d postgres migrate
       - name: Carga dos dados (ONGs PUBLIC + SIMULATED)

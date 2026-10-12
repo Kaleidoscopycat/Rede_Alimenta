@@ -20,10 +20,14 @@ RUN groupadd --system --gid 10001 app \
  && useradd --system --uid 10001 --gid app --home-dir /app --shell /usr/sbin/nologin app
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
-# Remove setuptools/wheel do Python do sistema (/usr/local) e, por garantia, do venv (/opt/venv): não são usados em tempo de execução e embutem pacotes com CVEs.
-# (pip uninstall -y apenas avisa e segue se o pacote já não existir.)
-RUN /usr/local/bin/python -m pip uninstall -y setuptools wheel \
- && /opt/venv/bin/python -m pip uninstall -y setuptools wheel
+# Remove pip, setuptools e wheel do Python do sistema (/usr/local) e do venv (/opt/venv). Em runtime nada chama pip (CMD, HEALTHCHECK, Compose, alembic e seed usam só python -m alembic/uvicorn/streamlit/scripts), e o pip embute libs vendored (msgpack, urllib3, setuptools) com CVEs que nenhuma versão do pip corrige ainda. O pip fica só no estágio builder.
+# Depois da remoção, apaga resquícios (diretórios, dist-info, executáveis) e FALHA o build se o pip ainda for importável ou se sobrar rastro dele.
+RUN /opt/venv/bin/python -m pip uninstall -y pip setuptools wheel \
+ && /usr/local/bin/python -m pip uninstall -y pip setuptools wheel \
+ && rm -rf /opt/venv/lib/python3*/site-packages/pip /opt/venv/lib/python3*/site-packages/pip-*.dist-info /usr/local/lib/python3*/site-packages/pip /usr/local/lib/python3*/site-packages/pip-*.dist-info /opt/venv/bin/pip /opt/venv/bin/pip3* /usr/local/bin/pip /usr/local/bin/pip3* \
+ && ! /opt/venv/bin/python -c "import pip" 2>/dev/null \
+ && ! /usr/local/bin/python -c "import pip" 2>/dev/null \
+ && [ -z "$(find /usr/local /opt/venv \( -name 'pip-*.dist-info' -o -path '*/site-packages/pip' \))" ]
 # somente o necessário para executar API, migrações e carga (sem tests/, docs/, data/, eda/, pipelines de ingestão)
 COPY --chown=app:app alembic.ini ./alembic.ini
 COPY --chown=app:app core ./core
