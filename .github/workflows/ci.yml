@@ -182,18 +182,25 @@ jobs:
         run: docker compose ${COMPOSE_FILES} --profile seed run --rm seed
       - name: Sobe API e frontend
         run: docker compose ${COMPOSE_FILES} up -d api frontend
-      - name: Espera a API ficar pronta e checa a interface
+      - name: Espera a API e a interface ficarem prontas
         run: |
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:8000/ready && break; sleep 3; done
           curl -sf http://127.0.0.1:8000/ready
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8501/_stcore/health && break; sleep 3; done
           curl -sf http://127.0.0.1:8501/_stcore/health
       - name: Fluxo completo (doador → parser → confirmação → match → ONG aceita/recusa → coleta)
         env:
-          DATABASE_URL: postgresql+psycopg://rede_alimenta:ci_compose_pw_aleatoria_0123456789@127.0.0.1:5432/rede_alimenta
+          DATABASE_URL: postgresql+psycopg://${{ env.APP_USER }}:${{ env.POSTGRES_PASSWORD }}@127.0.0.1:5432/${{ env.APP_DB }}
           API_BASE_URL: http://127.0.0.1:8000
           E2E_SIM_TAG: smoke
           E2E_OUT: security/reports/ci/e2e-compose.json
         run: python -m scripts.e2e_flow
+      - name: Diagnóstico (estado e logs recentes; sem variáveis de ambiente)
+        if: failure()
+        run: |
+          docker compose ${COMPOSE_FILES} ps || true
+          docker compose ${COMPOSE_FILES} logs --no-color --tail 100 frontend || true
+          docker compose ${COMPOSE_FILES} logs --no-color --tail 50 api || true
       - name: Logs dos contêineres (em caso de falha)
         if: failure()
         run: docker compose ${COMPOSE_FILES} logs --no-color --tail=200
