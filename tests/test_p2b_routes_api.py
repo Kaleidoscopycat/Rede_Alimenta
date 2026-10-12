@@ -1,5 +1,6 @@
 """Contrato dos endpoints de rotas (Fase 2 Parte 2): POST /api/v1/routes/plan e GET /api/v1/routes/{id}.
 Fixture TÉCNICA: o aceite da ONG é gravado direto no banco (o ciclo de aceite já é testado em test_p2_match); veículos e doações vêm do simulador (SIMULATED)."""
+import datetime as dt
 import uuid
 
 import pytest
@@ -129,12 +130,31 @@ def test_lote_refrigerado_em_veiculo_comum_fica_de_fora_com_motivo(client, world
     assert p["unassigned"][0]["reason"] == "REFRIGERACAO_INCOMPATIVEL"
 
 
-def test_prazo_de_validade_com_margem_excessiva_deixa_lote_fora(client, world, alvo, clock):
+# Cenário determinístico: relógio fixo (terça 10:00 America/Sao_Paulo) e fuso da aplicação conferido. O motivo reportado é a PRIMEIRA violação na ordem do verificador; com margem de 48 h
+# a validade (24 h) sempre é violada, mas outras violações simultâneas (janela de recebimento da ONG, horizonte) podem vir antes, conforme as janelas da ONG/doador nos dados
+# (verificado: no mesmo relógio, ONGs com horários diferentes reportam PRAZO_INVIAVEL ou JANELA_ONG_INVIAVEL). Todos os motivos abaixo são legítimos para "não há como entregar a tempo".
+MOTIVOS_DE_PRAZO = ("PRAZO_INVIAVEL", "JANELA_ONG_INVIAVEL", "JANELA_INALCANCAVEL", "JANELA_INSUFICIENTE", "FORA_DO_HORIZONTE")
+RELOGIO_FIXO = dt.datetime(2026, 10, 13, 13, 0, tzinfo=dt.timezone.utc)  # terça 10:00 em America/Sao_Paulo
+
+
+@pytest.fixture()
+def relogio_fixo(clock):
+    from core.settings import TZ
+    assert str(TZ) == "America/Sao_Paulo", "o cenário assume o fuso padrão da aplicação (APP_TIMEZONE)"
+    salvo = clock.now
+    clock.now = RELOGIO_FIXO
+    yield clock
+    clock.now = salvo
+
+
+def test_prazo_de_validade_com_margem_excessiva_deixa_lote_fora(client, world, alvo, relogio_fixo):
+    assert relogio_fixo() == RELOGIO_FIXO
     d = aceitar(client, world, alvo["org_id"], quantidade_kg=10, dias_ate_validade=1)
-    r = client.post(URL, headers=world["admin"], json={"donation_ids": [d["id"]], "vehicle_id": str(alvo["vehicle_id"]), "departure_at": partida(clock), "safety_margin_h": 48})
+    r = client.post(URL, headers=world["admin"], json={"donation_ids": [d["id"]], "vehicle_id": str(alvo["vehicle_id"]), "departure_at": partida(relogio_fixo), "safety_margin_h": 48})
     assert r.status_code == 201, r.text
     p = r.json()["primary"]
-    assert p["status"] == "INFEASIBLE" and p["unassigned"][0]["reason"] in ("PRAZO_INVIAVEL", "JANELA_INALCANCAVEL", "JANELA_INSUFICIENTE", "FORA_DO_HORIZONTE")
+    assert p["status"] == "INFEASIBLE" and p["n_stops"] == 0
+    assert p["unassigned"][0]["reason"] in MOTIVOS_DE_PRAZO, p["unassigned"]
     assert p["parameters"]["safety_margin_h"] == 48
 
 

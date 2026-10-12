@@ -116,10 +116,12 @@ jobs:
           trivy fs --scanners vuln,secret,misconfig --skip-dirs .venv,data,.git --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 .
       - name: gitleaks (segredos no histórico do Git)
         run: |
-          curl -sSfL -o gitleaks.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          # O tarball mantém o nome original: o arquivo de checksums referencia esse nome e o `sha256sum -c` precisa encontrá-lo.
+          TARBALL="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -sSfL -o "${TARBALL}" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${TARBALL}"
           curl -sSfL -o gitleaks.checksums "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_checksums.txt"
-          grep "gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz" gitleaks.checksums | sha256sum -c -
-          tar xzf gitleaks.tgz gitleaks
+          grep -F " ${TARBALL}" gitleaks.checksums | sha256sum -c -
+          tar xzf "${TARBALL}" gitleaks
           ./gitleaks detect --source . --redact --report-format json --report-path security/reports/ci/gitleaks.json
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
