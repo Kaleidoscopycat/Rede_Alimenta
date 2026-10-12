@@ -69,7 +69,19 @@ class ProfileOut(BaseModel):
     aviso: Optional[str] = None
 
 
+class OrganizationPublicView(BaseModel):
+    """Visão de DONOR (e de ORG para outra organização): só identificação pública mínima; sem perfil declarado, coordenadas, origem do registro ou capacidade."""
+    perfil: Literal["PUBLICA"] = "PUBLICA"
+    ong_id: str
+    ong_tipo: str
+    uf: Optional[str]
+    municipio_ibge: Optional[int]
+    platform_status: str
+    aviso: str
+
+
 class OrganizationOut(BaseModel):
+    perfil: Literal["COMPLETA"] = "COMPLETA"
     id: uuid.UUID
     ong_id: str
     ong_tipo: str

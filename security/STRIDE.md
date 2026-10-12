@@ -130,11 +130,11 @@ Atualiza A1/A3 (autenticação mínima e auditoria, **implementadas**). A7/A10 p
 
 **Severidade** é qualitativa (Impacto × Probabilidade), avaliada pela equipe. **Status:** `IMPLEMENTADO` (existe no repositório e foi verificado como indicado), `PARCIAL`, `PENDENTE`. Itens verificados só por inspeção ou emulação dizem isso na coluna Verificação.
 
-### 12.1 Risco registrado na validação da Parte 1 — divulgação de informação (PENDENTE)
+### 12.1 Risco registrado na validação da Parte 1 — divulgação de informação (MITIGADO na Fase 3 Parte 1 — ver §13)
 
 | ID | STRIDE | Ameaça | Impacto | Prob. | Severidade | Mitigação planejada | Status | Verificação |
 |---|---|---|---|---|---|---|---|---|
-| **P2B-1** | **I** | **Divulgação de informação:** a API (e, por consequência, a interface) entrega a qualquer perfil autenticado os **scores internos da IA** (`ML_SCORE`, `BUSINESS_RULE_SCORE`, `DISTANCE_SCORE`, `FINAL_SCORE`), os componentes das regras, os pesos, as contagens de elegibilidade e o **ranking completo de ONGs**. O **doador** recebe o ranking inteiro (inclusive `org_id` das ONGs não escolhidas). A **ONG** recebe, além da sua candidatura, a sua **posição** e `current_position` no ranking, o que revela a classificação relativa frente às outras ONGs. | Médio–Alto (permite *gaming* do ranking, expõe critérios internos e a competição entre ONGs; hoje sobre dados SIMULADOS, mas o desenho vale para dados reais) | Alta (qualquer conta autenticada) | **ALTA** | **Fase 3 Parte 1, seção 3:** esquemas de resposta **por perfil aplicados na API** (e não só na tela): doador vê apenas a ONG proposta/aceita e a explicação em linguagem simples; ONG vê apenas a própria proposta sem scores internos nem posição; scores/ranking completos só para ADMIN/auditoria. **NÃO implementado nesta parte, por decisão da equipe.** | **PENDENTE** | Comportamento atual reproduzido por sonda e fixado em `tests/test_p2b_divulgacao_scores_pendente.py` (2 testes `xfail(strict=True)` descrevendo o comportamento desejado; viram XPASS quando a mitigação entrar). |
+| **P2B-1** | **I** | **Divulgação de informação:** (situação encontrada na Parte 1) a API entregava a qualquer perfil autenticado os scores internos da IA, os componentes das regras, os pesos, a elegibilidade e o ranking completo de ONGs; a ONG recebia também a posição no ranking. | Médio–Alto | Alta | **ALTA** | **Fase 3 Parte 1, seção 3 (Etapa A):** `response_model` por perfil na API (`api/schemas_views.py`): DONOR vê só a situação e a ONG que aceitou; ORG vê a doação, análise textual e a própria candidatura sem scores nem posição; ranking, scores, modelo e predictions só ADMIN, com auditoria `admin.access`. | **IMPLEMENTADO (Etapa A)** | `tests/test_p3a_visibilidade_perfil.py` (substitui o antigo `test_p2b_divulgacao_scores_pendente.py`, que era *xfail* estrito); e2e com tokens por perfil verifica 403 nas rotas ADMIN e ausência de scores. Detalhes: `docs/ROLE_VISIBILITY.md`. Residual: ver P3A-9 e P3A-10. |
 
 ### 12.2 Rotas de coleta (`routing/`, `api/routers/routes.py`) — F1/F5
 
@@ -173,10 +173,35 @@ Atualiza A1/A3 (autenticação mínima e auditoria, **implementadas**). A7/A10 p
 | P2B-22 | I | Métrica de dados simulados lida como desempenho real | Média | Rótulo "calculada sobre dados simulados" em relatórios, API (`/model/info`) e benchmark de rotas; MANUALLY_LABELED não existe | IMPLEMENTADO | `docs/MODEL_REPORT.md`, `docs/ROUTING_BENCHMARK.json` |
 
 ### 12.5 Riscos residuais ao final da Parte 2
-1. **P2B-1** (scores/ranking expostos a todos os perfis) — a corrigir na Fase 3 Parte 1, seção 3.
+1. **P2B-1** (scores/ranking expostos a todos os perfis) — mitigado na Fase 3 Parte 1 (Etapa A); ver §13.
 2. TLS, rate limit, autenticação com expiração/rotação/MFA e gerenciador de segredos (P2-3, P2-6, P2-7, P2B-19, P2B-20).
 3. Resultados do Trivy (vulnerabilidades de dependências e imagens) e a execução real do pipeline no GitHub e do `docker compose up` — **ainda não verificados** (ver `docs/FASE2_P2_RELATORIO_FINAL.md`).
 4. Desempenho do parser e do modelo em textos e dados **reais** é **desconhecido** (sem rotulagem manual; toda métrica é sobre dados simulados).
 
 ### 12.6 Rastreabilidade para testes (Parte 2)
-`tests/test_p2b_routing_core.py` (P2B-4, P2B-9), `tests/test_p2b_routes_api.py` (P2B-2, P2B-3, P2B-4, P2B-6, P2B-8), `tests/test_p2b_divulgacao_scores_pendente.py` (P2B-1, *xfail* estrito), `tests/test_portabilidade.py` (portabilidade do `streamlit run`), `tests/test_p2b_uso_academico.py` (P2B-18).
+`tests/test_p2b_routing_core.py` (P2B-4, P2B-9), `tests/test_p2b_routes_api.py` (P2B-2, P2B-3, P2B-4, P2B-6, P2B-8), `tests/test_p3a_visibilidade_perfil.py` (P2B-1; antes *xfail* estrito em `test_p2b_divulgacao_scores_pendente.py`, hoje exigido), `tests/test_portabilidade.py` (portabilidade do `streamlit run`), `tests/test_p2b_uso_academico.py` (P2B-18).
+
+## 13. Fase 3 · Parte 1 (Etapa A) — doação com itens e visibilidade por perfil
+
+**Status:** `IMPLEMENTADO` = no repositório e verificado como indicado; `PARCIAL`; `PENDENTE`. Verificações marcadas **CI** só serão confirmadas no GitHub (não há Docker neste ambiente).
+
+| ID | STRIDE | Ameaça | Sev. | Mitigação | Status | Verificação |
+|---|---|---|---|---|---|---|
+| P3A-1 | I | Doador ou ONG recebe scores, ranking, elegibilidade, pesos, latências ou posição | Alta | Schemas de resposta por perfil (`DonorMatchView`, `OrgMatchView`, `AdminMatchView`, união discriminada por `perfil`); o `response_model` descarta chaves extras (defesa em profundidade); eventos do doador/ONG sem `detail`, `ong_id` e `rank_position` | IMPLEMENTADO | `tests/test_p3a_visibilidade_perfil.py` |
+| P3A-2 | E | DONOR/ORG usa rotas exclusivas do ADMIN (`/matches/{id}/ranking`, `/predictions`, `/model/info`) | Alta | `require_roles("ADMIN")`; negativas auditadas (`authz.role_denied`) | IMPLEMENTADO | `test_apenas_admin_ve_ranking_modelo_e_predictions`, `test_negativas_de_acesso_sao_auditadas`; e2e |
+| P3A-3 | R | Acesso do ADMIN a dados restritos sem trilha | Média | `audit_admin=` em `require_roles` grava `admin.access` (recurso e query; nunca o token) | IMPLEMENTADO | `test_acesso_admin_e_auditado_sem_token`; e2e conta os registros |
+| P3A-4 | T/I | Item com `data_origin` diferente do da doação (dado simulado apresentado como real, ou o contrário) | Alta | FK composta `(donation_id, data_origin)` → `donations(id, data_origin)`; item herda a origem e o rastreio do simulador | IMPLEMENTADO | `test_item_herda_origem_da_doacao_e_o_banco_recusa_origem_diferente` |
+| P3A-5 | T | Peso estimado (volume → kg por massa por litro, **premissa sem fonte**) tratado como medido | Média | `weight_basis`, `weight_estimated`, nota e alerta em toda resposta; densidade padrão configurável (`DONATION_DEFAULT_DENSITY_KG_L`); sugestões do texto ficam pendentes | IMPLEMENTADO (limitação documentada) | `test_item_em_volume_usa_massa_por_litro_da_taxonomia_e_avisa`, `tests/test_p3a_conversao_agregacao.py` |
+| P3A-6 | T | Validade só mês/ano lida como data exata: o último dia do mês é a leitura **menos** restritiva (o produto pode vencer antes) | Média | Regra da equipe aplicada com aviso explícito, campo PENDENTE de confirmação quando vem do texto, nota em toda resposta; a validade do lote é a do item mais próximo | PARCIAL (risco residual: o doador que informa só mês/ano assume a data) | `test_item_manual_converte_para_kg_e_agrega_no_cabecalho`, `test_regressao_quatro_itens…` |
+| P3A-7 | T | Sugestão do parser gravada como fato (quantidade, validade, categoria, refrigeração) | Alta | Itens do texto nascem `TEXTO_SUGERIDO` com `pending_fields`; sem confirmação do item e de cada campo a doação não passa de `PENDING_CONFIRMATION`; o parser é função pura, a pré-visualização não grava doação | IMPLEMENTADO | `tests/test_p3a_parser_itens.py`, `test_pre_visualizacao_do_texto_nao_grava_doacao`, `test_itens_sugeridos_do_texto_exigem_confirmacao` |
+| P3A-8 | D | Rascunho com milhares de itens / peso absurdo | Média | `DONATION_MAX_ITEMS` (padrão 30), `DONATION_MAX_TOTAL_KG`, entradas estritas (`extra="forbid"`, limites por campo); **sem rate limit** (P2-6) | PARCIAL | `test_limite_de_itens_configuravel`, `test_entradas_estritas` |
+| P3A-9 | I | Lote misto avaliado por modelo treinado só com lotes de **uma** categoria | Média | Elegibilidade exige que a ONG aceite **todas** as categorias; `ML_SCORE` usa a categoria predominante; alerta de desempenho DESCONHECIDO ao ADMIN e à ONG | PARCIAL (desempenho em lote misto desconhecido) | `tests/test_p3a_lote_misto_match.py` |
+| P3A-10 | I | Pseudônimo da ONG que aceitou (e distância) exibidos ao doador; ONG que vê o município do doador; coordenadas exatas após dados reais | Média | Doador vê o pseudônimo só após o aceite; ONG vê tipo/porte/município do doador (não o id); **localização exata e contato só após cadastro real (P2B-7) permanecem PENDENTES** | PARCIAL | `test_doador_nao_recebe_scores_ranking_nem_elegibilidade` |
+| P3A-11 | T | Migration 0003 irreversível ou destrutiva | Média | Downgrade manual testado com dados; itens históricos do simulador não são alterados | IMPLEMENTADO (local) | `tests/test_p3a_xx_migracao_reversivel.py`; **CI:** serviço `migrate` do Compose |
+| P3A-12 | I | Tokens por perfil no CI vazando em log/imagem | Alta | Gerados no job, mascarados (`::add-mask::`), lidos por `create_user --token-env` (não impresso), **não** passados aos contêineres; `.env.example` só documenta nomes | IMPLEMENTADO (inspeção); **execução no GitHub PENDENTE** | revisão de `ci.yml`, `docker-compose.ci.yml`, `scripts/create_user.py` |
+
+### 13.1 Riscos residuais ao final da Etapa A
+1. Desempenho do ranker em **lote misto** e do parser em **texto real** desconhecidos (sem conjunto `MANUALLY_LABELED`).
+2. Conversões para kg (massa por litro e massa unitária por embalagem) são **premissas da taxonomia v0.2, sem fonte**.
+3. A base de ONGs só tem pseudônimo (sem nome): a interface não pode mostrar nome de ONG ao doador.
+4. TLS, rate limit, expiração/rotação/MFA de tokens (P2-3, P2-6, P2B-19, P2B-20) seguem PENDENTES.

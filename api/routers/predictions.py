@@ -18,8 +18,8 @@ from database import models as m
 router = APIRouter(prefix="/api/v1", tags=["modelo"])
 
 
-@router.post("/predictions", response_model=PredictOut, summary="Predição direta do ranker da Fase 1 (sem criar doação/match)")
-def predictions(body: PredictionIn, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN"))):
+@router.post("/predictions", response_model=PredictOut, summary="ADMIN: predição direta do ranker da Fase 1 (sem criar doação/match)")
+def predictions(body: PredictionIn, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("ADMIN", audit_admin="predictions"))):
     donor = resolve_donor(db, request, user, body.donor_id)
     if STATE.ranker is None:
         raise HTTPException(503, "modelo indisponível")
@@ -43,8 +43,8 @@ def predictions(body: PredictionIn, request: Request, db: Session = Depends(get_
     return res
 
 
-@router.get("/model/info", summary="Versões, hashes, origem dos dados de treino e limitações dos modelos e do motor")
-def model_info(user: m.User = Depends(require_roles("DONOR", "ORG", "ADMIN"))):
+@router.get("/model/info", summary="ADMIN: versões, hashes, origem dos dados de treino e limitações dos modelos e do motor")
+def model_info(user: m.User = Depends(require_roles("ADMIN", audit_admin="model_info"))):
     if STATE.ranker is None or STATE.parser is None:
         raise HTTPException(503, "modelo indisponível")
     mt = STATE.ranker.meta

@@ -1,4 +1,6 @@
 # Sobreposição SOMENTE para o CI: publica o PostgreSQL em 127.0.0.1 para o script de validação ponta a ponta (scripts/e2e_flow.py) criar contas de demonstração.
+# Tokens POR PERFIL (Fase 3 Parte 1): o CI gera E2E_ADMIN_TOKEN, E2E_DONOR_TOKEN e E2E_ORG_TOKEN (mascarados), e o e2e cria as contas no banco com `create_user --token-env`.
+# Os tokens NÃO são passados aos contêineres (a API só guarda hashes; privilégio mínimo): ficam apenas no processo do CI que roda o e2e.
 # Uso: docker compose -f docker-compose.yml -f docker-compose.ci.yml up -d
 services:
   postgres:

@@ -12,7 +12,7 @@ from database.session import session_scope
 from match import batch as batch_mod
 from match import lifecycle
 from match.eligibility import RULES, DonationCtx, evaluate
-from tests.helpers_p2 import org_token
+from tests.helpers_p2 import admin_match, org_token
 
 PAYLOAD = {"categoria": "HORT_FRUTOS", "exige_refrigeracao": False, "dias_ate_validade": 4, "quantidade_kg": 20}
 
@@ -35,7 +35,8 @@ def new_match(client, world, donor="donor_a", **kw):
     d = new_lot(client, world, donor, **kw)
     r = client.post("/api/v1/matches", headers=world[donor], json={"donation_id": d["id"], "top_n": 15})
     assert r.status_code == 201, r.text
-    return d, r.json()
+    assert r.json()["perfil"] == "DONOR" and "ranking" not in r.json()  # o doador recebe só a situação
+    return d, admin_match(client, world, r.json()["id"])
 
 
 # ------------------------------------------------------------------ scores e ranking
@@ -164,16 +165,17 @@ def test_ciclo_completo_recusa_expira_aceita_coleta(client, world, restore_clock
     assert client.post(f"/api/v1/matches/{mid}/respond", headers=org2, json={"accept": True}).status_code == 403
     # ONG 1 vê a proposta (apenas a própria candidatura) e recusa
     v = client.get(f"/api/v1/matches/{mid}", headers=org1).json()
-    assert v["awaiting_my_response"] and "ranking" not in v
+    assert v["perfil"] == "ORG" and v["awaiting_my_response"] and "ranking" not in v
     r = client.post(f"/api/v1/matches/{mid}/respond", headers=org1, json={"accept": False, "note": "sem espaço"})
     assert r.status_code == 200, r.text
-    assert r.json()["current_org"] == rk[1]["ong_id"] and r.json()["status"] == "PROPOSED"
+    assert r.json()["perfil"] == "ORG" and r.json()["status"] == "PROPOSED"
+    assert admin_match(client, world, mid)["current_org"] == rk[1]["ong_id"]
     # ONG 2 deixa expirar
     restore_clock.advance(minutes=SETTINGS.proposal_ttl_minutes + 1)
     with session_scope() as s:
         assert lifecycle.expire_overdue(s, STATE.engine) >= 1
-    v = client.get(f"/api/v1/matches/{mid}", headers=world["donor_a"]).json()
-    assert v["current_org"] == rk[2]["ong_id"]
+    assert admin_match(client, world, mid)["current_org"] == rk[2]["ong_id"]
+    assert "current_org" not in client.get(f"/api/v1/matches/{mid}", headers=world["donor_a"]).json()
     # resposta tardia da ONG 2 é negada
     assert client.post(f"/api/v1/matches/{mid}/respond", headers=org2, json={"accept": True}).status_code in (403, 409)
     # ONG 3 aceita; coleta registrada
@@ -195,7 +197,9 @@ def test_ciclo_completo_recusa_expira_aceita_coleta(client, world, restore_clock
     assert all(e["data_origin"] == "SIMULATED" for e in ev)
     # ONG só vê os próprios eventos
     ev1 = client.get(f"/api/v1/matches/{mid}/events", headers=org1).json()["events"]
-    assert ev1 and all(e["ong_id"] == rk[0]["ong_id"] for e in ev1)
+    assert ev1 and all("ong_id" not in e and "rank_position" not in e for e in ev1)  # ONG não vê posição nem identificação de outras
+    assert not any("FINAL_SCORE" in str(e.get("detail")) for e in ev1)
+    assert all("detail" not in e and "ong_id" not in e for e in ev)  # doador só vê tipos e tempos
     # capacidade: recusada/expirada liberadas; aceita consumida
     with session_scope() as s:
         res = {r.organization_id: r.status for r in s.scalars(select(m.CapacityReservation).where(m.CapacityReservation.match_id == mid))}
@@ -222,6 +226,7 @@ def test_esgota_candidatas_vira_no_match(client, world):
     while mt["status"] == "PROPOSED" and n < 40:
         mt = client.post(f"/api/v1/matches/{mt['id']}/respond", headers=world["admin"], json={"accept": False}).json()
         n += 1
+    assert mt["perfil"] == "ADMIN"
     assert mt["status"] == "EXHAUSTED"
     assert client.get(f"/api/v1/donations/{d['id']}", headers=world["donor_a"]).json()["status"] == "NO_MATCH"
     with session_scope() as s:
@@ -322,12 +327,15 @@ def test_batch_pela_api_sobre_lotes_simulados(client, world):
 
 # ------------------------------------------------------------------ predições e contrato
 def test_predictions_contrato(client, world):
-    r = client.post("/api/v1/predictions", headers=world["donor_a"], json={"categoria": "HORT_FRUTOS", "quantidade_kg": 20, "horas_ate_validade": 72, "municipio_ibge": 3550308})
+    assert client.post("/api/v1/predictions", headers=world["donor_a"], json={"categoria": "HORT_FRUTOS", "quantidade_kg": 20, "horas_ate_validade": 72, "municipio_ibge": 3550308}).status_code == 403
+    assert client.get("/api/v1/model/info", headers=world["donor_a"]).status_code == 403
+    r = client.post("/api/v1/predictions", headers=world["admin"], json={"donor_id": str(world["donor_a_id"]), "categoria": "HORT_FRUTOS", "quantidade_kg": 20, "horas_ate_validade": 72,
+                                                                          "municipio_ibge": 3550308})
     assert r.status_code == 200, r.text
     j = r.json()
     assert j["data_origin"] and "SIMULAD" in j["aviso"].upper()
     assert j["ranking"]
-    info = client.get("/api/v1/model/info", headers=world["donor_a"]).json()
+    info = client.get("/api/v1/model/info", headers=world["admin"]).json()
     assert info["parser"]["threshold_note"] == "limiar calibrado sobre texto simulado"
     assert any("R1" in a and "R6" in a for a in info["avisos"])
 

@@ -61,6 +61,8 @@ def score_table(ranking: list[dict]) -> pd.DataFrame:
 
 def render_match(mt: dict) -> None:
     st.markdown(f"**Match** `{mt['id']}` — estado **{mt['status']}** — {origin_badge(mt['data_origin'])}")
+    if mt.get("situacao"):  # visão do DOADOR: só a situação (nunca ranking, scores ou ONGs não escolhidas)
+        st.write(f"Situação: **{mt['situacao']}**" + (f" — ONG que aceitou: **{mt['ong_aceita']}**" if mt.get("ong_aceita") else ""))
     if mt.get("current_org"):
         st.write(f"Proposta atual: **{mt['current_org']}** (posição {mt['current_position']})" + (f" — responder até {mt['proposal_expires_at']}" if mt.get("proposal_expires_at") else ""))
     lat = mt.get("latency_ms", {})
@@ -188,7 +190,7 @@ def page_donor(cli: ApiClient, me: dict) -> None:
                 render_match(mt)
                 ev = cli.events(mid)
                 st.markdown("**Histórico de estados (match_events)**")
-                st.dataframe(pd.DataFrame([{"quando": e["at"], "evento": e["event_type"], "ONG": e["ong_id"], "pos.": e["rank_position"], "s desde o anterior": e["seconds_since_previous"],
+                st.dataframe(pd.DataFrame([{"quando": e["at"], "evento": e["event_type"], "ONG": e.get("ong_id"), "pos.": e.get("rank_position"), "s desde o anterior": e["seconds_since_previous"],
                                             "ator": e["actor_type"]} for e in ev["events"]]), hide_index=True, use_container_width=True)
             except ApiError as e:
                 show_error(e)
@@ -210,15 +212,19 @@ def page_org(cli: ApiClient, me: dict) -> None:
             st.info("Nenhuma proposta pendente para a sua organização.")
         for mt in props:
             d = mt["donation"]
+            rs = d["resumo"]
             with st.container(border=True):
                 st.markdown(f"**Proposta** `{mt['id']}` — {origin_badge(mt['data_origin'])}")
-                st.write(f"Lote: **{d['categoria']}** · **{d['quantity_kg']} kg** (≈ {d['refeicoes_equivalentes']} refeições, kg ÷ {d['premissa_kg_por_refeicao']}) · refrigeração: {'sim' if d['exige_refrigeracao'] else 'não'} · "
-                         f"validade até {d['expires_at']} ({d['validity_source']}) · alérgenos: {'sim' if d['contem_alergenico'] else 'não/inf.'}")
+                st.write(f"Lote: **{', '.join(rs['categories'])}** · **{rs['quantity_kg']} kg** (≈ {rs['refeicoes_equivalentes']} refeições, kg ÷ {rs['premissa_kg_por_refeicao']}) · refrigeração: "
+                         f"{'sim' if rs['exige_refrigeracao'] else 'não'} · validade mais próxima até {rs['expires_at']} · alérgenos: {'sim' if d['contem_alergenico'] else 'não/inf.'}")
+                for it in d["items"]:
+                    st.caption(f"• {it['produto']} — {it['quantity']} × {it['unit'] or 'un.'} de {it['unit_weight']} {it['unit_weight_unit']} = {it['quantity_kg']} kg · validade {it['expires_at']}")
+                for line in d["analise"]:
+                    st.write("🛈 " + line)
                 st.caption(f"Doador: {d['doador']['tipo']} (município IBGE {d['doador']['municipio_ibge']}) · responder até {mt['proposal_expires_at']}")
                 my = mt.get("my_candidacy")
                 if my:
-                    st.write(f"Scores da sua candidatura — ML {my['ML_SCORE']} · regras {my['BUSINESS_RULE_SCORE']} · distância {my['DISTANCE_SCORE']} · FINAL {my['FINAL_SCORE']} · "
-                             f"dist. {my['dist_km']} km ({my['location_precision']})")
+                    st.write(f"Distância em linha reta: {my['dist_km']} km" + (" (aproximada)" if my["distancia_aproximada"] else "") + f" · espera pela janela {my['espera_janela_h']} h · folga até a validade {my['folga_validade_h']} h")
                 st.caption(d["aviso"])
                 c1, c2, _ = st.columns([1, 1, 4])
                 if c1.button("Aceitar", key=f"ok_{mt['id']}"):
@@ -235,7 +241,7 @@ def page_org(cli: ApiClient, me: dict) -> None:
                         show_error(e)
                 try:
                     ev = cli.events(mt["id"])
-                    st.dataframe(pd.DataFrame([{"quando": e["at"], "evento": e["event_type"], "pos.": e["rank_position"], "ator": e["actor_type"]} for e in ev["events"]]), hide_index=True,
+                    st.dataframe(pd.DataFrame([{"quando": e["at"], "evento": e["event_type"], "ator": e["actor_type"]} for e in ev["events"]]), hide_index=True,
                                  use_container_width=True)
                 except ApiError:
                     pass
@@ -248,7 +254,7 @@ def page_org(cli: ApiClient, me: dict) -> None:
             st.subheader("Aceitas — aguardando coleta")
             for mt in acc:
                 with st.container(border=True):
-                    st.write(f"`{mt['id']}` — {mt['donation']['categoria']} · {mt['donation']['quantity_kg']} kg — {origin_badge(mt['data_origin'])}")
+                    st.write(f"`{mt['id']}` — {', '.join(mt['donation']['resumo']['categories'])} · {mt['donation']['resumo']['quantity_kg']} kg — {origin_badge(mt['data_origin'])}")
                     c1, c2, _ = st.columns([1, 1, 4])
                     if c1.button("Coleta concluída", key=f"col_{mt['id']}"):
                         cli.outcome(mt["id"], "COLLECTED")

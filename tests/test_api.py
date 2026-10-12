@@ -13,12 +13,12 @@ def test_health_ready(client):
 
 
 def test_model_info(client, world):
-    j = client.get("/api/v1/model/info", headers=world["donor_a"]).json()
+    j = client.get("/api/v1/model/info", headers=world["admin"]).json()
     assert j["ranker"]["model_version"] and "SIMULAD" in j["ranker"]["aviso"].upper() and j["ranker"]["model_sha256"]
 
 
 def test_predict_contrato(client, world):
-    r = client.post("/api/v1/predictions", headers=world["donor_a"], json=BASE)
+    r = client.post("/api/v1/predictions", headers=world["admin"], json={**BASE, "donor_id": str(world["donor_a_id"])})
     assert r.status_code == 200, r.text
     j = r.json()
     for k in ("ranking", "prediction", "confidence", "factors", "model_version", "data_version", "data_origin"):
@@ -30,16 +30,19 @@ def test_predict_contrato(client, world):
 
 
 def test_entradas_invalidas(client, world):
-    h = world["donor_a"]
-    assert client.post("/api/v1/predictions", headers=h, json={"quantidade_kg": -1}).status_code == 422
-    assert client.post("/api/v1/predictions", headers=h, json={**BASE, "horas_ate_validade": 0}).status_code == 422
-    assert client.post("/api/v1/predictions", headers=h, json={**BASE, "categoria": "XYZ"}).status_code == 422
-    assert client.post("/api/v1/predictions", headers=h, json={"categoria": "FRUTAS", "quantidade_kg": 5, "horas_ate_validade": 5}).status_code == 422
-    assert client.post("/api/v1/predictions", headers=h, json={**BASE, "campo_extra": 1}).status_code == 422
+    h = world["admin"]
+    d = {"donor_id": str(world["donor_a_id"])}
+    assert client.post("/api/v1/predictions", headers=h, json={**d, "quantidade_kg": -1}).status_code == 422
+    assert client.post("/api/v1/predictions", headers=h, json={**BASE, **d, "horas_ate_validade": 0}).status_code == 422
+    assert client.post("/api/v1/predictions", headers=h, json={**BASE, **d, "categoria": "XYZ"}).status_code == 422
+    assert client.post("/api/v1/predictions", headers=h, json={**d, "categoria": "FRUTAS", "quantidade_kg": 5, "horas_ate_validade": 5}).status_code == 422
+    assert client.post("/api/v1/predictions", headers=h, json={**BASE, **d, "campo_extra": 1}).status_code == 422
+    # predictions e model/info: só ADMIN (Fase 3 Parte 1, seção 3)
+    assert client.post("/api/v1/predictions", headers=world["donor_a"], json=BASE).status_code == 403
 
 
 def test_resposta_nao_expoe_pessoa_fisica(client, world):
-    j = client.post("/api/v1/predictions", headers=world["donor_a"], json=BASE).json()
+    j = client.post("/api/v1/predictions", headers=world["admin"], json={**BASE, "donor_id": str(world["donor_a_id"])}).json()
     s = str(j).lower()
     for t in ("cpf", "telefone", "email", "razao_social"):
         assert t not in s

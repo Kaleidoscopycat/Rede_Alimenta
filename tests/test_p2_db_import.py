@@ -20,7 +20,7 @@ def test_migration_head_e_tabelas(p2_db):
     assert esperadas <= tabelas
     assert {"vehicles", "routes", "route_stops"} <= tabelas, "roteirização: migration 0002 (Fase 2 Parte 2)"
     with get_engine().connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0002"
+        assert c.execute(text("select version_num from alembic_version")).scalar() == "0003"
 
 
 def test_organizacoes_reais_com_rastreabilidade(p2_db):

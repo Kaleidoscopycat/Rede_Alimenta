@@ -3,7 +3,7 @@ from sqlalchemy import select
 
 from database import models as m
 from database.session import session_scope
-from tests.helpers_p2 import org_token, ready_donation
+from tests.helpers_p2 import admin_match, org_token, ready_donation
 
 PUBLICOS = ["/health", "/ready", "/openapi.json", "/docs"]
 
@@ -68,16 +68,18 @@ def test_ong_so_ve_e_responde_propostas_dirigidas_a_ela(client, world):
     d = ready_donation(client, world, "donor_a", 1)
     mt = client.post("/api/v1/matches", headers=world["donor_a"], json={"donation_id": d["id"], "top_n": 5}).json()
     assert mt["status"] == "PROPOSED"
-    r = client.get("/api/v1/organizations?limit=200", headers=world["admin"]).json()
-    top = mt["ranking"][0]
-    other = mt["ranking"][1]
+    assert mt["perfil"] == "DONOR" and "ranking" not in mt
+    full = admin_match(client, world, mt["id"])
+    top = full["ranking"][0]
+    other = full["ranking"][1]
     h_top, h_other = org_token(client, world["admin"], top["org_id"]), org_token(client, world["admin"], other["org_id"])
     assert client.get(f"/api/v1/matches/{mt['id']}", headers=h_top).status_code == 200
     assert client.get(f"/api/v1/matches/{mt['id']}", headers=h_other).status_code == 403  # nunca foi proposta a ela
     assert client.post(f"/api/v1/matches/{mt['id']}/respond", headers=h_other, json={"accept": True}).status_code == 403
     assert client.get(f"/api/v1/matches/{mt['id']}/events", headers=h_other).status_code == 403
     v = client.get(f"/api/v1/matches/{mt['id']}", headers=h_top).json()
-    assert "ranking" not in v and v["awaiting_my_response"] is True and v["my_candidacy"]["org_id"] == top["org_id"]  # ONG não vê as demais candidatas
+    assert "ranking" not in v and v["awaiting_my_response"] is True and v["my_candidacy"]["dist_km"] == top["dist_km"]  # ONG não vê as demais candidatas
+    assert not any(k in str(v["my_candidacy"]) for k in ("SCORE", "posicao", "org_id"))
     # limpa: recusa para liberar a capacidade reservada
     assert client.post(f"/api/v1/matches/{mt['id']}/respond", headers=h_top, json={"accept": False}).status_code == 200
 

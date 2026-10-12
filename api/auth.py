@@ -70,11 +70,14 @@ def current_user(request: Request, creds: HTTPAuthorizationCredentials | None = 
     return user
 
 
-def require_roles(*roles: str) -> Callable[..., m.User]:
+def require_roles(*roles: str, audit_admin: str | None = None) -> Callable[..., m.User]:
+    """Exige um dos perfis. `audit_admin="recurso"` registra `admin.access` em audit_logs quando o ADMIN acessa dados restritos (ranking, scores, modelo, predictions...)."""
     def dep(request: Request, user: m.User = Depends(current_user)) -> m.User:
         if user.role not in roles:
             audit("authz.role_denied", "FORBIDDEN", request, user=user, status_code=403, detail={"exigido": list(roles)})
             raise HTTPException(403, "perfil sem permissão para este recurso")
+        if audit_admin and user.role == "ADMIN":
+            audit("admin.access", "OK", request, user=user, resource_type=audit_admin, detail={"recurso": audit_admin, "query": dict(request.query_params)})
         return user
     return dep
 

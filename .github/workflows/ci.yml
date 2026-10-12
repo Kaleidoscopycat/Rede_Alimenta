@@ -195,7 +195,14 @@ jobs:
           curl -sf http://127.0.0.1:8000/ready
           for i in $(seq 1 60); do curl -sf http://127.0.0.1:8501/_stcore/health && break; sleep 3; done
           curl -sf http://127.0.0.1:8501/_stcore/health
-      - name: Fluxo completo (doador → parser → confirmação → match → ONG aceita/recusa → coleta)
+      - name: Gera um token POR PERFIL (ADMIN, DONOR, ORG), mascarados nos logs
+        run: |
+          for p in ADMIN DONOR ORG; do
+            tok="rai_$(python -c 'import secrets; print(secrets.token_urlsafe(32))')"
+            echo "::add-mask::${tok}"
+            echo "E2E_${p}_TOKEN=${tok}" >> "$GITHUB_ENV"
+          done
+      - name: Fluxo completo (doador → rascunho com itens → match sem ranking para o doador → ONG aceita/recusa → coleta; ADMIN vê o ranking)
         env:
           DATABASE_URL: postgresql+psycopg://${{ env.APP_USER }}:${{ env.POSTGRES_PASSWORD }}@127.0.0.1:5432/${{ env.APP_DB }}
           API_BASE_URL: http://127.0.0.1:8000

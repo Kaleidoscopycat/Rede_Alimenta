@@ -16,7 +16,7 @@ from .schedule import pickup_wait_hours
 RULES: dict[str, str] = {
     "E_LOCALIZACAO_AUSENTE": "organização sem posição conhecida: não ranqueável por distância",
     "E_NAO_CADASTRADA": "organização é apenas registro de fonte pública e ainda não se cadastrou/aceitou a plataforma (obrigatório para doações reais)",
-    "E_CATEGORIA_NAO_ACEITA": "categoria do alimento não consta entre as aceitas declaradas pela ONG",
+    "E_CATEGORIA_NAO_ACEITA": "alguma categoria do lote não consta entre as aceitas declaradas pela ONG (lote misto: a ONG precisa aceitar todas)",
     "E_CAPACIDADE": "quantidade acima da capacidade de recebimento restante declarada (capacidade diária − reservas do dia)",
     "E_REFRIGERACAO": "alimento exige refrigeração e a ONG não declara câmara fria nem frota refrigerada",
     "E_HORARIO": "não há horário comum entre a janela de coleta do doador e o funcionamento da ONG nos próximos 7 dias",
@@ -42,6 +42,7 @@ class DonationCtx:
     location_precision: str
     allergen: bool
     data_origin: str
+    categorias: tuple[str, ...] = ()  # Fase 3 P1: todas as categorias do lote (lote misto); vazio ⇒ só `categoria`
 
 
 def travel_hours(dist_km: np.ndarray) -> np.ndarray:
@@ -61,7 +62,11 @@ def evaluate(ctx: DonationCtx, orgs: pd.DataFrame, dist_km: np.ndarray, remainin
     fail: dict[str, np.ndarray] = {}
     fail["E_LOCALIZACAO_AUSENTE"] = ~orgs["has_location"].to_numpy(bool)
     fail["E_NAO_CADASTRADA"] = (orgs["platform_status"].to_numpy() != "REGISTERED") if ctx.data_origin != "SIMULATED" else np.zeros(n, bool)
-    fail["E_CATEGORIA_NAO_ACEITA"] = ~orgs[f"aceita_{ctx.categoria}_declarado"].to_numpy(bool)
+    cats = tuple(dict.fromkeys((ctx.categoria, *ctx.categorias)))  # a ONG precisa aceitar TODAS as categorias do lote
+    accepts_all = np.ones(n, bool)
+    for c in cats:
+        accepts_all &= orgs[f"aceita_{c}_declarado"].to_numpy(bool)
+    fail["E_CATEGORIA_NAO_ACEITA"] = ~accepts_all
     fail["E_CAPACIDADE"] = ctx.quantity_kg > np.asarray(remaining_cap_kg, dtype=float)
     cold_ok = orgs["camara_fria_declarada"].to_numpy(bool) | (orgs["tem_frota"].fillna(False).to_numpy(bool) & orgs["refrigerado"].fillna(False).to_numpy(bool))
     fail["E_REFRIGERACAO"] = (~cold_ok) if ctx.needs_cold else np.zeros(n, bool)

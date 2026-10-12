@@ -10,16 +10,17 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from api import donation_rules as rules
+from api import views
+from api.items import is_item_managed
 from api.auth import audit, forbid, get_db, require_roles
 from api.parsing import build_parse_response
-from api.schemas_v2 import ConfirmIn, DonationIn, DonationOut, ParseIn, ParseOut
+from api.schemas_v2 import ConfirmIn, DonationIn, ParseIn, ParseOut
+from api.schemas_views import DonationView
 from api.state import STATE
 from core.settings import TZ
 from database import models as m
 
 router = APIRouter(prefix="/api/v1/donations", tags=["doações"])
-AVISO_DOACAO = ("A plataforma não afirma que o alimento é próprio para consumo; o doador é responsável pela informação. "
-                "Doações SIMULATED vêm de doador simulado (conta de demonstração) e não representam uso real.")
 
 
 def _now() -> dt.datetime:
@@ -41,13 +42,9 @@ def resolve_donor(db: Session, request: Request, user: m.User, donor_id: uuid.UU
     return d
 
 
-def to_out(d: m.Donation) -> DonationOut:
-    pend = [k for k, f in (d.fields or {}).items() if isinstance(f, dict) and k in rules.REQUIRED and (f.get("status") in rules.PENDING_STATES or f.get("final") is None)]
-    return DonationOut(id=d.id, donor_id=d.donor_id, data_origin=d.data_origin, status=d.status, block_reason=d.block_reason, pending_fields=pend, raw_text=d.raw_text,
-                       categoria=d.categoria, perecibilidade=d.perecibilidade, exige_refrigeracao=d.exige_refrigeracao, quantity_kg=d.quantity_kg, validity_days=d.validity_days,
-                       expires_at=d.expires_at, validity_source=d.validity_source,
-                       refeicoes_equivalentes=round(d.quantity_kg / 0.4, 1) if d.quantity_kg else None, fields=d.fields or {}, parser_version=d.parser_version,
-                       created_at=d.created_at, confirmed_at=d.confirmed_at, aviso=AVISO_DOACAO)
+def view(db: Session, d: m.Donation, user: m.User):
+    """Visão da doação conforme o perfil (DONOR → DonorDonationView; ADMIN → AdminDonationView)."""
+    return views.donation_view(db, d, user, _now())
 
 
 def _apply(d: m.Donation, ev: dict[str, Any]) -> None:
@@ -81,7 +78,7 @@ def _jsonable(x: Any) -> Any:
     return x
 
 
-@router.post("", response_model=DonationOut, status_code=201, summary="Cadastra doação (texto livre e/ou campos estruturados)")
+@router.post("", response_model=DonationView, status_code=201, summary="Cadastra doação (texto livre e/ou campos estruturados)")
 def create_donation(body: DonationIn, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN"))):
     donor = resolve_donor(db, request, user, body.donor_id)
     now = _now()
@@ -117,7 +114,7 @@ def create_donation(body: DonationIn, request: Request, db: Session = Depends(ge
                               confidence=raw["parse_confidence"], training_data_origin="SIMULATED", subject_data_origin=donor.data_origin, created_by=user.id))
     audit("donation.create", "OK", request, user, "donation", don.id, 201, detail={"status": ev["status"], "pendentes": ev["pending"]}, session=db)
     db.commit()
-    return to_out(don)
+    return view(db, don, user)
 
 
 def _load_owned(db: Session, request: Request, user: m.User, donation_id: uuid.UUID, lock: bool = False) -> m.Donation:
@@ -130,24 +127,26 @@ def _load_owned(db: Session, request: Request, user: m.User, donation_id: uuid.U
     return d
 
 
-@router.get("", response_model=list[DonationOut], summary="Lista doações do doador autenticado (ADMIN: todas, paginado)")
-def list_donations(request: Request, limit: int = 20, offset: int = 0, status: str | None = None, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN"))):
+@router.get("", response_model=list[DonationView], summary="Lista doações do doador autenticado (ADMIN: todas, paginado)")
+def list_donations(request: Request, limit: int = 20, offset: int = 0, status: str | None = None, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN", audit_admin="donations"))):
     q = select(m.Donation).where(m.Donation.entry_channel == "API").order_by(m.Donation.created_at.desc()).limit(min(max(limit, 1), 100)).offset(max(offset, 0))
     if user.role == "DONOR":
         q = q.where(m.Donation.donor_id == user.donor_id)
     if status:
         q = q.where(m.Donation.status == status)
-    return [to_out(d) for d in db.scalars(q)]
+    return [view(db, d, user) for d in db.scalars(q)]
 
 
-@router.get("/{donation_id}", response_model=DonationOut)
-def get_donation(donation_id: uuid.UUID, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN"))):
-    return to_out(_load_owned(db, request, user, donation_id))
+@router.get("/{donation_id}", response_model=DonationView)
+def get_donation(donation_id: uuid.UUID, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN", audit_admin="donations"))):
+    return view(db, _load_owned(db, request, user, donation_id), user)
 
 
-@router.patch("/{donation_id}/confirm", response_model=DonationOut, summary="Doador confirma/corrige campos; só então o match pode ser gerado")
+@router.patch("/{donation_id}/confirm", response_model=DonationView, summary="Doador confirma/corrige campos; só então o match pode ser gerado")
 def confirm(donation_id: uuid.UUID, body: ConfirmIn, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN"))):
     d = _load_owned(db, request, user, donation_id, lock=True)
+    if is_item_managed(d):
+        raise HTTPException(409, "esta doação usa itens detalhados: use PATCH /donations/{id}/items/{item_id} e POST /donations/{id}/finalize")
     if d.status in ("MATCHING", "MATCHED", "HISTORICAL") or d.entry_channel != "API":
         raise HTTPException(409, f"doação em estado {d.status}: campos não podem mais ser alterados")
     now = _now()
@@ -176,4 +175,4 @@ def confirm(donation_id: uuid.UUID, body: ConfirmIn, request: Request, db: Sessi
                                   seed=d.seed, dataset_version=d.dataset_version))
     audit("donation.confirm", "OK", request, user, "donation", d.id, 200, detail={"campos_alterados": sorted(set(changed)), "status": ev["status"]}, session=db)
     db.commit()
-    return to_out(d)
+    return view(db, d, user)

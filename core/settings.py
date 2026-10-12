@@ -62,6 +62,20 @@ class RouteSettings:
 ROUTE = RouteSettings()
 
 
+@dataclass(frozen=True)
+class DonationSettings:
+    """Doação com vários itens (Fase 3 Parte 1). Todos os valores são PREMISSAS do projeto, configuráveis por ambiente; nenhum tem fonte externa."""
+    max_items: int = field(default_factory=lambda: _i("DONATION_MAX_ITEMS", 30))  # limite de itens por doação
+    # Se (validade mais distante − validade mais próxima) ultrapassar este número de dias, o doador é avisado de que a validade mais próxima define o prazo de todo o lote.
+    validity_spread_warn_days: int = field(default_factory=lambda: _i("DONATION_VALIDITY_SPREAD_WARN_DAYS", 60))
+    # Conversão volume → massa quando a categoria não tem massa por litro na taxonomia (premissa sem fonte: densidade ≈ 1 kg/L).
+    default_density_kg_per_l: float = field(default_factory=lambda: _f("DONATION_DEFAULT_DENSITY_KG_L", 1.0))
+    max_total_kg: float = field(default_factory=lambda: _f("DONATION_MAX_TOTAL_KG", 100000.0))  # mesmo teto de quantidade_kg da API (100 000 kg)
+
+
+DONATION = DonationSettings()
+
+
 def database_url() -> str:
     url = os.environ.get("DATABASE_URL")
     if not url:

@@ -11,7 +11,7 @@ import datetime as dt
 import uuid
 from typing import Any, Optional
 
-from sqlalchemy import (BigInteger, Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer, SmallInteger, String, Text,
+from sqlalchemy import (BigInteger, Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, ForeignKeyConstraint, Index, Integer, SmallInteger, String, Text,
                         UniqueConstraint, func, text)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -267,25 +267,57 @@ class Donation(SimTraceMixin, Base):
     confirmed_by: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id"))
     created_by: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("users.id"))
     imported_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))
-    items: Mapped[list["DonationItem"]] = relationship(back_populates="donation")
+    # --- Fase 3 Parte 1: a doação é o CABEÇALHO; os campos abaixo (e categoria/quantity_kg/validity_*/exige_refrigeracao/perecibilidade) são AGREGADOS dos itens (api/aggregation.py).
+    # Doações históricas simuladas (SIMULATOR_IMPORT) não têm itens detalhados: ficam com categories NULL e is_mixed_batch = false.
+    categories: Mapped[Optional[list[str]]] = mapped_column(ARRAY(String(30)))  # categorias do lote, da de maior peso para a de menor
+    is_mixed_batch: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))  # "lote misto": mais de uma categoria
+    aggregated_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))
+    items: Mapped[list["DonationItem"]] = relationship(back_populates="donation", order_by="DonationItem.id")
     __table_args__ = tuple(_origin_checks("donation", ("SIMULATED", "USER_ENTERED"))) + (
-        CheckConstraint("status IN ('PENDING_CONFIRMATION','READY','BLOCKED_EXPIRED','BLOCKED_NO_VALIDITY','MATCHING','MATCHED','NO_MATCH','HISTORICAL')", name="ck_donation_status"),
+        CheckConstraint("status IN ('DRAFT','PENDING_CONFIRMATION','READY','BLOCKED_EXPIRED','BLOCKED_NO_VALIDITY','MATCHING','MATCHED','NO_MATCH','HISTORICAL')", name="ck_donation_status"),
+        UniqueConstraint("id", "data_origin", name="uq_donation_id_origin"),  # alvo da FK composta dos itens: item.data_origin == donation.data_origin
         Index("uq_donation_sim_ext", "dataset_version", "external_id", unique=True, postgresql_where=text("external_id IS NOT NULL")))
 
 
 class DonationItem(SimTraceMixin, Base):
+    """Item de uma doação. Colunas da Fase 2 (categoria, produto, quantity/unit, quantity_kg) + Fase 3 Parte 1 (migration 0003), todas NULAS nos itens históricos simulados
+    (que NÃO foram alterados nem preenchidos com valores inventados). `data_origin` é sempre o da doação (FK composta)."""
     __tablename__ = "donation_items"
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    donation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("donations.id"), index=True)
+    donation_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
     categoria: Mapped[Optional[str]] = mapped_column(ForeignKey("food_categories.code"))
-    produto: Mapped[Optional[str]] = mapped_column(String(80))
+    produto: Mapped[Optional[str]] = mapped_column(String(80))  # nome do alimento
     product_name_origin: Mapped[Optional[str]] = mapped_column(String(40))
-    quantity: Mapped[Optional[float]] = mapped_column(Float)
-    unit: Mapped[Optional[str]] = mapped_column(String(20))
+    quantity: Mapped[Optional[float]] = mapped_column(Float)  # itens novos: número de unidades/embalagens
+    unit: Mapped[Optional[str]] = mapped_column(String(20))  # itens novos: tipo de embalagem (pacote, caixa, garrafa, unidade...)
     quantity_kg: Mapped[Optional[float]] = mapped_column(Float)
     data_origin: Mapped[str] = mapped_column(String(12))
+    # --- Fase 3 Parte 1 (todos opcionais)
+    description: Mapped[Optional[str]] = mapped_column(String(160))  # descrição livre curta
+    perecibilidade: Mapped[Optional[str]] = mapped_column(String(40))  # derivada da categoria (taxonomia), nunca digitada
+    exige_refrigeracao: Mapped[Optional[bool]] = mapped_column(Boolean)
+    validity_days: Mapped[Optional[int]] = mapped_column(Integer)  # dias até a validade na data do cadastro/edição
+    expires_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))  # fim do dia da validade (America/Sao_Paulo)
+    validity_source: Mapped[Optional[str]] = mapped_column(String(32))  # INFORMADA_PELO_DOADOR | INFORMADA_MES_ANO | SUGERIDA_PELO_TEXTO
+    validity_precision: Mapped[Optional[str]] = mapped_column(String(10))  # DAY | MONTH (mês/ano ⇒ último dia do mês, regra da equipe; validade real pode ser anterior)
+    unit_weight: Mapped[Optional[float]] = mapped_column(Float)  # peso/volume por unidade ou embalagem
+    unit_weight_unit: Mapped[Optional[str]] = mapped_column(String(4))  # kg | g | l | ml
+    weight_basis: Mapped[Optional[str]] = mapped_column(String(24))  # MASSA_INFORMADA | VOLUME_CONVERTIDO (premissa) | MASSA_UNITARIA_CATEGORIA (premissa)
+    entry_source: Mapped[Optional[str]] = mapped_column(String(20))  # MANUAL | TEXTO_SUGERIDO
+    pending_fields: Mapped[Optional[list[str]]] = mapped_column(JSONB)  # campos que o doador ainda precisa conferir (itens sugeridos pelo texto)
+    parser_suggestion: Mapped[Optional[dict[str, Any]]] = mapped_column(JSONB)  # saída do parser para este item (campos, confiança, alertas): visível só a ORG (análise) e ADMIN
+    created_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))
     donation: Mapped[Donation] = relationship(back_populates="items")
-    __table_args__ = tuple(_origin_checks("ditem", ("SIMULATED", "USER_ENTERED")))
+    __table_args__ = tuple(_origin_checks("ditem", ("SIMULATED", "USER_ENTERED"))) + (
+        ForeignKeyConstraint(["donation_id", "data_origin"], ["donations.id", "donations.data_origin"], name="fk_ditem_donation_origin"),
+        CheckConstraint("unit_weight_unit IS NULL OR unit_weight_unit IN ('kg','g','l','ml')", name="ck_ditem_uw_unit"),
+        CheckConstraint("unit_weight IS NULL OR unit_weight > 0", name="ck_ditem_uw_pos"),
+        CheckConstraint("(unit_weight IS NULL) = (unit_weight_unit IS NULL)", name="ck_ditem_uw_pair"),
+        CheckConstraint("weight_basis IS NULL OR weight_basis IN ('MASSA_INFORMADA','VOLUME_CONVERTIDO','MASSA_UNITARIA_CATEGORIA')", name="ck_ditem_wbasis"),
+        CheckConstraint("validity_precision IS NULL OR validity_precision IN ('DAY','MONTH')", name="ck_ditem_vprec"),
+        CheckConstraint("entry_source IS NULL OR entry_source IN ('MANUAL','TEXTO_SUGERIDO')", name="ck_ditem_source"))
 
 
 # ------------------------------------------------------------------ matches

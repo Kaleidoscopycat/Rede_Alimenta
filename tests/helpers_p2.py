@@ -26,3 +26,11 @@ def ready_donation(client, world, donor="donor_a", idx=0):
     d = new_ready_donation(client, world, donor, "ready", idx)
     assert d["status"] == "READY", d
     return d
+
+
+def admin_match(client, world, match_id, top_n=15):
+    """Visão COMPLETA (ADMIN) do match: ranking, scores, elegibilidade. Doador e ONG nunca recebem isto."""
+    r = client.get(f"/api/v1/matches/{match_id}?top_n={top_n}", headers=world["admin"])
+    assert r.status_code == 200, r.text
+    assert r.json()["perfil"] == "ADMIN"
+    return r.json()

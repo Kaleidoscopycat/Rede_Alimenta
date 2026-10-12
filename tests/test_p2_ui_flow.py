@@ -2,7 +2,7 @@
 import pytest
 
 from app.api_client import ApiClient, ApiError
-from tests.helpers_p2 import org_token
+from tests.helpers_p2 import admin_match, org_token
 
 from pathlib import Path
 ROOT_APP = str(Path(__file__).resolve().parents[1] / "app" / "streamlit_app.py")
@@ -16,7 +16,10 @@ def test_fluxo_doador_e_ong_pelo_api_client(client, world):
     donor = _cli(client, world["donor_a"])
     me = donor.me()
     assert me["role"] == "DONOR" and me["data_origin_scope"] == "SIMULATED"
-    info = donor.model_info()
+    with pytest.raises(ApiError) as e403:
+        donor.model_info()  # modelo/limiar: só ADMIN
+    assert e403.value.status == 403
+    info = _cli(client, world["admin"]).model_info()
     assert info["parser"]["training_data_origin"] == "SIMULATED"
     p = donor.parse(world["texts"]["ready"][2])
     assert p["training_data_origin"] == "SIMULATED" and p["threshold_note"] == "limiar calibrado sobre texto simulado"
@@ -27,8 +30,8 @@ def test_fluxo_doador_e_ong_pelo_api_client(client, world):
         d = donor.create_donation({"categoria": "HORT_FRUTOS", "exige_refrigeracao": False, "dias_ate_validade": 4, "quantidade_kg": 15})
     assert d["status"] == "READY" and d["data_origin"] == "SIMULATED"
     mt = donor.create_match(d["id"], 5)
-    assert mt["status"] == "PROPOSED" and mt["ranking"]
-    cand = mt["ranking"][0]
+    assert mt["status"] == "PROPOSED" and "ranking" not in mt and mt["situacao"]  # doador: só a situação
+    cand = admin_match(client, world, mt["id"])["ranking"][0]
     ong = _cli(client, org_token(client, world["admin"], cand["org_id"]))
     pend = ong.list_matches("PROPOSED")
     assert any(x["id"] == mt["id"] and x["awaiting_my_response"] for x in pend)

@@ -12,6 +12,7 @@ import uuid
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from api.aggregation import MIXED_BATCH_LIMITATION
 from core.settings import SETTINGS, TZ
 from database import models as m
 from .eligibility import DonationCtx
@@ -60,7 +61,8 @@ def build_ctx(session: Session, donation: m.Donation, now: dt.datetime) -> Donat
     return DonationCtx(categoria=donation.categoria, quantity_kg=float(donation.quantity_kg), hours_to_expiry=hours, needs_cold=bool(donation.exige_refrigeracao),
                        pickup_days_mask=int(donation.pickup_days_mask), pickup_start_h=float(donation.pickup_start_h), pickup_end_h=float(donation.pickup_end_h),
                        load_minutes=float(donation.load_minutes), lat=loc.lat, lon=loc.lon, municipio_ibge=int(donor.municipio_ibge), location_precision=loc.location_precision,
-                       allergen=bool(donation.contem_alergenico), data_origin=donation.data_origin)
+                       allergen=bool(donation.contem_alergenico), data_origin=donation.data_origin,
+                       categorias=tuple(donation.categories or ()))
 
 
 # ---------------------------------------------------------------------------------------------------- criação
@@ -82,7 +84,7 @@ def create_match(session: Session, engine: MatchEngine, donation_id: uuid.UUID, 
     day = now.astimezone(TZ).date()
     result = engine.rank(ctx, now, reserved_on(session, day))
     match = m.Match(id=uuid.uuid4(), donation_id=donation.id, data_origin=donation.data_origin, status="PROPOSED", engine_version=result["engine_version"], model_version=result["model_version"],
-                    weights=result["weights"], ranking=result["ranking"], eligibility={**result["eligibility"], "alertas": result.get("alertas", []), "rules_catalog": result["rules_catalog"],
+                    weights=result["weights"], ranking=result["ranking"], eligibility={**result["eligibility"], "alertas": result.get("alertas", []) + ([MIXED_BATCH_LIMITATION] if donation.is_mixed_batch else []), "rules_catalog": result["rules_catalog"],
                     "distance_method": result["distance_method"], "n_unranked_no_location": result["n_unranked_no_location"]},
                     current_position=0, latency_ms=result["latency_ms"], simulated_clock=False, created_by=actor.id if actor else None, created_at=now, updated_at=now,
                     generator_version=donation.generator_version, seed=donation.seed, dataset_version=donation.dataset_version)

@@ -8,13 +8,27 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
 from api.auth import audit, current_user, forbid, get_db, require_roles
-from api.schemas_v2 import LocationOut, OrganizationOut, ProfileIn, ProfileOut
+from typing import Annotated, Union
+
+from pydantic import Field
+
+from api.schemas_v2 import LocationOut, OrganizationOut, OrganizationPublicView, ProfileIn, ProfileOut
 from api.state import STATE
 from database import models as m
 
 router = APIRouter(prefix="/api/v1/organizations", tags=["organizações"])
 AVISO_ORG = ("Registro proveniente de fonte pública (licença em revisão: NEEDS_REVIEW). NÃO é cliente da Rede Alimenta até cadastro/aceite (platform_status=REGISTERED). "
              "Capacidade, horários, categorias e refrigeração são DECLARADOS SIMULADOS enquanto não houver cadastro real (profile.data_origin).")
+
+
+OrgView = Annotated[Union[OrganizationOut, OrganizationPublicView], Field(discriminator="perfil")]
+
+
+def visible(o: m.Organization, user: m.User) -> OrganizationOut | OrganizationPublicView:
+    """ADMIN e a própria ORG veem o registro completo; os demais, só a identificação pública mínima (sem perfil, coordenadas ou capacidade)."""
+    if user.role == "ADMIN" or (user.role == "ORG" and user.organization_id == o.id):
+        return to_out(o)
+    return OrganizationPublicView(ong_id=o.ong_id, ong_tipo=o.ong_tipo, uf=o.uf, municipio_ibge=o.municipio_ibge, platform_status=o.platform_status, aviso=AVISO_ORG)
 
 
 def to_out(o: m.Organization) -> OrganizationOut:
@@ -35,7 +49,7 @@ def to_out(o: m.Organization) -> OrganizationOut:
                            profile=prof, aviso=AVISO_ORG)
 
 
-@router.get("", response_model=list[OrganizationOut], summary="Lista organizações (registros de fonte pública)")
+@router.get("", response_model=list[OrgView], summary="Lista organizações (registros de fonte pública)")
 def list_orgs(uf: str | None = Query(None, min_length=2, max_length=2), municipio_ibge: int | None = None, tipo: str | None = None,
               platform_status: str | None = Query(None, pattern="^(PUBLIC_RECORD|REGISTERED)$"), limit: int = Query(50, ge=1, le=200), offset: int = Query(0, ge=0),
               db: Session = Depends(get_db), user: m.User = Depends(current_user)):
@@ -48,15 +62,15 @@ def list_orgs(uf: str | None = Query(None, min_length=2, max_length=2), municipi
         q = q.where(m.Organization.ong_tipo == tipo)
     if platform_status:
         q = q.where(m.Organization.platform_status == platform_status)
-    return [to_out(o) for o in db.scalars(q).unique()]
+    return [visible(o, user) for o in db.scalars(q).unique()]
 
 
-@router.get("/{org_id}", response_model=OrganizationOut)
+@router.get("/{org_id}", response_model=OrgView)
 def get_org(org_id: uuid.UUID, db: Session = Depends(get_db), user: m.User = Depends(current_user)):
     o = db.scalar(select(m.Organization).options(joinedload(m.Organization.location), joinedload(m.Organization.profile)).where(m.Organization.id == org_id))
     if o is None:
         raise HTTPException(404, "organização não encontrada")
-    return to_out(o)
+    return visible(o, user)
 
 
 @router.patch("/{org_id}/registration", response_model=OrganizationOut, summary="ADMIN registra o aceite da organização na plataforma")
