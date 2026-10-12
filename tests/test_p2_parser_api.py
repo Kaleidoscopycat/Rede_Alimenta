@@ -9,9 +9,15 @@ CAMPOS = {"categoria", "perecibilidade", "exige_refrigeracao", "dias_ate_validad
 
 
 def _parse(client, world, texto, donor="donor_a"):
-    r = client.post("/api/v1/donations/parse", headers=world[donor], json={"texto": texto})
+    """Saída crua do parser (valor, confiança, limiar) é informação da IA: só o ADMIN a recebe (AJUSTE B0). O DONOR recebe 410 (fluxo antigo descontinuado para DONOR)."""
+    r = client.post("/api/v1/donations/parse", headers=world["admin"], json={"texto": texto, "donor_id": str(world[f"{donor}_id"])})
     assert r.status_code == 200, r.text
     return r.json()
+
+
+def test_parse_antigo_descontinuado_para_doador(client, world):
+    r = client.post("/api/v1/donations/parse", headers=world["donor_a"], json={"texto": world["texts"]["ready"][0]})
+    assert r.status_code == 410 and "descontinuada" in r.json()["detail"] and "confidence" not in r.text
 
 
 def test_contrato_do_parse(client, world):

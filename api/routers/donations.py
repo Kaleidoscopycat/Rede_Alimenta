@@ -55,6 +55,9 @@ def _apply(d: m.Donation, ev: dict[str, Any]) -> None:
 
 @router.post("/parse", response_model=ParseOut, summary="Análise semântica do texto livre do lote (não cria doação)")
 def parse(body: ParseIn, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN"))):
+    if user.role == "DONOR":  # AJUSTE B0: a saída crua do parser (valor, confiança, limiar) é informação da IA; este fluxo (lote único) é DESCONTINUADO para DONOR
+        raise HTTPException(410, "Esta análise foi descontinuada para o doador. Monte a doação item a item (POST /api/v1/donations/drafts) "
+                                 "ou use POST /api/v1/donations/items/parse-preview para sugestões a conferir.")
     donor = resolve_donor(db, request, user, body.donor_id)
     if STATE.parser is None:
         raise HTTPException(503, "parser indisponível")

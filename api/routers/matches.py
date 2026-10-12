@@ -5,7 +5,7 @@ import datetime as dt
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from api.auth import audit, forbid, get_db, require_roles
@@ -65,8 +65,9 @@ def list_matches(status: str | None = None, limit: int = 20, offset: int = 0, db
     q = select(m.Match).order_by(m.Match.created_at.desc()).limit(min(max(limit, 1), 100)).offset(max(offset, 0))
     if user.role == "DONOR":
         q = q.join(m.Donation, m.Donation.id == m.Match.donation_id).where(m.Donation.donor_id == user.donor_id)
-    elif user.role == "ORG":
-        q = q.where(m.Match.current_org_id == user.organization_id)
+    elif user.role == "ORG":  # propostas atuais E já recebidas por esta ONG (histórico: aceitas, recusadas ou sem resposta, mesmo que o match já tenha passado à próxima candidata)
+        proposed_to_me = select(m.MatchEvent.match_id).where(m.MatchEvent.organization_id == user.organization_id, m.MatchEvent.event_type == "PROPOSED")
+        q = q.where(or_(m.Match.current_org_id == user.organization_id, m.Match.id.in_(proposed_to_me)))
     if status:
         q = q.where(m.Match.status == status)
     return [views.match_view(db, x, user, 3 if user.role == "ADMIN" else None) for x in db.scalars(q)]

@@ -83,6 +83,18 @@ def plan_route_step(adm: ApiClient, donation_id: str, donor_ext: str, ext2id: di
 SCORES = {"ML_SCORE", "BUSINESS_RULE_SCORE", "DISTANCE_SCORE", "FINAL_SCORE"}
 
 
+PARSER_KEYS = {"fields", "confidence", "confidence_threshold", "threshold_note", "parser_version", "parse_confidence", "categoria_conf", "exige_refrigeracao_conf"}
+
+
+def has_parser_output(obj) -> bool:
+    """AJUSTE B0: saída do parser (fields, confiança, versão) não pode aparecer em resposta de DONOR nem de ORG."""
+    if isinstance(obj, dict):
+        return bool(PARSER_KEYS & set(obj)) or any(has_parser_output(v) for v in obj.values())
+    if isinstance(obj, list):
+        return any(has_parser_output(v) for v in obj)
+    return False
+
+
 def has_scores(obj) -> bool:
     if isinstance(obj, dict):
         return bool(SCORES & set(obj)) or "ranking" in obj or any(has_scores(v) for v in obj.values())
@@ -112,7 +124,7 @@ def main() -> None:
     # os textos do simulador carregam validades absolutas do relógio SIMULADO (maioria vencida hoje → bloqueio correto). Usa, do doador escolhido, textos ainda válidos hoje.
     bloqueado, validos = None, []
     for r in cand[cand["donor_id"] == row0["donor_id"]].itertuples(index=False):
-        pj = don.parse(r.texto)
+        pj = adm.parse(r.texto, donor_id=str(ext2id[row0["donor_id"]][0]))  # saída crua do parser: só ADMIN (AJUSTE B0); o doador recebe 410
         f = pj["fields"]
         dv_ = f["dias_ate_validade"]["value"]
         if dv_ is not None and dv_ < 0 and bloqueado is None:
@@ -166,6 +178,9 @@ def main() -> None:
     # --- verificação de visibilidade por perfil, sobre as respostas reais
     ov = o1.get_match(mt["id"])
     res["visibilidade"] = {
+        "doador_recebe_saida_do_parser": has_parser_output(dr) or has_parser_output(d) or has_parser_output(don.get_donation(d["id"])),
+        "ong_recebe_saida_do_parser": has_parser_output(ov) or has_parser_output(pend),
+        "doador_em_parse_antigo": http.post("/api/v1/donations/parse", headers={"Authorization": f"Bearer {donor_tok}"}, json={"texto": validos[0]["texto"]}).status_code,
         "doador_recebe_scores_ou_ranking": has_scores(mt) or has_scores(don.get_match(mt["id"])),
         "ong_recebe_scores_ou_ranking": has_scores(ov) or has_scores(pend),
         "ong_analise_ia_sem_scores": ov["donation"]["analise"],
@@ -173,6 +188,8 @@ def main() -> None:
         "doador_em_ranking": http.get(f"/api/v1/matches/{mt['id']}/ranking", headers={"Authorization": f"Bearer {donor_tok}"}).status_code,
         "ong_em_model_info": http.get("/api/v1/model/info", headers={"Authorization": f"Bearer {org_tok[1]}"}).status_code,
         "ong_em_ranking": http.get(f"/api/v1/matches/{mt['id']}/ranking", headers={"Authorization": f"Bearer {org_tok[1]}"}).status_code}
+    if res["visibilidade"]["doador_recebe_saida_do_parser"] or res["visibilidade"]["ong_recebe_saida_do_parser"] or res["visibilidade"]["doador_em_parse_antigo"] != 410:
+        raise SystemExit("FALHA: saída do parser (fields/confiança) exposta ao doador ou à ONG")
     if res["visibilidade"]["doador_recebe_scores_ou_ranking"] or res["visibilidade"]["ong_recebe_scores_ou_ranking"]:
         raise SystemExit("FALHA: vazamento de scores/ranking para doador ou ONG")
     if res["visibilidade"]["doador_em_ranking"] != 403 or res["visibilidade"]["ong_em_ranking"] != 403 or res["visibilidade"]["doador_em_predictions"] != 403:

@@ -3,6 +3,7 @@
   python -m scripts.create_user --role DONOR --label conta-doador --donor-id <uuid> [--demo]
   python -m scripts.create_user --role ORG --label conta-ong --org-id <uuid> [--demo]
   python -m scripts.create_user --role ADMIN --label admin-ci --token-env E2E_ADMIN_TOKEN   # usa o token JÁ definido nessa variável de ambiente (CI); nada é impresso
+  python -m scripts.create_user --list donors|orgs [--limit 10]   # lista ids para usar em --donor-id / --org-id (doadores SIMULATED: id do simulador; ONGs: pseudônimo público; sem dados pessoais)
 Regras: contas --demo só operam sobre dados SIMULATED (doador SIMULATED / ONG sem cadastro real). O rótulo NÃO deve ser nome de pessoa física."""
 from __future__ import annotations
 
@@ -28,13 +29,26 @@ from database.session import session_scope
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--role", required=True, choices=["DONOR", "ORG", "ADMIN"])
-    ap.add_argument("--label", required=True)
+    ap.add_argument("--role", choices=["DONOR", "ORG", "ADMIN"])
+    ap.add_argument("--label")
+    ap.add_argument("--list", choices=["donors", "orgs"], help="apenas lista ids de doadores SIMULATED ou de ONGs (pseudônimo) para usar nos comandos de criação")
+    ap.add_argument("--limit", type=int, default=10)
     ap.add_argument("--donor-id")
     ap.add_argument("--org-id")
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--token-env", help="nome da variável de ambiente que já contém o token (formato rai_...); o token NÃO é impresso. Usado pelo CI para um token por perfil")
     a = ap.parse_args()
+    if a.list:
+        with session_scope() as s:
+            if a.list == "donors":
+                rows = s.execute(select(m.Donor.id, m.Donor.external_id, m.Donor.data_origin).where(m.Donor.data_origin == "SIMULATED").order_by(m.Donor.external_id).limit(max(a.limit, 1))).all()
+            else:
+                rows = s.execute(select(m.Organization.id, m.Organization.ong_id, m.Organization.data_origin).order_by(m.Organization.ong_id).limit(max(a.limit, 1))).all()
+        for r in rows:
+            print(f"{r[0]}  {r[1]}  {r[2]}")
+        return
+    if not a.role or not a.label:
+        raise SystemExit("informe --role e --label (ou use --list donors|orgs)")
     if a.token_env:
         token = os.environ.get(a.token_env, "")
         if not re.fullmatch(r"rai_[A-Za-z0-9_\-]{40,}", token):

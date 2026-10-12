@@ -81,7 +81,9 @@ def test_lote_misto_e_agregacao_conservadora(client, world, clock):
     assert r["validity_days"] == 9, "a validade do lote é a do item mais próximo"
     assert r["exige_refrigeracao"] is True and r["perecibilidade"] == "PERECIVEL_REFRIGERADO_CONGELADO"
     assert d["categoria"] == "LATICINIOS_OVOS"  # categoria predominante = a de maior peso (24 kg de laticínios × 15 kg de grãos)
-    assert any("Lote misto" in a and "DESCONHECIDO" in a for a in d["alertas"])
+    assert any("Lote misto" in a for a in d["alertas"]) and not any(w in " ".join(d["alertas"]).lower() for w in ("modelo", "ml_score", "desconhecido")), "doador: sem informação do modelo"
+    adm = client.get(f"{BASE}/{d['id']}", headers=world["admin"]).json()
+    assert any("Lote misto" in a and "DESCONHECIDO" in a for a in adm["alertas"]), "a limitação do modelo (lote misto) aparece para o ADMIN"
     assert any("validades muito diferentes" in a for a in d["alertas"]), "diferença de 191 dias > limite de aviso"
     with session_scope() as s:
         row = s.get(m.Donation, d["id"])
@@ -226,7 +228,10 @@ def test_pre_visualizacao_do_texto_nao_grava_doacao(client, world):
     r = client.post(f"{BASE}/items/parse-preview", headers=world["donor_a"], json={"texto": texto})
     assert r.status_code == 200, r.text
     j = r.json()
-    assert j["items"] and all("revisao_do_item" in i["pending_fields"] for i in j["items"]) and j["training_data_origin"] == "SIMULATED" and "não afirma" in j["aviso"]
+    assert j["perfil"] == "DONOR" and j["items"] and all("revisao_do_item" in i["pending_fields"] for i in j["items"]) and "conferir" in j["aviso"]
+    assert not ({"parser_version", "confidence_threshold", "threshold_note", "training_data_origin"} & set(j)) and "_conf" not in str(j), "doador: sem confiança nem versão do parser"
+    adm = client.post(f"{BASE}/items/parse-preview", headers=world["admin"], json={"texto": texto, "donor_id": str(world["donor_a_id"])}).json()
+    assert adm["perfil"] == "ADMIN" and adm["training_data_origin"] == "SIMULATED" and "não afirma" in adm["aviso"] and "categoria_conf" in adm["items"][0], "ADMIN vê o detalhe técnico"
     with session_scope() as s:
         assert len(s.scalars(select(m.Donation.id)).all()) == n0 and len(s.scalars(select(m.DonationItem.id)).all()) == i0
 

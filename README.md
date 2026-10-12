@@ -1,4 +1,4 @@
-# Rede Alimenta IA — Projeto Integrador FIAP (Fase 1 + Fase 2 Partes 1 e 2)
+# Rede Alimenta IA — Projeto Integrador FIAP (Fase 1 + Fase 2 Partes 1 e 2 + Fase 3 Parte 1)
 
 Solução para reduzir desperdício de alimentos conectando **doadores a ONGs** (fluxo DOADOR → ONG) com IA e DevSecOps. Este repositório contém o **Checkpoint 1**: dados (reais + simulados), MVP da IA, API e modelagem de ameaças STRIDE.
 
@@ -64,7 +64,7 @@ Pré-requisito: Docker com Compose v2 e as pastas `data/gold`, `data/metadata`, 
 
 ```bash
 cp .env.example .env                  # preencha POSTGRES_PASSWORD (letras, números, - e _). O .env não vai ao Git nem às imagens
-docker compose up -d postgres migrate # banco + migrations Alembic (0001, 0002)
+docker compose up -d postgres migrate # banco + migrations Alembic (0001 a 0003)
 docker compose --profile seed run --rm seed   # carga: ONGs PUBLIC + dados SIMULATED (SIM_TAG=main por padrão)
 docker compose up -d --build          # api (http://127.0.0.1:8000/docs) + frontend (http://127.0.0.1:8501)
 docker compose exec api python -m scripts.create_user --role ADMIN --label admin-local   # token exibido UMA vez
@@ -93,3 +93,74 @@ Correção de portabilidade: `streamlit run app/streamlit_app.py` falhava com `M
 `.github/workflows/ci.yml`: lint (Ruff), testes (com PostgreSQL), Bandit, pip-audit, Trivy (dependências, configuração e imagens), gitleaks e fluxo completo via Compose. Relatórios antes/depois em `security/reports/` (`LEIA-ME.md`, `SUPRESSOES.md`); ameaças em `security/STRIDE.md` (§11–12). Verificação de tipos (mypy) **não adotada** (falha interna da ferramenta).
 
 Documentos: `docs/FASE2_P2_RELATORIO_FINAL.md`, `docs/ROUTING.md`.
+
+
+## Fase 3 · Parte 1 — doação com vários itens e interface por perfil
+
+> **Aviso:** doadores, doações, lotes e respostas das ONGs usados nas demonstrações são **SIMULADOS** (`data_origin = SIMULATED`); as ONGs listadas são registros de fontes públicas e **não são clientes** da plataforma. Contas `--demo` operam só sobre dados SIMULADOS. Nada simulado é apresentado como real.
+
+**O que mudou**
+* O doador monta a doação **item a item** (categoria, nome, unidades, peso/volume por unidade, validade e refrigeração); o total em kg, a validade mais próxima e a refrigeração do lote são calculados a partir dos itens (`docs/DONATION_ITEMS.md`). Líquidos viram kg por **estimativa** (premissa sem fonte), sempre sinalizada como "peso estimado".
+* **Visibilidade por perfil aplicada na API** (`docs/ROLE_VISIBILITY.md`): o doador não vê scores, ranking nem saída do parser; a ONG vê a doação proposta, a própria distância e a "Análise da IA" em texto; só o ADMIN vê scores, ranking, modelo e saída do parser (acessos auditados).
+* A tela é só apresentação — a barreira de segurança é a API.
+
+**Telas (Streamlit, `app/streamlit_app.py`)**
+
+| Perfil | Menu |
+|---|---|
+| DONOR | **Nova doação** (passos: Itens → Retirada → Revisar e enviar, com confirmação) · **Minhas doações** (status em destaque: Pendente, Aceita, Recusada…) |
+| ORG | **Propostas recebidas** (Aceitar/Recusar com confirmação; bloco recolhível "Análise da IA") · **Histórico** |
+| ADMIN | **Visão técnica (admin)** (ranking, scores, explicações, match_events e aviso de lote misto) |
+
+### Criar usuários DONOR, ORG e ADMIN e rodar a interface
+
+O token é exibido **uma única vez** (só o hash vai ao banco). Nunca coloque tokens em `.env`, no repositório ou em prints.
+
+```bash
+# 1) banco e carga (uma vez) — ver Fase 2; depois a API (terminal 1)
+python -m scripts.bootstrap_db
+uvicorn api.main:app --port 8000
+
+# 2) usuários (uma conta por perfil). Liste ids de doadores SIMULATED e de ONGs (pseudônimos públicos):
+python -m scripts.create_user --list donors --limit 5
+python -m scripts.create_user --list orgs --limit 5
+python -m scripts.create_user --role ADMIN --label admin-local
+python -m scripts.create_user --role DONOR --label conta-doador-demo --donor-id <UUID-do-doador> --demo
+python -m scripts.create_user --role ORG   --label conta-ong-demo    --org-id   <UUID-da-ong>    --demo
+
+# 3) interface (terminal 2) — abra http://localhost:8501 e cole o token do perfil na barra lateral
+streamlit run app/streamlit_app.py
+```
+
+Mesmos passos no **PowerShell** (Windows):
+```powershell
+python -m scripts.bootstrap_db
+python -m uvicorn api.main:app --port 8000                       # terminal 1
+
+python -m scripts.create_user --list donors --limit 5
+python -m scripts.create_user --list orgs --limit 5
+python -m scripts.create_user --role ADMIN --label admin-local
+python -m scripts.create_user --role DONOR --label conta-doador-demo --donor-id <UUID-do-doador> --demo
+python -m scripts.create_user --role ORG   --label conta-ong-demo    --org-id   <UUID-da-ong>    --demo
+
+streamlit run app/streamlit_app.py                               # terminal 2 — http://localhost:8501
+$env:API_BASE_URL = "http://127.0.0.1:8000"                      # opcional: se a API não estiver nesse endereço (defina ANTES do streamlit)
+```
+
+Com **Docker Compose** (a interface fica em `http://127.0.0.1:8501`):
+```bash
+docker compose up -d postgres migrate && docker compose --profile seed run --rm seed && docker compose up -d --build
+docker compose exec api python -m scripts.create_user --list donors --limit 5
+docker compose exec api python -m scripts.create_user --role DONOR --label conta-doador-demo --donor-id <UUID-do-doador> --demo
+docker compose exec api python -m scripts.create_user --role ORG   --label conta-ong-demo    --org-id   <UUID-da-ong>    --demo
+docker compose exec api python -m scripts.create_user --role ADMIN --label admin-local
+```
+(No PowerShell o mesmo funciona: troque apenas as quebras de linha e use `` ` `` para continuar uma linha.)
+
+**Fluxo de demonstração (três perfis, três janelas/abas):** o doador adiciona vários itens com validades diferentes, confere o total, informa a retirada e envia → a ONG vê os itens e a "Análise da IA" e aceita ou recusa → o doador acompanha só a situação → o admin vê scores, ranking e o aviso de lote misto. Com um terminal de API em execução, `python -m scripts.e2e_flow` percorre o mesmo caminho por HTTP (tokens por perfil em `E2E_ADMIN_TOKEN`, `E2E_DONOR_TOKEN` e `E2E_ORG_TOKEN`, opcionais; sem eles o script gera tokens novos — ver `docs/ROLE_VISIBILITY.md`).
+
+**Fluxo antigo (lote único):** `POST /donations/parse` está **descontinuado para DONOR** (a resposta é saída crua do parser); `POST /donations` e `PATCH /donations/{id}/confirm` continuam no servidor, mas a tela do doador não os usa. Ver `docs/ROLE_VISIBILITY.md` §1.1.
+
+**Limitações:** o ranker foi treinado só com lotes SIMULADOS de uma única categoria — o desempenho em **lote misto é desconhecido** (aviso na Visão técnica); a leitura de texto livre nunca foi testada com texto real de doadores; token estático, sem TLS nem limite de requisições; localização exata e contato do doador para a ONG só após cadastro real.
+
+Documentos: `docs/DONATION_ITEMS.md`, `docs/ROLE_VISIBILITY.md`, `security/STRIDE.md` (seção 13).

@@ -6,6 +6,14 @@ from typing import Any
 import httpx
 
 
+CAMPOS_PT = {"produto": "nome do alimento", "categoria": "categoria", "quantity": "quantidade de unidades", "unit": "tipo de embalagem", "unit_weight": "peso ou volume por unidade",
+             "unit_weight_unit": "unidade de medida", "validade_data": "validade", "validade_mes_ano": "validade (mês/ano)", "exige_refrigeracao": "refrigeração", "description": "descrição",
+             "janela_retirada_inicio_h": "início da retirada", "janela_retirada_fim_h": "fim da retirada", "dias_retirada": "dias de retirada", "texto": "texto"}
+POR_STATUS = {401: "Sua sessão não foi reconhecida. Confira o código de acesso informado.", 403: "Você não tem permissão para esta ação.", 404: "Não encontramos este registro.",
+              410: "Esta função não está mais disponível para o seu perfil.", 429: "Muitas tentativas seguidas. Aguarde um instante e tente de novo.",
+              503: "O serviço está temporariamente indisponível. Tente de novo em instantes."}
+
+
 class ApiError(Exception):
     def __init__(self, status: int, detail: Any):
         self.status, self.detail = status, detail
@@ -17,6 +25,24 @@ class ApiError(Exception):
         if isinstance(d, dict):
             return str(d.get("mensagem") or d)
         return str(d)
+
+    @property
+    def friendly(self) -> str:
+        """Mensagem em linguagem simples para a tela (nunca traceback, nunca JSON cru)."""
+        d = self.detail
+        if isinstance(d, list):  # erro de validação (422): lista de {loc, msg}
+            partes = []
+            for e in d:
+                if isinstance(e, dict):
+                    campo = next((CAMPOS_PT.get(str(x)) for x in reversed(e.get("loc", [])) if str(x) in CAMPOS_PT), None)
+                    partes.append(f"{campo}: {e.get('msg')}" if campo else str(e.get("msg")))
+            return "Confira os dados informados — " + "; ".join(partes) if partes else "Confira os dados informados."
+        if self.status >= 500:
+            return "Não foi possível concluir agora. Tente novamente em instantes."
+        txt = self.message
+        if self.status in (401, 403, 404, 410, 429, 503) and not isinstance(d, dict) and (not txt or txt.lower() in ("not found", "forbidden", "unauthorized", "invalid token")):
+            return POR_STATUS[self.status]
+        return txt or POR_STATUS.get(self.status, "Não foi possível concluir a ação.")
 
 
 class ApiClient:
@@ -41,8 +67,12 @@ class ApiClient:
     def model_info(self) -> dict:
         return self._req("GET", "/api/v1/model/info")
 
-    def parse(self, texto: str) -> dict:
-        return self._req("POST", "/api/v1/donations/parse", json={"texto": texto})
+    def parse(self, texto: str, donor_id: str | None = None) -> dict:
+        """Fluxo antigo (lote único). DESCONTINUADO para DONOR (a API responde 410); ADMIN informa `donor_id`."""
+        body: dict = {"texto": texto}
+        if donor_id:
+            body["donor_id"] = donor_id
+        return self._req("POST", "/api/v1/donations/parse", json=body)
 
     def create_donation(self, payload: dict) -> dict:
         return self._req("POST", "/api/v1/donations", json=payload)
@@ -53,14 +83,67 @@ class ApiClient:
     def confirm(self, donation_id: str, payload: dict) -> dict:
         return self._req("PATCH", f"/api/v1/donations/{donation_id}/confirm", json=payload)
 
+    # ---- rascunho e itens (Fase 3 Parte 1 · Etapa A) — fluxo do DONOR
+    def create_draft(self, payload: dict | None = None) -> dict:
+        return self._req("POST", "/api/v1/donations/drafts", json=payload or {})
+
+    def patch_draft(self, donation_id: str, payload: dict) -> dict:
+        return self._req("PATCH", f"/api/v1/donations/{donation_id}/draft", json=payload)
+
+    def add_item(self, donation_id: str, payload: dict) -> dict:
+        return self._req("POST", f"/api/v1/donations/{donation_id}/items", json=payload)
+
+    def patch_item(self, donation_id: str, item_id: int, payload: dict) -> dict:
+        return self._req("PATCH", f"/api/v1/donations/{donation_id}/items/{item_id}", json=payload)
+
+    def delete_item(self, donation_id: str, item_id: int) -> dict:
+        return self._req("DELETE", f"/api/v1/donations/{donation_id}/items/{item_id}")
+
+    def list_items(self, donation_id: str) -> list:
+        return self._req("GET", f"/api/v1/donations/{donation_id}/items")
+
+    def parse_preview(self, texto: str, donor_id: str | None = None) -> dict:
+        body: dict = {"texto": texto}
+        if donor_id:
+            body["donor_id"] = donor_id
+        return self._req("POST", "/api/v1/donations/items/parse-preview", json=body)
+
+    def items_from_text(self, donation_id: str, texto: str) -> dict:
+        return self._req("POST", f"/api/v1/donations/{donation_id}/items/from-text", json={"texto": texto})
+
+    def finalize(self, donation_id: str) -> dict:
+        return self._req("POST", f"/api/v1/donations/{donation_id}/finalize")
+
+    def list_donations(self, limit: int = 20, offset: int = 0, status: str | None = None) -> list:
+        params: dict = {"limit": limit, "offset": offset}
+        if status:
+            params["status"] = status
+        return self._req("GET", "/api/v1/donations", params=params)
+
+    # ---- ADMIN (Visão técnica) e dados públicos
+    def ranking(self, match_id: str) -> dict:
+        return self._req("GET", f"/api/v1/matches/{match_id}/ranking")
+
+    def list_organizations(self, uf: str | None = None, limit: int = 50, offset: int = 0) -> list:
+        params: dict = {"limit": limit, "offset": offset}
+        if uf:
+            params["uf"] = uf
+        return self._req("GET", "/api/v1/organizations", params=params)
+
+    def get_organization(self, org_id: str) -> dict:
+        return self._req("GET", f"/api/v1/organizations/{org_id}")
+
     def create_match(self, donation_id: str, top_n: int = 5) -> dict:
         return self._req("POST", "/api/v1/matches", json={"donation_id": donation_id, "top_n": top_n})
 
     def get_match(self, match_id: str) -> dict:
         return self._req("GET", f"/api/v1/matches/{match_id}")
 
-    def list_matches(self, status: str | None = None) -> list:
-        return self._req("GET", "/api/v1/matches", params={"status": status} if status else None)
+    def list_matches(self, status: str | None = None, limit: int = 20, offset: int = 0) -> list:
+        params: dict = {"limit": limit, "offset": offset}
+        if status:
+            params["status"] = status
+        return self._req("GET", "/api/v1/matches", params=params)
 
     def respond(self, match_id: str, accept: bool, note: str | None = None) -> dict:
         return self._req("POST", f"/api/v1/matches/{match_id}/respond", json={"accept": accept, "note": note})

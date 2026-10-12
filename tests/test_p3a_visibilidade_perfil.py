@@ -14,7 +14,9 @@ from tests.helpers_p2 import admin_match, org_token, ready_donation
 
 SCORES = {"ML_SCORE", "BUSINESS_RULE_SCORE", "DISTANCE_SCORE", "FINAL_SCORE", "business_rule_components"}
 PROIBIDAS = SCORES | {"ranking", "posicao", "eligibility", "weights", "latency_ms", "engine_version", "model_version", "current_position", "current_org", "n_candidates", "score_definitions",
-                      "org_id", "regras_aprovadas", "profile_origin"}
+                      "org_id", "regras_aprovadas", "profile_origin",
+                      # AJUSTE B0 (Etapa B): saída do parser também é informação da IA (doador e ONG não a recebem em JSON algum)
+                      "fields", "confidence", "confidence_threshold", "threshold_note", "parser_version", "parse_confidence"}
 
 
 def chaves(obj, acc=None):

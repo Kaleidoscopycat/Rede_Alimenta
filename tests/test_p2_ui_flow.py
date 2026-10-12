@@ -21,7 +21,10 @@ def test_fluxo_doador_e_ong_pelo_api_client(client, world):
     assert e403.value.status == 403
     info = _cli(client, world["admin"]).model_info()
     assert info["parser"]["training_data_origin"] == "SIMULATED"
-    p = donor.parse(world["texts"]["ready"][2])
+    with pytest.raises(ApiError) as e410:
+        donor.parse(world["texts"]["ready"][2])  # saída do parser (confiança) não é do doador (AJUSTE B0)
+    assert e410.value.status == 410
+    p = _cli(client, world["admin"]).parse(world["texts"]["ready"][2], donor_id=str(world["donor_a_id"]))
     assert p["training_data_origin"] == "SIMULATED" and p["threshold_note"] == "limiar calibrado sobre texto simulado"
     d = donor.create_donation({"texto": world["texts"]["ready"][2]})
     if d["status"] == "PENDING_CONFIRMATION":
@@ -62,12 +65,12 @@ def _run(monkeypatch, client, token=None):
 
 
 def test_ui_sem_token_mostra_avisos(monkeypatch, client, world):
+    """Antes do login: aviso simples de ambiente de demonstração (dados SIMULADOS) e o aviso de uso acadêmico das bases públicas; sem jargão técnico."""
     at = _run(monkeypatch, client)
     assert not at.exception
-    txt = " ".join(w.value for w in at.warning).lower()
-    assert "dados simulados com limitações conhecidas" in txt
     caps = " ".join(c.value for c in at.caption).lower()
-    assert "texto simulado" in caps and "tls" in caps
+    assert "simulados" in caps and "não são clientes" in caps and "fins acadêmicos" in caps
+    assert not any(t in (caps + " ".join(i.value for i in at.info)).lower() for t in ("parser", "τ", "score", "confiança"))
 
 
 def test_ui_pagina_doador_e_ong(monkeypatch, client, world):

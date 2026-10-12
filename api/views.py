@@ -63,7 +63,7 @@ def resumo(d: m.Donation, items: list[m.DonationItem]) -> Resumo:
                   refeicoes_equivalentes=round(d.quantity_kg / 0.4, 1) if d.quantity_kg else None)
 
 
-def alerts(d: m.Donation, items: list[m.DonationItem], now=None) -> list[str]:
+def alerts(d: m.Donation, items: list[m.DonationItem], now=None, audience: str = "ADMIN") -> list[str]:
     out: list[str] = []
     if not items:
         return out
@@ -74,7 +74,7 @@ def alerts(d: m.Donation, items: list[m.DonationItem], now=None) -> list[str]:
         nomes = ", ".join(i.produto or "item" for i in items if i.id in agg.short_validity_item_ids)
         out.append(f"Itens com validades muito diferentes (até {agg.spread_days} dias de diferença; limite de aviso {DONATION.validity_spread_warn_days}). {SPREAD_ADVICE} Mais próximos: {nomes}.")
     if d.is_mixed_batch:
-        out.append("Lote misto (várias categorias): a ONG precisa aceitar todas as categorias. " + MIXED_BATCH_LIMITATION)
+        out.append("Lote misto (várias categorias): a ONG precisa aceitar todas as categorias." + (" " + MIXED_BATCH_LIMITATION if audience == "ADMIN" else ""))  # limitação do modelo: só ADMIN
     if any(it.weight_basis in ("VOLUME_CONVERTIDO", "MASSA_UNITARIA_CATEGORIA") for it in items):
         out.append("Há peso ESTIMADO (volume convertido em kg por premissa sem fonte): confira o peso real.")
     if any(it.validity_precision == "MONTH" for it in items):
@@ -110,8 +110,8 @@ def donation_donor(db: Session, d: m.Donation, now=None) -> DonorDonationView:
         ong = o.ong_id if o else None
     situacao = SITUACAO_MATCH.get(mt.status) if (mt is not None and d.status in ("MATCHING", "MATCHED", "NO_MATCH")) else SITUACAO_DOACAO.get(d.status, d.status)
     return DonorDonationView(**_header(d), id=d.id, data_origin=d.data_origin, status=d.status, situacao=situacao or d.status, block_reason=d.block_reason, pending_fields=_pending_donation(d, items),
-                             raw_text=d.raw_text, items=[item_donor(i) for i in items], resumo=resumo(d, items), alertas=alerts(d, items, now), contem_alergenico=d.contem_alergenico,
-                             janela_retirada=_window(d), fields=d.fields or {}, match_id=mt.id if mt is not None else None, ong_aceita=ong, created_at=d.created_at,
+                             raw_text=d.raw_text, items=[item_donor(i) for i in items], resumo=resumo(d, items), alertas=alerts(d, items, now, "DONOR"), contem_alergenico=d.contem_alergenico,
+                             janela_retirada=_window(d), match_id=mt.id if mt is not None else None, ong_aceita=ong, created_at=d.created_at,
                              confirmed_at=d.confirmed_at, aviso=AVISO_DOACAO)
 
 
@@ -133,7 +133,7 @@ def analysis_for_org(d: m.Donation, items: list[m.DonationItem]) -> list[str]:
     if d.expires_at is not None:
         out.append(f"Validade mais próxima do lote: {d.expires_at.strftime('%d/%m/%Y')} (todo o lote deve ser retirado antes dela).")
     out.append("Exige refrigeração: " + ("sim" if d.exige_refrigeracao else "não" if d.exige_refrigeracao is False else "não informado") + ".")
-    out.extend(alerts(d, items))
+    out.extend(alerts(d, items, None, "ORG"))
     if d.contem_alergenico:
         out.append("O doador informou que o lote pode conter alergênicos.")
     return out
@@ -171,7 +171,10 @@ def match_donor(db: Session, mt: m.Match) -> DonorMatchView:
 def match_org(db: Session, mt: m.Match, user: m.User) -> OrgMatchView:
     d = db.get(m.Donation, mt.donation_id)
     mine = next((r for r in mt.ranking if r["org_id"] == str(user.organization_id)), None)
+    last = db.scalars(select(m.MatchEvent).where(m.MatchEvent.match_id == mt.id, m.MatchEvent.organization_id == user.organization_id,
+                                                 m.MatchEvent.event_type.in_(("PROPOSED", "ACCEPTED", "DECLINED", "EXPIRED", "COLLECTED", "FAILED"))).order_by(m.MatchEvent.id.desc())).first()
     return OrgMatchView(id=mt.id, data_origin=mt.data_origin, status=mt.status, awaiting_my_response=mt.status == "PROPOSED" and mt.current_org_id == user.organization_id,
+                        mine_now=mt.current_org_id == user.organization_id, my_last_event=last.event_type if last else None, my_last_event_at=last.at if last else None,
                         proposal_expires_at=mt.proposal_expires_at if mt.current_org_id == user.organization_id else None, my_candidacy=candidacy_for_org(mine),
                         donation=donation_org(db, d), created_at=mt.created_at, closed_at=mt.closed_at, aviso=AVISO_ORG)
 

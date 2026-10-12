@@ -1,5 +1,5 @@
 """Visões por perfil (Fase 3 Parte 1, seção 3). Cada perfil tem o PRÓPRIO schema de resposta (response_model), que também descarta qualquer chave extra:
-  DONOR → só o que o doador precisa (sua doação, itens, situação e a ONG que aceitou); NUNCA ranking, scores, elegibilidade, modelo ou latências.
+  DONOR → só o que o doador precisa (sua doação, itens, situação e a ONG que aceitou); NUNCA ranking, scores, elegibilidade, modelo, latências nem a saída do parser (`fields`, confiança — removidos pelo AJUSTE B0).
   ORG   → a doação dirigida a ela, a análise textual SEM scores e a própria candidatura (sem as demais candidatas).
   ADMIN → tudo (inclusive ranking completo, scores, modelo e predictions); o acesso é auditado (`admin.access`).
 A união é discriminada pelo campo `perfil`."""
@@ -106,7 +106,6 @@ class DonorDonationView(Header):
     alertas: list[str]
     contem_alergenico: bool
     janela_retirada: dict[str, Any]
-    fields: dict[str, Any] = Field(default_factory=dict, description="Fluxo de texto único (anterior): campos extraídos e decisões, para conferência do doador")
     match_id: Optional[uuid.UUID] = None
     ong_aceita: Optional[str] = Field(None, description="Pseudônimo da ONG, só após o aceite")
     created_at: dt.datetime
@@ -183,6 +182,9 @@ class OrgMatchView(BaseModel):
     data_origin: str
     status: str
     awaiting_my_response: bool
+    mine_now: bool = Field(False, description="A proposta/coleta está com a minha ONG agora (false = a proposta já passou a outra candidata)")
+    my_last_event: Optional[str] = Field(None, description="Último evento DESTA ONG neste match: PROPOSED | ACCEPTED | DECLINED | EXPIRED | COLLECTED | FAILED (histórico)")
+    my_last_event_at: Optional[dt.datetime] = None
     proposal_expires_at: Optional[dt.datetime]
     my_candidacy: Optional[OrgCandidacy]
     donation: OrgDonationView

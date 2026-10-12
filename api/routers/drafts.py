@@ -6,10 +6,10 @@ from __future__ import annotations
 
 import json
 import uuid
-from typing import Any
+from typing import Annotated, Any, Literal, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -29,6 +29,8 @@ FIELD_OF = {"quantity": "quantidade", "unit_weight": "peso_por_unidade", "unit_w
 
 
 class ParseItemsOut(BaseModel):
+    """Visão ADMIN da pré-análise (com confiança, versão e limiar do parser)."""
+    perfil: Literal["ADMIN"] = "ADMIN"
     items: list[dict[str, Any]]
     alerts: list[str]
     parser_version: str
@@ -36,6 +38,36 @@ class ParseItemsOut(BaseModel):
     threshold_note: str
     training_data_origin: str
     aviso: str
+
+
+class ItemSugeridoDonor(BaseModel):
+    """Sugestão a conferir (campos de formulário): SEM confiança, SEM versão/limiar do parser e SEM base interna do peso."""
+    produto: Optional[str] = None
+    categoria: Optional[str] = None
+    perecibilidade: Optional[str] = None
+    exige_refrigeracao: Optional[bool] = None
+    quantity: Optional[float] = None
+    unit: Optional[str] = None
+    unit_weight: Optional[float] = None
+    unit_weight_unit: Optional[str] = None
+    quantity_kg: Optional[float] = None
+    weight_estimated: bool = False
+    expires_at: Optional[Any] = None
+    validity_days: Optional[int] = None
+    validity_precision: Optional[str] = None
+    pending_fields: list[str] = []
+    notes: list[str] = []
+    segmento: Optional[str] = None
+
+
+class ParseItemsDonorOut(BaseModel):
+    perfil: Literal["DONOR"] = "DONOR"
+    items: list[ItemSugeridoDonor]
+    alerts: list[str]
+    aviso: str = "Sugestões a conferir: nada é enviado até você confirmar cada item."
+
+
+ParsePreviewOut = Annotated[Union[ParseItemsDonorOut, ParseItemsOut], Field(discriminator="perfil")]
 
 
 def _units():
@@ -94,7 +126,7 @@ def _add_suggested(db: Session, d: m.Donation, texto: str, user: m.User, now, to
     return res
 
 
-@router.post("/items/parse-preview", response_model=ParseItemsOut, summary="Pré-visualiza a divisão do texto em itens (não grava nada)")
+@router.post("/items/parse-preview", response_model=ParsePreviewOut, summary="Pré-visualiza a divisão do texto em itens (não grava a doação)")
 def parse_preview(body: TextIn, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN"))):
     donor = dn.resolve_donor(db, request, user, body.donor_id)
     res = _parse(body.texto, dn._now().astimezone(TZ).date())
@@ -102,6 +134,8 @@ def parse_preview(body: TextIn, request: Request, db: Session = Depends(get_db),
                           training_data_origin="SIMULATED", subject_data_origin=donor.data_origin, created_by=user.id))
     audit("donation.parse_items", "OK", request, user, "donor", donor.id, 200, detail={"n_items": len(res["items"])}, session=db)
     db.commit()
+    if user.role == "DONOR":
+        return ParseItemsDonorOut(items=[ItemSugeridoDonor(**{k: v for k, v in it.items() if k in ItemSugeridoDonor.model_fields}) for it in res["items"]], alerts=res["alerts"])
     return ParseItemsOut(**{k: res[k] for k in ("items", "alerts", "parser_version", "confidence_threshold", "threshold_note", "training_data_origin")}, aviso=AVISO_PARSER)
 
 
