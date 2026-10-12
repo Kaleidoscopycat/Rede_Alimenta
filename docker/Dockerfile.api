@@ -5,8 +5,12 @@ FROM python:3.10-slim AS builder
 ENV PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
+# pip/setuptools/wheel atualizados ANTES de instalar as dependências (o setuptools antigo embute jaraco.context e wheel vulneráveis, achados HIGH do Trivy)
+RUN pip install --upgrade pip setuptools wheel
 COPY requirements-api.txt /tmp/requirements-api.txt
-RUN pip install -r /tmp/requirements-api.txt
+# setuptools/wheel só servem para instalar: removidos do venv assim que as dependências terminam (verificado: nenhuma dependência de runtime importa setuptools/pkg_resources; pytz só tenta pkg_resources como último recurso, dentro de try/except ImportError)
+RUN pip install -r /tmp/requirements-api.txt \
+ && pip uninstall -y setuptools wheel
 
 FROM python:3.10-slim AS runtime
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -16,6 +20,10 @@ RUN groupadd --system --gid 10001 app \
  && useradd --system --uid 10001 --gid app --home-dir /app --shell /usr/sbin/nologin app
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv
+# Remove setuptools/wheel do Python do sistema (/usr/local) e, por garantia, do venv (/opt/venv): não são usados em tempo de execução e embutem pacotes com CVEs.
+# (pip uninstall -y apenas avisa e segue se o pacote já não existir.)
+RUN /usr/local/bin/python -m pip uninstall -y setuptools wheel \
+ && /opt/venv/bin/python -m pip uninstall -y setuptools wheel
 # somente o necessário para executar API, migrações e carga (sem tests/, docs/, data/, eda/, pipelines de ingestão)
 COPY --chown=app:app alembic.ini ./alembic.ini
 COPY --chown=app:app core ./core
