@@ -43,6 +43,7 @@ COPY --chown=app:app simulation/config ./simulation/config
 COPY --chown=app:app simulation/params ./simulation/params
 COPY --chown=app:app pipelines/__init__.py pipelines/geo.py ./pipelines/
 COPY --chown=app:app scripts/bootstrap_db.py scripts/create_user.py ./scripts/
+COPY --chown=app:app security/reports ./security/reports
 USER app
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \

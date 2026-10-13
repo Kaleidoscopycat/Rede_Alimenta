@@ -3,6 +3,7 @@
   python -m scripts.create_user --role DONOR --label conta-doador --donor-id <uuid> [--demo]
   python -m scripts.create_user --role ORG --label conta-ong --org-id <uuid> [--demo]
   python -m scripts.create_user --role ADMIN --label admin-ci --token-env E2E_ADMIN_TOKEN   # usa o token JÁ definido nessa variável de ambiente (CI); nada é impresso
+  python -m scripts.create_user --revoke <label>   # desativa (is_active=false) os usuários ATIVOS com esse rótulo — ex.: token ADMIN criado para a defesa; grava auditoria `user.revoke`; não imprime token
   python -m scripts.create_user --list donors|orgs [--limit 10]   # lista ids para usar em --donor-id / --org-id (doadores SIMULATED: id do simulador; ONGs: pseudônimo público; sem dados pessoais)
 Regras: contas --demo só operam sobre dados SIMULATED (doador SIMULATED / ONG sem cadastro real). O rótulo NÃO deve ser nome de pessoa física."""
 from __future__ import annotations
@@ -27,17 +28,33 @@ from database import models as m
 from database.session import session_scope
 
 
+def revoke(label: str) -> int:
+    """Desativa os usuários ATIVOS com o rótulo informado (o token deixa de autenticar). Registra `user.revoke` em audit_logs (rótulo e quantidade; nunca o token). Devolve quantos foram desativados."""
+    with session_scope() as s:
+        users = list(s.scalars(select(m.User).where(m.User.label == label, m.User.is_active.is_(True))))
+        for u in users:
+            u.is_active = False
+        s.add(m.AuditLog(user_id=None, role=None, action="user.revoke", resource_type="user", resource_id=None, outcome="OK" if users else "NOOP", status_code=None, method="CLI", path=None,
+                         client_ip=None, detail={"label": label, "desativados": len(users), "roles": sorted({u.role for u in users})}))
+    return len(users)
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--role", choices=["DONOR", "ORG", "ADMIN"])
     ap.add_argument("--label")
     ap.add_argument("--list", choices=["donors", "orgs"], help="apenas lista ids de doadores SIMULATED ou de ONGs (pseudônimo) para usar nos comandos de criação")
+    ap.add_argument("--revoke", metavar="LABEL", help="desativa os usuários ativos com este rótulo (revogação do token, p.ex. o ADMIN criado para a defesa)")
     ap.add_argument("--limit", type=int, default=10)
     ap.add_argument("--donor-id")
     ap.add_argument("--org-id")
     ap.add_argument("--demo", action="store_true")
     ap.add_argument("--token-env", help="nome da variável de ambiente que já contém o token (formato rai_...); o token NÃO é impresso. Usado pelo CI para um token por perfil")
     a = ap.parse_args()
+    if a.revoke:
+        n = revoke(a.revoke)
+        print(f"revogados={n}" + ("" if n else " (nenhum usuário ativo com este rótulo)"))
+        return
     if a.list:
         with session_scope() as s:
             if a.list == "donors":

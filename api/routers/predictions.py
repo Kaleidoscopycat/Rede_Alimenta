@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -15,6 +16,7 @@ from api.state import STATE
 from core.settings import SETTINGS
 from database import models as m
 
+log = logging.getLogger("api.predictions")
 router = APIRouter(prefix="/api/v1", tags=["modelo"])
 
 
@@ -39,6 +41,8 @@ def predictions(body: PredictionIn, request: Request, db: Session = Depends(get_
     db.add(m.MlPrediction(kind="RANKER", model_name="ranker", model_version=r.meta["model_version"], output={"top": [x.model_dump() for x in res.ranking[:5]], "confidence": res.confidence},
                           confidence=res.confidence, training_data_origin="SIMULATED", subject_data_origin=donor.data_origin, latency_ms=ms, created_by=user.id))
     audit("prediction.create", "OK", request, user, "donor", donor.id, 200, session=db)
+    log.info("predição do ranker", extra={"evt": "prediction.ranker", "model_version": r.meta["model_version"], "latency_ms": round(ms, 2), "confidence": round(float(res.confidence), 4),
+                                          "n_ranking": len(res.ranking), "subject_data_origin": donor.data_origin})
     db.commit()
     return res
 

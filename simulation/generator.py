@@ -173,7 +173,9 @@ def run(seed: int = 20261003, n_lots: int = 60000, n_donors: int = 8000, scenari
                 "text_fractions_drawn": fr, "text_probs_drawn": tp, "mix_calibration": diag, "seconds": round(time.time() - t0, 1)}
     (out / "run_params.json").write_text(json.dumps(run_info, indent=1, ensure_ascii=False, default=str), encoding="utf-8")
     np.savez_compressed(out / "_oracle_inputs.npz", L0=L0.astype("float32"), beta0=np.float64(beta0))  # para o teste do oráculo
-    log.info("concluído em %.0fs: %s", time.time() - t0, meta)
+    log.info("concluído em %.0fs: %s", time.time() - t0, meta,
+             extra={"evt": "simulation.done", "seed": seed, "generator_version": GENERATOR_VERSION, "dataset_version": dataset_version, "n_lots": n_lots, "n_donors": n_donors,
+                    "seconds": round(time.time() - t0, 1)})
     return run_info
 
 

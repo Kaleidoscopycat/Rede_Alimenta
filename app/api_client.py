@@ -166,3 +166,15 @@ class ApiClient:
 
     def get_route(self, route_id: str) -> dict:
         return self._req("GET", f"/api/v1/routes/{route_id}")
+
+    # ---- Dashboard do ADMIN (Fase 3 Parte 2 · Etapa A): /api/v1/admin/stats/* (cada consulta é auditada pela API)
+    def stats(self, tela: str, **params: Any) -> dict:
+        """GET /api/v1/admin/stats/<tela> com filtros (valores vazios são descartados)."""
+        q = {k: v for k, v in params.items() if v not in (None, "", [])}
+        return self._req("GET", f"/api/v1/admin/stats/{tela}", params=q)
+
+    def logistics_strategies(self, n_lots: int, seed: int, raio_km: float, tempo_solver_s: int = 1) -> dict:
+        return self._req("POST", "/api/v1/admin/stats/logistics/strategies", json={"n_lots": n_lots, "seed": seed, "raio_km": raio_km, "tempo_solver_s": tempo_solver_s})
+
+    def predict(self, payload: dict) -> dict:
+        return self._req("POST", "/api/v1/predictions", json=payload)

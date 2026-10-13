@@ -9,6 +9,7 @@ import datetime as dt
 import uuid
 from typing import Annotated, Any, Literal, Optional, Union
 
+from core.settings import ASSUMPTIONS
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -74,8 +75,8 @@ class Resumo(BaseModel):
     validity_days: Optional[int]
     exige_refrigeracao: Optional[bool]
     perecibilidade: Optional[str]
-    refeicoes_equivalentes: Optional[float] = Field(None, description="kg ÷ 0,4 (premissa da equipe, configurável); em dados SIMULADOS é simulação")
-    premissa_kg_por_refeicao: float = 0.4
+    refeicoes_equivalentes: Optional[float] = Field(None, description="kg ÷ premissa da equipe (padrão 0,4 kg por refeição, configurável); em dados SIMULADOS é simulação")
+    premissa_kg_por_refeicao: float = Field(default_factory=lambda: ASSUMPTIONS.kg_per_meal)
 
 
 class Header(BaseModel):
@@ -89,7 +90,7 @@ class Header(BaseModel):
     expires_at: Optional[dt.datetime] = None
     validity_source: Optional[str] = None
     refeicoes_equivalentes: Optional[float] = None
-    premissa_kg_por_refeicao: float = 0.4
+    premissa_kg_por_refeicao: float = Field(default_factory=lambda: ASSUMPTIONS.kg_per_meal)
 
 
 class DonorDonationView(Header):

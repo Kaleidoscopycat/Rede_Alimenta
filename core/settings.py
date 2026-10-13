@@ -7,6 +7,12 @@ from zoneinfo import ZoneInfo
 
 TZ = ZoneInfo(os.environ.get("APP_TIMEZONE", "America/Sao_Paulo"))
 
+# Ambiente de execução: development (padrão; logs legíveis) | production (logs em JSON; endurecimentos da Etapa B). Valor inválido ⇒ erro explícito (nunca cai em silêncio para "production").
+APP_ENV = os.environ.get("APP_ENV", "development").strip().lower()
+if APP_ENV not in ("development", "production"):
+    raise RuntimeError("APP_ENV deve ser 'development' ou 'production'")
+IS_PRODUCTION = APP_ENV == "production"
+
 
 def _f(name: str, default: float) -> float:
     return float(os.environ.get(name, default))
@@ -74,6 +80,23 @@ class DonationSettings:
 
 
 DONATION = DonationSettings()
+
+
+@dataclass(frozen=True)
+class ProjectAssumptions:
+    """PREMISSAS DA EQUIPE exibidas no dashboard e na documentação. Não são dados de fonte pública."""
+    # refeições = kg ÷ kg_per_meal. Valor definido pela equipe (0,4 kg por refeição); configurável por ambiente, nunca fixo no código das telas.
+    kg_per_meal: float = field(default_factory=lambda: _f("MEAL_KG_PER_MEAL", 0.4))
+
+    def __post_init__(self) -> None:
+        if not self.kg_per_meal > 0:
+            raise RuntimeError("MEAL_KG_PER_MEAL deve ser maior que zero")
+
+    def kg_to_meals(self, kg: float | None) -> float | None:
+        return None if kg is None else kg / self.kg_per_meal
+
+
+ASSUMPTIONS = ProjectAssumptions()
 
 
 def database_url() -> str:

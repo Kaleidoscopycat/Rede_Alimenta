@@ -1,0 +1,283 @@
+{
+  "exemplo_bloqueado_por_validade_vencida": null,
+  "api": "http://127.0.0.1:8000",
+  "lotes_simulados_usados": [
+    {
+      "lot_id": "L001262",
+      "texto": "bom  dia! temos 60 bdjs de abobrinha, vence daqui uns dias, pode retirar hoje? (armazenado a 5 °C)",
+      "categoria": "HORT_FRUTOS"
+    },
+    {
+      "lot_id": "L002270",
+      "texto": "Temos 35 unidades de prato execu. para doação. Val. 2d.",
+      "categoria": "REFEICOES_PRONTAS"
+    }
+  ],
+  "donor_id_simulador": "D00734",
+  "ready": {
+    "status": "ready",
+    "model_version": "ranker-1.0.0",
+    "parser_version": "semantic-parser-1.0.0+6ddef1e7ec57",
+    "engine_version": "match-engine-1.0.0",
+    "orgs_ranqueaveis": 54590
+  },
+  "me": {
+    "user_id": "30053a3f-4520-4870-b002-f4194fd3a94a",
+    "role": "DONOR",
+    "label": "e2e-conta-doador",
+    "donor_id": "0b536b43-e0e7-5d56-b3a6-17ccf6cc573a",
+    "organization_id": null,
+    "is_demo": true,
+    "data_origin_scope": "SIMULATED",
+    "auth_limitations": "Autenticação mínima: token estático por usuário (sem expiração/rotação automática, sem escopos), sem TLS e sem rate limit nesta fase (mitigações PENDENTES: Parte 2 e Fase 3; ver security/STRIDE.md)."
+  },
+  "rascunho": {
+    "n_items": 2,
+    "resumo": {
+      "n_items": 2,
+      "quantity_kg": 50.0,
+      "incomplete_weight": false,
+      "categories": [
+        "HORT_FRUTOS",
+        "REFEICOES_PRONTAS"
+      ],
+      "is_mixed_batch": true,
+      "expires_at": "2026-10-15T02:59:59Z",
+      "validity_days": 2,
+      "exige_refrigeracao": true,
+      "perecibilidade": "PRONTO_ALTO_RISCO",
+      "refeicoes_equivalentes": 125.0,
+      "premissa_kg_por_refeicao": 0.4
+    },
+    "alertas": [
+      "Lote misto (várias categorias): a ONG precisa aceitar todas as categorias."
+    ],
+    "status": "DRAFT"
+  },
+  "donation_final": {
+    "id": "7719fc44-e8c5-4ac2-b46f-453bff2c7392",
+    "status": "READY",
+    "block_reason": null,
+    "categoria": "HORT_FRUTOS",
+    "quantity_kg": 50.0,
+    "validity_days": 2,
+    "data_origin": "SIMULATED",
+    "is_mixed_batch": true
+  },
+  "match_latencia_http_ms": 211.3,
+  "match_latency_ms_motor": {
+    "ml_ms": 26.93,
+    "total_ms": 138.78,
+    "scores_ms": 3.24,
+    "candidatas_ms": 6.37,
+    "elegibilidade_ms": 100.44,
+    "busca_espacial_ms": 1.71
+  },
+  "eligibility": {
+    "n_in_radius": 9150,
+    "n_eligible": 410,
+    "por_regra": {
+      "E_HORARIO": 0,
+      "E_CAPACIDADE": 0,
+      "E_REFRIGERACAO": 7008,
+      "E_NAO_CADASTRADA": 0,
+      "E_PRAZO_VALIDADE": 0,
+      "E_LOCALIZACAO_AUSENTE": 0,
+      "E_CATEGORIA_NAO_ACEITA": 7429
+    }
+  },
+  "alertas_motor": [
+    "Distâncias aproximadas: centroide de município em um dos extremos (location_precision exibido por ONG).",
+    "Lote misto: o modelo de ranking foi treinado e avaliado somente com lotes SIMULADOS de uma única categoria; o desempenho em lotes de várias categorias é DESCONHECIDO. O ML_SCORE usa a categoria predominante (maior peso); a elegibilidade exige que a ONG aceite TODAS as categorias do lote."
+  ],
+  "ranking_top3_ADMIN": [
+    {
+      "posicao": 1,
+      "ong_id": "ONG-c7cd597a942e",
+      "uf": "SP",
+      "dist_km": 0.0,
+      "location_precision": "MUNICIPALITY_CENTROID",
+      "distancia_aproximada": true,
+      "ML_SCORE": 0.2575,
+      "BUSINESS_RULE_SCORE": 0.9225,
+      "DISTANCE_SCORE": 0.8727,
+      "FINAL_SCORE": 0.58
+    },
+    {
+      "posicao": 2,
+      "ong_id": "ONG-272c30915ece",
+      "uf": "SP",
+      "dist_km": 0.0,
+      "location_precision": "MUNICIPALITY_CENTROID",
+      "distancia_aproximada": true,
+      "ML_SCORE": 0.2823,
+      "BUSINESS_RULE_SCORE": 0.8742,
+      "DISTANCE_SCORE": 0.8727,
+      "FINAL_SCORE": 0.5779
+    },
+    {
+      "posicao": 3,
+      "ong_id": "ONG-d208aaf16815",
+      "uf": "SP",
+      "dist_km": 0.0,
+      "location_precision": "MUNICIPALITY_CENTROID",
+      "distancia_aproximada": true,
+      "ML_SCORE": 0.2823,
+      "BUSINESS_RULE_SCORE": 0.8742,
+      "DISTANCE_SCORE": 0.8727,
+      "FINAL_SCORE": 0.5779
+    }
+  ],
+  "polling_ong1_pendente": true,
+  "visibilidade": {
+    "doador_recebe_saida_do_parser": false,
+    "ong_recebe_saida_do_parser": false,
+    "doador_em_parse_antigo": 410,
+    "doador_recebe_scores_ou_ranking": false,
+    "ong_recebe_scores_ou_ranking": false,
+    "ong_analise_ia_sem_scores": [
+      "Lote com 2 item(ns), 50 kg no total, 2 categoria(s).",
+      "Validade mais próxima do lote: 15/10/2026 (todo o lote deve ser retirado antes dela).",
+      "Exige refrigeração: sim.",
+      "Lote misto (várias categorias): a ONG precisa aceitar todas as categorias."
+    ],
+    "doador_em_predictions": 403,
+    "doador_em_ranking": 403,
+    "ong_em_model_info": 403,
+    "ong_em_ranking": 403
+  },
+  "apos_recusa": {
+    "status": "PROPOSED",
+    "situacao": "Aguardando resposta de uma ONG"
+  },
+  "rota": {
+    "veiculo": {
+      "propria_da_ong": false,
+      "tipo": "VAN_FURGAO",
+      "capacidade_kg": 1041.2126682700182,
+      "refrigerado": true,
+      "data_origin": "SIMULATED"
+    },
+    "partida": "2026-10-13T08:00:00-03:00",
+    "status": "PLANNED",
+    "algoritmo": "ORTOOLS_GLS",
+    "n_paradas": 1,
+    "km_est": 0.0,
+    "minutos_est": 60,
+    "nao_atendidos": [],
+    "comparacao_baseline": {
+      "baseline": {
+        "km": 0.0,
+        "minutes": 60,
+        "lots_delivered": 1,
+        "kg": 50.0,
+        "unassigned": 0
+      },
+      "solver": {
+        "km": 0.0,
+        "minutes": 60,
+        "lots_delivered": 1,
+        "kg": 50.0,
+        "unassigned": 0
+      },
+      "km_delta_pct": null,
+      "lots_delta": 0
+    },
+    "data_origin": "SIMULATED",
+    "rotulo": "SIMULAÇÃO: frota, janelas de retirada, capacidade e horários vêm de premissas SIMULADAS; distâncias e tempos são ESTIMATIVAS (linha reta × fator de desvio ÷ velocidade), não rota viária; resultados não representam desempenho real.",
+    "get_confere": true
+  },
+  "eventos_vistos_pelo_doador": [
+    {
+      "event_type": "RANKED",
+      "to_status": "PROPOSED",
+      "at": "2026-10-12T22:00:07.575222+00:00",
+      "seconds_since_previous": null,
+      "actor_type": "DONOR",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "PROPOSED",
+      "to_status": "PROPOSED",
+      "at": "2026-10-12T22:00:07.575222+00:00",
+      "seconds_since_previous": 0.0,
+      "actor_type": "SYSTEM",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "DECLINED",
+      "to_status": "PROPOSED",
+      "at": "2026-10-12T22:00:09.923532+00:00",
+      "seconds_since_previous": 2.348,
+      "actor_type": "ORG",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "PROPOSED",
+      "to_status": "PROPOSED",
+      "at": "2026-10-12T22:00:09.923532+00:00",
+      "seconds_since_previous": 0.0,
+      "actor_type": "SYSTEM",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "ACCEPTED",
+      "to_status": "ACCEPTED",
+      "at": "2026-10-12T22:00:09.994589+00:00",
+      "seconds_since_previous": 0.071,
+      "actor_type": "ORG",
+      "data_origin": "SIMULATED"
+    },
+    {
+      "event_type": "COLLECTED",
+      "to_status": "COLLECTED",
+      "at": "2026-10-12T22:00:10.989680+00:00",
+      "seconds_since_previous": 0.995,
+      "actor_type": "ORG",
+      "data_origin": "SIMULATED"
+    }
+  ],
+  "status_final": "COLLECTED",
+  "metricas_tempo": {
+    "SIMULATED": {
+      "n_matches": 1,
+      "doacao_registrada_ate_primeira_proposta_s": {
+        "n": 1,
+        "media_s": 0.124,
+        "mediana_s": 0.124
+      },
+      "proposta_ate_resposta_s": {
+        "n": 2,
+        "media_s": 1.21,
+        "mediana_s": 1.21
+      },
+      "doacao_registrada_ate_aceite_s": {
+        "n": 1,
+        "media_s": 2.543,
+        "mediana_s": 2.543
+      },
+      "aceite_ate_coleta_s": {
+        "n": 1,
+        "media_s": 0.995,
+        "mediana_s": 0.995
+      }
+    },
+    "_nota": "Tempos vindos de data_origin=SIMULATED são de EXECUÇÕES DE DEMONSTRAÇÃO sobre doações simuladas (respostas dadas por contas de teste); NÃO representam o tempo real de ONGs. Apenas USER_ENTERED reflete uso real (hoje: nenhum)."
+  },
+  "dashboard": {
+    "admin_200_todas_as_telas": true,
+    "donor_403_todas": true,
+    "org_403_todas": true,
+    "auditorias_stats_gravadas": 21,
+    "logistica_estrategias": [
+      "A_ong_mais_proxima",
+      "B_ranking_hibrido",
+      "C_hibrido_com_rota"
+    ],
+    "logistica_rotulo": "SIMULAÇÃO: ",
+    "request_id_no_cabecalho": true
+  },
+  "auditoria_admin_access": 23,
+  "segundos_total_fluxo": 6.84,
+  "rotulo": "Todos os dados do fluxo são SIMULATED (doador/lote/perfis das ONGs) sobre registros públicos reais de ONGs; tempos de resposta das ONGs são de operadores de teste, NÃO de uso real."
+}

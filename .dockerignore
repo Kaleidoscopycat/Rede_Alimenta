@@ -15,7 +15,6 @@ eda
 quality
 prompts_adaptados
 Claude outputs
-security/reports
 .env
 .env.*
 !.env.example
@@ -23,6 +22,7 @@ security/reports
 *.key
 *.log
 *.md
+# relatórios de segurança (JSON/texto pequenos) entram na imagem da API para a tela Segurança do ADMIN; só os .md ficam de fora
 !requirements*.txt
 Comandos de terminal.txt
 Informações gerais importantes sobre o projeto.txt

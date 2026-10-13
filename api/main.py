@@ -12,14 +12,15 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
-from api.routers import admin, donations, drafts, donors, matches, organizations, predictions, public_data, routes
+from api.routers import admin, admin_stats, donations, drafts, donors, matches, organizations, predictions, public_data, routes
 from api.state import STATE
+from core.logging_setup import REQUEST_ID_HEADER, RequestContextMiddleware, configure_logging
 from core.settings import SETTINGS
 from database.session import session_scope
 from match import lifecycle
 
+configure_logging()  # JSON em production, texto legível em development (APP_ENV)
 log = logging.getLogger("api")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
 async def _expiry_loop() -> None:
@@ -57,10 +58,15 @@ app = FastAPI(title="Rede Alimenta IA — API v1 (Fase 3 Parte 1)", version="3.1
                            "Autenticação: `Authorization: Bearer <token>` (perfis DONOR, ORG, ADMIN). Sem TLS/rate limit nesta fase."))
 
 
+app.add_middleware(RequestContextMiddleware)  # request_id + log de requisição + 500 genérico com request_id (a middleware captura antes do handler abaixo)
+
+
 @app.exception_handler(Exception)
 async def _erro_generico(request: Request, exc: Exception):
-    log.exception("erro não tratado")  # detalhe só no log; resposta genérica (evita vazamento de informação)
-    return JSONResponse(status_code=500, content={"detail": "erro interno"})
+    """Rede de segurança (a middleware já converte exceções em 500 genérico). Detalhe só no log; resposta sem traceback e com o request_id."""
+    rid = getattr(request.state, "request_id", "-")
+    log.exception("erro não tratado", extra={"request_id": rid, "evt": "unhandled_exception"})
+    return JSONResponse(status_code=500, content={"detail": "erro interno", "request_id": rid}, headers={REQUEST_ID_HEADER: rid})
 
 
 @app.get("/health", tags=["infra"])
@@ -77,5 +83,5 @@ def ready():
             "orgs_ranqueaveis": len(STATE.index.orgs)}
 
 
-for r in (organizations.router, public_data.router, donors.router, donations.router, drafts.router, matches.router, predictions.router, admin.router, routes.router):
+for r in (organizations.router, public_data.router, donors.router, donations.router, drafts.router, matches.router, predictions.router, admin.router, admin_stats.router, routes.router):
     app.include_router(r)

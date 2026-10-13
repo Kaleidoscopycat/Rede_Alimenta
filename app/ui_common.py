@@ -163,3 +163,11 @@ def colorir(rotulo: str, cor: str) -> str:
 
 def doacao_pendente_envio(d: dict[str, Any]) -> bool:
     return d.get("status") in ("DRAFT", "PENDING_CONFIRMATION", "BLOCKED_EXPIRED", "BLOCKED_NO_VALIDITY", "READY") and not d.get("match_id")
+
+
+SELO_DASH = {"PÚBLICO": "🟦 PÚBLICO", "SIMULADO": "🟧 SIMULADO", "MEDIDO": "🟩 MEDIDO"}
+
+
+def selo_dash(selo: str | None) -> str:
+    """Selo de origem do dashboard do ADMIN: PÚBLICO (fonte oficial), SIMULADO (simulador documentado) ou MEDIDO (entrada real na plataforma)."""
+    return SELO_DASH.get(selo or "", selo or "")

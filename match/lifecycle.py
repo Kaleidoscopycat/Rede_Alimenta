@@ -41,6 +41,8 @@ def _emit(session: Session, match: m.Match, etype: str, frm: str | None, to: str
     ev = m.MatchEvent(match_id=match.id, event_type=etype, from_status=frm, to_status=to, organization_id=org_id, rank_position=pos, at=now,
                       actor_user_id=actor.id if actor else None, actor_type=actor_type, detail=detail or {}, data_origin=match.data_origin)
     session.add(ev)
+    log.info("evento de match %s", etype, extra={"evt": "match.event", "match_id": str(match.id), "event_type": etype, "from_status": frm, "to_status": to, "rank_position": pos,
+                                                  "actor_type": actor_type, "data_origin": match.data_origin})
     return ev
 
 

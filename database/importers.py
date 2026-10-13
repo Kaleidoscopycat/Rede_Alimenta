@@ -284,4 +284,6 @@ def import_all(session: Session, sim_tag: str | None = "main", with_lots: bool =
     if sim_tag:
         rep["simulated"] = import_simulated(session, sim_tag, with_lots)
         session.commit()
+    resumo = {k: {a: b for a, b in v.items() if isinstance(b, (int, float))} for k, v in rep.items() if isinstance(v, dict)}
+    log.info("importação concluída", extra={"evt": "ingestion.import_all", "sim_tag": sim_tag, "with_lots": with_lots, "contagens": resumo})
     return rep

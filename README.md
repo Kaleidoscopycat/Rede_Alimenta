@@ -1,6 +1,6 @@
-# Rede Alimenta IA — Projeto Integrador FIAP (Fase 1 + Fase 2 Partes 1 e 2 + Fase 3 Parte 1)
+# Rede Alimenta IA — Projeto Integrador FIAP (Fases 1 a 3; Fase 3 Parte 2 · Etapa A: dashboard)
 
-Solução para reduzir desperdício de alimentos conectando **doadores a ONGs** (fluxo DOADOR → ONG) com IA e DevSecOps. Este repositório contém o **Checkpoint 1**: dados (reais + simulados), MVP da IA, API e modelagem de ameaças STRIDE.
+Solução para reduzir desperdício de alimentos conectando **doadores a ONGs** (fluxo DOADOR → ONG) com IA e DevSecOps. Este repositório contém dados (reais + simulados), a IA (ranker + parser), a API autenticada com motor de match e rotas de coleta, a interface por perfil, o **dashboard do ADMIN**, o pipeline DevSecOps e a modelagem de ameaças STRIDE.
 
 > **Regra central (AGENTS.md):** dados REAIS (ONGs, bancos de alimentos, municípios, população, PAA) nunca são inventados; dados SIMULADOS (doadores, lotes, textos, desfechos) existem apenas como `data_origin = SIMULATED`; **métricas obtidas em dados simulados não são desempenho real**.
 
@@ -164,3 +164,46 @@ docker compose exec api python -m scripts.create_user --role ADMIN --label admin
 **Limitações:** o ranker foi treinado só com lotes SIMULADOS de uma única categoria — o desempenho em **lote misto é desconhecido** (aviso na Visão técnica); a leitura de texto livre nunca foi testada com texto real de doadores; token estático, sem TLS nem limite de requisições; localização exata e contato do doador para a ONG só após cadastro real.
 
 Documentos: `docs/DONATION_ITEMS.md`, `docs/ROLE_VISIBILITY.md`, `security/STRIDE.md` (seção 13).
+
+
+## Fase 3 · Parte 2 — Etapa A: dashboard do ADMIN, observabilidade e defesa
+
+> **Aviso:** dados demonstrativos — doadores, lotes e desfechos são **SIMULADOS**; ONGs e municípios são registros públicos (licença em revisão). Uso exclusivamente acadêmico, sem fins comerciais. Hoje **"Nenhuma doação real registrada."**
+
+### Requisitos do projeto × situação
+| Requisito | Situação (Etapa A) |
+|---|---|
+| A) Dataset estruturado | pronto (`data/`, `docs/data/`) — reais + simulados com `data_origin` |
+| B) Modelo funcional local | pronto (`ml/artifacts`, `docs/MODEL_REPORT.md`) — métricas **sobre dados simulados** |
+| C) Matriz de riscos (STRIDE) | pronta (`security/STRIDE.md`, §14 = dashboard) |
+| D) Dockerfile + Compose | prontos; **build não validado neste ambiente** (sem Docker) — confirma o CI |
+| E) CI/CD (GitHub Actions) | pronto (`.github/workflows/ci.yml`); execução só no GitHub |
+| F) SAST (Bandit e Trivy) | Bandit/ruff/pip-audit locais em `security/reports/fase3a/`; Trivy de imagem só no CI |
+| G) URL pública | **Etapa B** (não se aplica nesta etapa) |
+| H) Banco em nuvem | **Etapa B** |
+| I) README | este arquivo (rascunho completo) |
+| J) Pitch | `docs/PITCH.md` (rascunho) |
+
+### Como rodar o dashboard (local)
+```bash
+python -m scripts.bootstrap_db                                   # esquema + ONGs reais + dados SIMULADOS (use --sim-tag smoke para uma carga pequena)
+python -m scripts.create_user --role ADMIN --label admin-defesa  # token exibido UMA vez; não grave em arquivo
+uvicorn api.main:app --port 8000                                 # terminal 1
+streamlit run app/streamlit_app.py                               # terminal 2 — cole o token na barra lateral; o menu do ADMIN abre no Overview
+python -m scripts.create_user --revoke admin-defesa              # ao final da defesa: desativa o token e grava auditoria `user.revoke`
+```
+Telas, indicadores e regras de exibição: **`docs/DASHBOARD.md`**. Em resumo: selos 🟦 PÚBLICO / 🟧 SIMULADO / 🟩 MEDIDO em todo número; refeições = kg ÷ 0,4 (premissa configurável por `MEAL_KG_PER_MEAL`, exibida na tela); métricas de IA com nomes reais (MRR, Top-1, Top-3, NDCG@3, ROC-AUC, PR-AUC, F1; "acurácia" só no parser) rotuladas como calculadas sobre dados simulados, com baselines; mapa sem serviço de terceiros; tela de logística compara ONG mais próxima × ranking híbrido × híbrido com rota (simulação reprodutível).
+
+### Observabilidade
+`APP_ENV=production` liga log JSON (uma linha por evento); em `development` o log é legível. Toda resposta traz `X-Request-ID` (aceito do cliente só em formato seguro). O log de requisição não registra token, corpo, query string nem IP. Eventos de negócio (`ingestion.import_all`, `simulation.done`, `prediction.ranker`, `match.event`) usam apenas identificadores técnicos e contagens.
+
+### Verificações locais desta etapa
+```bash
+ruff check .                                   # All checks passed!
+bandit -r api app core database match ml pipelines routing scripts simulation quality eda -x tests --severity-level medium
+python -m pytest                               # exige TEST_DATABASE_URL (banco *_test)
+```
+E2E local (HTTP real, três perfis): `API_BASE_URL=http://127.0.0.1:8000 E2E_OUT=docs/E2E_FASE3P2A_RESULTADO.json python -m scripts.e2e_flow` — inclui `/api/v1/admin/stats/*` com ADMIN 200 + auditoria e DONOR/ORG 403.
+
+### Limitações (também exibidas na tela de IA)
+Circularidade do simulador; desempenho em **lote misto desconhecido**; **sem conjunto `MANUALLY_LABELED`**; ONGs por pseudônimo (capacidade/horários declarados e simulados); token estático, sem TLS nem rate limit nesta fase. Evolução futura: lote misto por sublotes.

@@ -274,6 +274,8 @@ def test_admin_ve_visao_tecnica_com_scores_e_aviso_de_lote_misto(monkeypatch, cl
     mid = r.json()["id"]
     try:
         at = _run(monkeypatch, client, world["admin"])
+        at.sidebar.radio(key="menu").set_value("Visão técnica (admin)")  # Fase 3 P2: o menu do ADMIN abre no Overview
+        at.run()
         assert at.header[0].value == "Visão técnica (admin)"
         at.selectbox(key="adm_match").select(mid)
         at.run()

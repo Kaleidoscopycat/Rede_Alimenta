@@ -214,3 +214,17 @@ Atualiza A1/A3 (autenticação mínima e auditoria, **implementadas**). A7/A10 p
 | P3B-2 | I | Token do usuário na sessão do Streamlit (campo de senha; guardado só na memória da sessão, nunca em arquivo/log) | Sem gravação em disco; token estático segue como limitação (P2-3, P2B-19, P2B-20) | RESIDUAL |
 | P3B-3 | E | A tela mostrar ao doador/ONG algo que a API não permitiria | A barreira é a API (`response_model` por perfil); a tela só apresenta; AppTest por perfil exige ausência de jargão/tabelas de score | IMPLEMENTADO |
 | P3B-4 | R | Dupla ação (clique repetido) em Aceitar/Recusar/Enviar | Confirmação em 2 passos; API idempotente/409 em doação alterada; tela bloqueia após o envio | IMPLEMENTADO |
+
+## 14. Dashboard do ADMIN e observabilidade (Fase 3 Parte 2 · Etapa A)
+| ID | STRIDE | Risco | Tratamento | Status | Verificação |
+|---|---|---|---|---|---|
+| P3C-1 | E/I | DONOR ou ORG acessa estatísticas agregadas (`/api/v1/admin/stats/*`) ou a simulação de logística | `require_roles("ADMIN", audit_admin="stats.<tela>")` em todas as rotas; a tela só apresenta | IMPLEMENTADO | `tests/test_p3c_admin_stats.py` (403 para DONOR/ORG, 401 sem token); e2e local com os 3 perfis |
+| P3C-2 | R | Consulta de dashboard sem trilha | Cada chamada grava `admin.access` com recurso `stats.<tela>` e os parâmetros de consulta (nunca o token) | IMPLEMENTADO | teste de auditoria; e2e (21 auditorias gravadas) |
+| P3C-3 | T/I | Número simulado apresentado como real, ou origens somadas num mesmo indicador | Toda linha leva `data_origin` + selo (PÚBLICO/SIMULADO/MEDIDO); consultas agrupam por origem; sem doação USER_ENTERED a tela diz "Nenhuma doação real registrada."; "kg salvos" não é rótulo | IMPLEMENTADO | `tests/test_p3c_ui_dashboard.py` |
+| P3C-4 | I | Indicador de segurança inflado ou inventado | Só conta par antes/depois de arquivos presentes (com SHA-256); Trivy de imagem do CI sem JSON = "pendente", sem estimativa | IMPLEMENTADO | `tests/test_p3c_observabilidade_seguranca.py` |
+| P3C-5 | I | Log com token, corpo, query string ou IP | Middleware loga método, caminho (sem query), status e duração; sem cabeçalhos/corpo/IP; eventos de negócio só com ids técnicos e contagens | IMPLEMENTADO | teste de log (`api.request`) |
+| P3C-6 | T | Cabeçalho `X-Request-ID` malicioso (injeção em log/resposta) | Só aceito se casar `^[A-Za-z0-9._-]{8,64}$`; senão gera uuid4 | IMPLEMENTADO | `test_request_id_validacao` |
+| P3C-7 | I | Terceiros no mapa (tiles, chaves) expõem o uso ou exigem licença | Mapa sem mapa-base de terceiros nem chave; pontos/calor/rotas sobre fundo neutro | IMPLEMENTADO | revisão de `app/page_dashboard.py` |
+| P3C-8 | E | Token ADMIN de defesa permanece válido | `scripts/create_user.py --revoke <rótulo>` desativa e audita (`user.revoke`); token nunca impresso | IMPLEMENTADO | `test_revogar_token_por_rotulo` |
+| P3C-9 | D | Consultas pesadas do dashboard / simulação de logística repetida | Agregações em SQL, limites e paginação (≤200 linhas); simulação limitada (2–24 lotes, solver ≤3 s). **Sem rate limit** (P2-6) | PARCIAL | limites validados por Pydantic |
+| P3C-10 | I | Relatórios de segurança copiados para a imagem da API | Somente JSON/texto dos relatórios (sem segredos; gitleaks 0); `.md` continua fora da imagem | IMPLEMENTADO (local) | `.dockerignore` e `Dockerfile.api` (build só confirma o CI) |

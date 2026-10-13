@@ -2,7 +2,8 @@
 
 DOADOR → "Nova doação" (passos: Itens → Retirada → Revisar e enviar) e "Minhas doações".
 ONG    → "Propostas recebidas" (Aceitar/Recusar com confirmação, "Análise da IA" recolhível) e "Histórico".
-ADMIN  → "Visão técnica (admin)": ranking, scores, explicações, match_events e aviso de lote misto (o dashboard completo é a Fase 3 Parte 2).
+ADMIN  → dashboard completo (Fase 3 Parte 2): Overview, Doações e matches, Mapa, Organizações, Doadores, Dados públicos, Indicadores territoriais, IA, Recomendações, Logística,
+         Segurança/Sistema e "Visão técnica (admin)" (ranking, scores, explicações, match_events e aviso de lote misto).
 
 Autenticação: cole o TOKEN do seu usuário na barra lateral (nada é gravado no código/repositório). Limitação: token estático, sem TLS/rate limit nesta fase."""
 from __future__ import annotations
@@ -30,7 +31,8 @@ AVISO_AUTH = "🔐 Autenticação mínima: token estático por usuário; sem TLS
 AVISO_LICENCA = "dados públicos usados para fins acadêmicos; licença de reutilização não confirmada"
 AVISO_DEMO = ("🟧 Ambiente de demonstração: os doadores, as doações e as respostas das ONGs aqui são **simulados** e não representam o uso real. "
               "As ONGs listadas são registros de fontes públicas e **não são clientes** da plataforma.")
-MENUS = {"DONOR": ["Nova doação", "Minhas doações"], "ORG": ["Propostas recebidas", "Histórico"], "ADMIN": ["Visão técnica (admin)"]}
+MENUS = {"DONOR": ["Nova doação", "Minhas doações"], "ORG": ["Propostas recebidas", "Histórico"], "ADMIN": ["Overview", "Doações e matches", "Mapa", "Organizações", "Doadores", "Dados públicos", "Indicadores territoriais", "IA", "Recomendações", "Logística",
+                                                                      "Segurança e sistema", "Visão técnica (admin)"]}
 
 
 def make_client(token: str) -> ApiClient:
@@ -49,7 +51,7 @@ def banner_tecnico() -> None:
 
 
 def main() -> None:
-    st.set_page_config(page_title="Rede Alimenta IA", page_icon="🥕", layout="centered")
+    st.set_page_config(page_title="Rede Alimenta IA", page_icon="🥕", layout="wide")
     st.title("Rede Alimenta IA")
     token = st.sidebar.text_input("Código de acesso (token)", type="password", help="Cole o código entregue pelo administrador. Não é gravado em arquivo.")
     st.sidebar.caption(f"Serviço: {API_BASE_URL}")
@@ -79,6 +81,8 @@ def main() -> None:
         if alvo in menu:
             st.session_state["menu"] = alvo
     pagina = st.sidebar.radio("Menu", menu, key="menu") if len(menu) > 1 else (menu[0] if menu else None)
+    if me["role"] != "ADMIN":  # DOADOR e ONG mantêm a leitura confortável em coluna estreita; só o ADMIN usa a largura total do dashboard
+        st.markdown("<style>.block-container{max-width:46rem;margin-left:auto;margin-right:auto}</style>", unsafe_allow_html=True)
     if me["role"] == "ADMIN":
         banner_tecnico()
     elif me["data_origin_scope"] == "SIMULATED":
@@ -90,8 +94,11 @@ def main() -> None:
         from app import page_org
         {"Propostas recebidas": page_org.pagina_propostas, "Histórico": page_org.pagina_historico}[pagina](cli, me)
     elif me["role"] == "ADMIN":
-        from app import page_admin
-        page_admin.pagina_tecnica(cli, me)
+        from app import page_admin, page_dashboard
+        if pagina == "Visão técnica (admin)":
+            page_admin.pagina_tecnica(cli, me)
+        else:
+            page_dashboard.TELAS[pagina](cli, me)
     else:
         st.warning("Perfil sem telas disponíveis.")
     rodape()

@@ -23,3 +23,14 @@ Fonte do painel "vulnerabilidades mitigadas": os JSON desta pasta (`antes/` e `d
 | `simulation/generator.py` | B311 | suprimido: PRNG reprodutível exigido pelo simulador |
 
 Suíte de testes após as correções: ver relatório final (`docs/FASE2_P2_RELATORIO_FINAL.md`).
+
+## Convenções de pastas (usadas pela tela "Segurança e sistema" do ADMIN)
+| Pasta | Conteúdo | Uso no indicador |
+|---|---|---|
+| `antes/` e `depois/` | Fase 2 (Bandit, pip-audit, gitleaks, Trivy fs) — **não sobrescrever** | mitigadas = antes − depois, só se os dois arquivos existem |
+| `fase3a/` | Estado atual da Fase 3 Parte 2 · Etapa A (`bandit.json`, `pip-audit.json`, `pip-audit-frontend.json`, `ruff.txt`) | exibido como "estado atual"; não entra na conta de mitigadas |
+| `ci/antes/*.json` e `ci/depois/*.json` | JSON do Trivy de **imagem** baixados do GitHub Actions (antes e depois da correção das 4 HIGH) | só com os dois lados presentes o indicador mostra "4 → 0"; sem eles aparece **pendente**, sem estimativa |
+
+### Estado da Fase 3 Parte 2 · Etapa A (execução local)
+Bandit 1.9.4: **0 achados** (11.022 linhas); ruff: **All checks passed!**; pip-audit (`requirements-api.txt`, `requirements-frontend.txt`): **0 vulnerabilidades**. Nenhuma dependência nova foi adicionada.
+Trivy (fs/imagem) e Docker **não estão disponíveis** neste ambiente: o Trivy de imagem só é confirmado pelo CI (job `docker`).

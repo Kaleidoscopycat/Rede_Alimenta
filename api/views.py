@@ -13,7 +13,7 @@ from api.items import is_item_managed, item_missing, item_weight_info
 from api.schemas_views import (AdminDonationView, AdminMatchView, DonorDonationView, DonorMatchView, ItemAdminView, ItemDonorView, ItemOrgView, OrgCandidacy, OrgDonationView,
                                OrgMatchView, Resumo)
 from api.state import STATE
-from core.settings import DONATION
+from core.settings import ASSUMPTIONS, DONATION
 from database import models as m
 
 AVISO_DOACAO = ("A plataforma não afirma que o alimento é próprio para consumo; o doador é responsável pela informação. "
@@ -60,7 +60,7 @@ def resumo(d: m.Donation, items: list[m.DonationItem]) -> Resumo:
     cats = list(d.categories or ([d.categoria] if d.categoria else []))
     return Resumo(n_items=len(items), quantity_kg=d.quantity_kg, incomplete_weight=incomplete, categories=cats, is_mixed_batch=bool(d.is_mixed_batch), expires_at=d.expires_at,
                   validity_days=d.validity_days, exige_refrigeracao=d.exige_refrigeracao, perecibilidade=d.perecibilidade,
-                  refeicoes_equivalentes=round(d.quantity_kg / 0.4, 1) if d.quantity_kg else None)
+                  refeicoes_equivalentes=round(ASSUMPTIONS.kg_to_meals(d.quantity_kg), 1) if d.quantity_kg else None)
 
 
 def alerts(d: m.Donation, items: list[m.DonationItem], now=None, audience: str = "ADMIN") -> list[str]:
@@ -90,7 +90,7 @@ def _pending_donation(d: m.Donation, items: list[m.DonationItem]) -> list[str]:
 
 def _header(d: m.Donation) -> dict[str, Any]:
     return dict(donor_id=d.donor_id, categoria=d.categoria, perecibilidade=d.perecibilidade, exige_refrigeracao=d.exige_refrigeracao, quantity_kg=d.quantity_kg,
-                validity_days=d.validity_days, expires_at=d.expires_at, validity_source=d.validity_source, refeicoes_equivalentes=round(d.quantity_kg / 0.4, 1) if d.quantity_kg else None)
+                validity_days=d.validity_days, expires_at=d.expires_at, validity_source=d.validity_source, refeicoes_equivalentes=round(ASSUMPTIONS.kg_to_meals(d.quantity_kg), 1) if d.quantity_kg else None)
 
 
 def _window(d: m.Donation) -> dict[str, Any]:

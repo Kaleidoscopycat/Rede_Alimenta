@@ -1,6 +1,6 @@
 """Validação ponta a ponta (HTTP real contra API em execução): doador SIMULADO → rascunho com itens → finalização → match (doador sem ranking) → ONG recusa/aceita → rota de coleta planejada → coleta → eventos/tempos.
 Somente registros do simulador (SIMULATED) e ONGs reais de fontes públicas; contas são de DEMONSTRAÇÃO (is_demo). Não usa USER_ENTERED nem dados fictícios.
-Uso: API_BASE_URL=http://127.0.0.1:8000 python -m scripts.e2e_flow  → escreve docs/E2E_FASE3P1_RESULTADO.json
+Uso: API_BASE_URL=http://127.0.0.1:8000 python -m scripts.e2e_flow  → escreve docs/E2E_FASE3P1_RESULTADO.json (E2E_OUT muda o destino; a Etapa A da Fase 3 Parte 2 grava docs/E2E_FASE3P2A_RESULTADO.json)
 Variáveis: E2E_SIM_TAG (padrão main; precisa ser a mesma carga importada no banco), E2E_OUT (arquivo de saída)."""
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ from pathlib import Path
 
 import httpx
 import pandas as pd
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from app.api_client import ApiClient
 from database import models as m
@@ -203,6 +203,22 @@ def main() -> None:
     res["eventos_vistos_pelo_doador"] = [{k: e[k] for k in ("event_type", "to_status", "at", "seconds_since_previous", "actor_type", "data_origin")} for e in ev]
     res["status_final"] = don.get_match(mt["id"])["status"]
     res["metricas_tempo"] = adm._req("GET", "/api/v1/metrics/match-times")
+    # --- Fase 3 Parte 2 (dashboard): ADMIN → 200 com auditoria; DONOR e ORG → 403 (barreira na API, não na tela)
+    telas = ["overview", "donations-matches", "meals-by-region", "map", "organizations", "donors", "public-data", "territorial", "ai", "security"]
+    with session_scope() as s:
+        antes = s.scalar(select(func.count()).select_from(m.AuditLog).where(m.AuditLog.action == "admin.access", m.AuditLog.resource_type.like("stats.%")))
+    codigos = {t: adm._req("GET", f"/api/v1/admin/stats/{t}") is not None for t in telas}
+    logi = adm.logistics_strategies(4, 7, 60.0, 1)
+    h = {"donor": {"Authorization": f"Bearer {donor_tok}"}, "org": {"Authorization": f"Bearer {org_tok[1]}"}, "admin": {"Authorization": f"Bearer {admin_tok}"}}
+    status = {perfil: [http.get(f"/api/v1/admin/stats/{t}", headers=hd).status_code for t in telas] for perfil, hd in h.items()}
+    with session_scope() as s:
+        depois = s.scalar(select(func.count()).select_from(m.AuditLog).where(m.AuditLog.action == "admin.access", m.AuditLog.resource_type.like("stats.%")))
+    res["dashboard"] = {"admin_200_todas_as_telas": all(codigos.values()) and all(c == 200 for c in status["admin"]), "donor_403_todas": set(status["donor"]) == {403}, "org_403_todas": set(status["org"]) == {403},
+                        "auditorias_stats_gravadas": int(depois - antes), "logistica_estrategias": [e["id"] for e in logi["estrategias"]], "logistica_rotulo": logi["rotulo"][:11],
+                        "request_id_no_cabecalho": bool(http.get("/api/v1/me", headers=h["admin"]).headers.get("x-request-id"))}
+    d_ = res["dashboard"]
+    if not (d_["admin_200_todas_as_telas"] and d_["donor_403_todas"] and d_["org_403_todas"] and d_["auditorias_stats_gravadas"] >= len(telas) and d_["request_id_no_cabecalho"]):
+        raise SystemExit(f"FALHA no dashboard do ADMIN: {d_}")
     with session_scope() as s:
         res["auditoria_admin_access"] = len(s.scalars(select(m.AuditLog).where(m.AuditLog.action == "admin.access")).all())
     if res["auditoria_admin_access"] < 1:
@@ -210,7 +226,7 @@ def main() -> None:
     res["segundos_total_fluxo"] = round(time.perf_counter() - t0, 2)
     res["rotulo"] = "Todos os dados do fluxo são SIMULATED (doador/lote/perfis das ONGs) sobre registros públicos reais de ONGs; tempos de resposta das ONGs são de operadores de teste, NÃO de uso real."
     OUT.write_text(json.dumps(res, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
-    print(json.dumps({k: res[k] for k in ("donation_final", "match_latencia_http_ms", "apos_recusa", "status_final", "visibilidade", "auditoria_admin_access", "segundos_total_fluxo", "rota")},
+    print(json.dumps({k: res[k] for k in ("donation_final", "match_latencia_http_ms", "apos_recusa", "status_final", "visibilidade", "auditoria_admin_access", "dashboard", "segundos_total_fluxo", "rota")},
                      indent=2, ensure_ascii=False, default=str))
 
 

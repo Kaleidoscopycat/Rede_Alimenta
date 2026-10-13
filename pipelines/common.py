@@ -22,7 +22,8 @@ BASELINE_CHECKSUMS = META / "raw_checksums.json"  # gerado na Fase 0 (referênci
 
 
 def get_logger(name: str) -> logging.Logger:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
+    from core.logging_setup import configure_logging  # logging estruturado (JSON em production) também nos pipelines, simulador e scripts
+    configure_logging()
     return logging.getLogger(name)
 
 
