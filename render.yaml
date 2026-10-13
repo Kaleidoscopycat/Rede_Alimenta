@@ -1,0 +1,48 @@
+# Render Blueprint — Rede Alimenta IA (Fase 3 Parte 2 · Etapa B).
+# Dois serviços web a partir dos Dockerfiles do repositório, no plano GRATUITO. NENHUM segredo está neste arquivo:
+# as variáveis com `sync: false` são pedidas pelo Render na criação e digitadas pelo responsável no painel (nunca no chat, nunca no Git).
+# Passo a passo: docs/DEPLOY.md. O banco (Supabase) é criado À MÃO e carregado por scripts/load_to_cloud.py; o Render não cria banco.
+# Observação: `sync: false` só é perguntado na PRIMEIRA criação do Blueprint; depois, edite as variáveis no painel do serviço.
+services:
+  - type: web
+    name: rede-alimenta-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./docker/Dockerfile.api
+    dockerContext: .
+    healthCheckPath: /ready          # 200 só com o banco acessível; /health (sem banco) é o do HEALTHCHECK da imagem
+    autoDeployTrigger: checksPass    # só publica depois que os checks do CI (GitHub Actions) passam; se o CI não estiver ligado ao Render, troque por `commit` ou `off`
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DATABASE_URL            # string do POOLER em MODO SESSÃO (porta 5432) com ?sslmode=require — digitada pelo responsável
+        sync: false
+      - key: CORS_ALLOW_ORIGINS      # URL pública do FRONTEND (https://…onrender.com), sem barra no final — informada pelo responsável
+        sync: false
+      - key: TRUST_PROXY_HEADERS     # o Render termina o TLS e acrescenta X-Forwarded-For
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO
+      - key: AUTH_MAX_FAILURES
+        value: "20"
+      - key: AUTH_WINDOW_SECONDS
+        value: "300"
+      - key: DB_POOL_SIZE            # pequeno: o plano gratuito do banco tem poucas conexões
+        value: "5"
+      - key: DB_MAX_OVERFLOW
+        value: "5"
+      - key: DB_POOL_RECYCLE_S
+        value: "300"
+  - type: web
+    name: rede-alimenta-frontend
+    runtime: docker
+    plan: free
+    dockerfilePath: ./docker/Dockerfile.frontend
+    dockerContext: .
+    healthCheckPath: /_stcore/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: API_BASE_URL            # URL pública da API (https://…onrender.com) — informada pelo responsável após criar o serviço da API
+        sync: false
+      - key: API_WAKE_MAX_S          # tolera o "cold start" do plano gratuito: tenta de novo por até 2 min e mostra "acordando o servidor"
+        value: "120"

@@ -3,6 +3,7 @@
   python -m scripts.create_user --role DONOR --label conta-doador --donor-id <uuid> [--demo]
   python -m scripts.create_user --role ORG --label conta-ong --org-id <uuid> [--demo]
   python -m scripts.create_user --role ADMIN --label admin-ci --token-env E2E_ADMIN_TOKEN   # usa o token JÁ definido nessa variável de ambiente (CI); nada é impresso
+  python -m scripts.create_user --role ADMIN --label admin-defesa --expires-in-hours 12   # token que expira sozinho (401 depois do prazo); sem a opção, não expira
   python -m scripts.create_user --revoke <label>   # desativa (is_active=false) os usuários ATIVOS com esse rótulo — ex.: token ADMIN criado para a defesa; grava auditoria `user.revoke`; não imprime token
   python -m scripts.create_user --list donors|orgs [--limit 10]   # lista ids para usar em --donor-id / --org-id (doadores SIMULATED: id do simulador; ONGs: pseudônimo público; sem dados pessoais)
 Regras: contas --demo só operam sobre dados SIMULATED (doador SIMULATED / ONG sem cadastro real). O rótulo NÃO deve ser nome de pessoa física."""
@@ -17,6 +18,7 @@ if _ROOT not in _sys.path:
     _sys.path.insert(0, _ROOT)
 
 import argparse
+import datetime as dt
 import os
 import re
 import uuid
@@ -45,6 +47,7 @@ def main() -> None:
     ap.add_argument("--label")
     ap.add_argument("--list", choices=["donors", "orgs"], help="apenas lista ids de doadores SIMULATED ou de ONGs (pseudônimo) para usar nos comandos de criação")
     ap.add_argument("--revoke", metavar="LABEL", help="desativa os usuários ativos com este rótulo (revogação do token, p.ex. o ADMIN criado para a defesa)")
+    ap.add_argument("--expires-in-hours", type=float, help="o token deixa de valer após N horas (0 < N <= 720); sem a opção o token não expira")
     ap.add_argument("--limit", type=int, default=10)
     ap.add_argument("--donor-id")
     ap.add_argument("--org-id")
@@ -64,6 +67,8 @@ def main() -> None:
         for r in rows:
             print(f"{r[0]}  {r[1]}  {r[2]}")
         return
+    if a.expires_in_hours is not None and not (0 < a.expires_in_hours <= 720):
+        raise SystemExit("--expires-in-hours deve estar entre 0 (exclusivo) e 720 (30 dias)")
     if not a.role or not a.label:
         raise SystemExit("informe --role e --label (ou use --list donors|orgs)")
     if a.token_env:
@@ -79,7 +84,8 @@ def main() -> None:
             raise SystemExit("DONOR exige --donor-id; --demo se e somente se o doador for SIMULATED")
         if a.role == "ORG" and (org is None or (not a.demo and org.platform_status != "REGISTERED")):
             raise SystemExit("ORG exige --org-id; conta real exige organização REGISTERED (use --demo para dados SIMULATED)")
-        u = m.User(role=a.role, label=a.label, donor_id=donor.id if donor else None, organization_id=org.id if org else None, token_hash=hash_token(token), is_demo=a.demo)
+        u = m.User(role=a.role, label=a.label, donor_id=donor.id if donor else None, organization_id=org.id if org else None, token_hash=hash_token(token), is_demo=a.demo,
+                   expires_at=(dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=a.expires_in_hours)) if a.expires_in_hours else None)
         if a.token_env and s.scalar(select(m.User.id).where(m.User.token_hash == u.token_hash)):
             raise SystemExit("já existe um usuário com este token")
         s.add(u)
@@ -88,6 +94,8 @@ def main() -> None:
             print(f"user_id={u.id}\nrole={a.role}\n(token lido de {a.token_env}; não é exibido)")
         else:
             print(f"user_id={u.id}\nTOKEN={token}\n(guarde agora; não é possível recuperar)")
+        if u.expires_at:
+            print(f"expira_em={u.expires_at.isoformat()}")
 
 
 if __name__ == "__main__":

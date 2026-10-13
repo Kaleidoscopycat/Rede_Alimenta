@@ -10,6 +10,7 @@ name: rede-alimenta
 x-api-env: &api-env
   DATABASE_URL: postgresql+psycopg://${APP_USER:-rede_alimenta}:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@postgres:5432/${APP_DB:-rede_alimenta}
   APP_TIMEZONE: ${APP_TIMEZONE:-America/Sao_Paulo}
+  APP_ENV: ${APP_ENV:-development}
   DONATION_MAX_ITEMS: ${DONATION_MAX_ITEMS:-30}
   DONATION_VALIDITY_SPREAD_WARN_DAYS: ${DONATION_VALIDITY_SPREAD_WARN_DAYS:-60}
   DONATION_DEFAULT_DENSITY_KG_L: ${DONATION_DEFAULT_DENSITY_KG_L:-1.0}

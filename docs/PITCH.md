@@ -1,6 +1,6 @@
-# Pitch final — Rede Alimenta IA (rascunho da Etapa A)
+# Pitch final — Rede Alimenta IA (Etapa B)
 
-> Rascunho para ensaio. Todo número abaixo tem origem indicada; **nada simulado é apresentado como real**. A URL pública entra na Etapa B.
+> Rascunho para ensaio. Todo número abaixo tem origem indicada; **nada simulado é apresentado como real**. A URL pública é **pendente de provisionamento** (preencher aqui depois do deploy: `____`).
 
 **Duração sugerida:** 5 minutos · **Critérios da banca:** Impacto Social 30% · Qualidade da IA 30% · DevSecOps 20% · Engenharia & Defesa 20%.
 
@@ -29,10 +29,12 @@
 * CI com Ruff, testes (PostgreSQL), Bandit, pip-audit, Trivy, gitleaks e fluxo completo via Compose.
 * SAST: Bandit **13 → 0** (7 corrigidos, 6 suprimidos com justificativa registrada); pip-audit 0; STRIDE com riscos, mitigação e status (inclui P3C-1…10 do dashboard).
 * Trivy de imagem: **4 HIGH → 0** é comprovado pelo CI; no painel só é contado quando os JSONs *antes/depois* estão em `security/reports/ci/`.
+* Produção: `/docs` desligado, CORS restrito, cabeçalhos de segurança, SSL obrigatório no banco, limite de tentativas inválidas, RLS (migration `0004`), tokens com validade opcional. Riscos residuais ditos: rate limit global e rotação = Fase 4.
 * Observabilidade: log JSON, `X-Request-ID`, auditoria `admin.access`; token ADMIN da defesa criado por `scripts/create_user.py` e **revogado** com `--revoke <rótulo>`.
 
 ## 6. Próximos passos (30 s)
-* Etapa B: imagens com `PORT`, banco em nuvem, URL pública, smoke test.
+* Nuvem preparada: imagens com `PORT`, `render.yaml`, banco com RLS em todas as tabelas, carga idempotente e smoke test somente leitura — **publicação a cargo do responsável** (`docs/DEPLOY.md`).
+* Dados na nuvem: uso **acadêmico até a apresentação**; depois, licenciar ou remover e apagar (`docs/LICENCAS_DEMONSTRACAO.md`).
 * Evolução: lote misto por sublotes; rotulagem manual de textos reais; rate limit e rotação de tokens (Fase 4).
 
 ## Perguntas prováveis
@@ -40,5 +42,6 @@
 |---|---|
 | "Quantos kg já foram salvos?" | Nenhuma doação real ainda. O painel mostra *ofertados* e *coletados* **simulados**, com selo. |
 | "Quantas refeições?" | kg ÷ 0,4 — **premissa da equipe**, configurável e exibida na tela. |
+| "Está no ar? Onde estão os dados?" | URL pública: preencher após o deploy. Banco gerenciado (Supabase) só com dados públicos e simulados; uso acadêmico; será apagado depois da apresentação. |
 | "A IA funciona no mundo real?" | Não sabemos: foi avaliada só em dados simulados, e o simulador é definido por nós (circularidade). |
 | "Por que não mostra nome das ONGs?" | A base pública só tem pseudônimo; capacidade e horários são declarados/simulados. |

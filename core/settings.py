@@ -103,4 +103,22 @@ def database_url() -> str:
     url = os.environ.get("DATABASE_URL")
     if not url:
         raise RuntimeError("DATABASE_URL não definida (ver .env.example). Nenhuma credencial é embutida no código.")
+    if IS_PRODUCTION:
+        exigir_ssl_se_remoto(url)
+    # painéis (Supabase, Render) entregam `postgresql://` ou `postgres://`; o driver instalado é o psycopg 3
+    for velho in ("postgres://", "postgresql://"):
+        if url.startswith(velho):
+            return "postgresql+psycopg://" + url[len(velho):]
     return url
+
+
+def exigir_ssl_se_remoto(url: str) -> None:
+    """Em production, banco que não é local/Compose exige TLS (`sslmode=require` ou mais forte na URL). A URL nunca é impressa."""
+    from urllib.parse import parse_qs, urlsplit
+    p = urlsplit(url)
+    host = (p.hostname or "").lower()
+    if host in ("localhost", "127.0.0.1", "::1", "postgres", ""):
+        return
+    mode = (parse_qs(p.query).get("sslmode") or [""])[0].lower()
+    if mode not in ("require", "verify-ca", "verify-full"):
+        raise RuntimeError("em production, DATABASE_URL de banco remoto exige SSL: acrescente ?sslmode=require (a URL não é exibida por segurança)")

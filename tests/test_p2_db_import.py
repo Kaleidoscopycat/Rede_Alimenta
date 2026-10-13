@@ -11,6 +11,7 @@ from tests.conftest import ROOT
 
 
 def test_migration_head_e_tabelas(p2_db):
+    """Head atual = 0005 (0004: RLS em todas as tabelas; 0005: expiração opcional de token)."""
     from sqlalchemy import inspect
     from database.session import get_engine
     insp = inspect(get_engine())
@@ -20,7 +21,7 @@ def test_migration_head_e_tabelas(p2_db):
     assert esperadas <= tabelas
     assert {"vehicles", "routes", "route_stops"} <= tabelas, "roteirização: migration 0002 (Fase 2 Parte 2)"
     with get_engine().connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar() == "0003"
+        assert c.execute(text("select version_num from alembic_version")).scalar() == "0005"
 
 
 def test_organizacoes_reais_com_rastreabilidade(p2_db):

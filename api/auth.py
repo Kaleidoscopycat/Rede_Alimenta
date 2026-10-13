@@ -5,6 +5,7 @@
 * LIMITAÇÕES (registradas em security/STRIDE.md): tokens estáticos sem expiração/rotação automática/escopos; sem TLS e sem rate limit nesta fase (Parte 2/Fase 3)."""
 from __future__ import annotations
 
+import datetime as dt
 import hashlib
 import logging
 import secrets
@@ -16,6 +17,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from core.hardening import AUTH_LIMITER, client_ip
+from core.settings import IS_PRODUCTION
 from database import models as m
 from database.session import get_sessionmaker, session_scope
 
@@ -47,7 +50,7 @@ def audit(action: str, outcome: str, request: Request | None = None, user: m.Use
     row = m.AuditLog(user_id=user.id if user else None, role=user.role if user else None, action=action, resource_type=resource_type,
                      resource_id=str(resource_id) if resource_id is not None else None, outcome=outcome, status_code=status_code,
                      method=request.method if request else None, path=(request.url.path[:200] if request else None),
-                     client_ip=(request.client.host if request and request.client else None), detail=detail or {})
+                     client_ip=(client_ip(request) if request and request.client else None), detail=detail or {})
     try:
         if session is not None:
             session.add(row)
@@ -62,9 +65,18 @@ def current_user(request: Request, creds: HTTPAuthorizationCredentials | None = 
     if creds is None or not creds.credentials:
         audit("auth.missing_token", "AUTH_FAILED", request, status_code=401)
         raise HTTPException(401, "autenticação necessária", headers={"WWW-Authenticate": "Bearer"})
+    ip = client_ip(request)
+    espera = AUTH_LIMITER.blocked(ip) if IS_PRODUCTION else 0  # limite de tentativas inválidas por IP: só em production (em desenvolvimento/testes o comportamento é o anterior)
+    if espera:
+        audit("auth.rate_limited", "RATE_LIMITED", request, status_code=429, detail={"espera_s": espera})
+        raise HTTPException(429, "muitas tentativas; aguarde e tente novamente", headers={"Retry-After": str(espera)})
     user = db.scalar(select(m.User).where(m.User.token_hash == hash_token(creds.credentials)))
-    if user is None or not user.is_active:
-        audit("auth.invalid_token", "AUTH_FAILED", request, user=user, status_code=401, detail={"motivo": "token desconhecido" if user is None else "usuário inativo"})
+    expirado = user is not None and user.expires_at is not None and user.expires_at <= dt.datetime.now(dt.timezone.utc)
+    if user is None or not user.is_active or expirado:
+        motivo = "token desconhecido" if user is None else "token expirado" if expirado else "usuário inativo"
+        audit("auth.invalid_token", "AUTH_FAILED", request, user=user, status_code=401, detail={"motivo": motivo})
+        if IS_PRODUCTION:
+            AUTH_LIMITER.fail(ip)
         raise HTTPException(401, "credenciais inválidas", headers={"WWW-Authenticate": "Bearer"})
     request.state.user = user
     return user

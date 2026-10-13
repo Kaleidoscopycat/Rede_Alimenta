@@ -45,7 +45,9 @@ COPY --chown=app:app pipelines/__init__.py pipelines/geo.py ./pipelines/
 COPY --chown=app:app scripts/bootstrap_db.py scripts/create_user.py ./scripts/
 COPY --chown=app:app security/reports ./security/reports
 USER app
+# Porta: a plataforma (Render) define PORT; sem ela vale 8000 (Compose/desenvolvimento). Forma shell com `exec` para o uvicorn receber os sinais de parada.
+ENV PORT=8000
 EXPOSE 8000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
-  CMD ["python", "-c", "import sys,urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status == 200 else 1)"]
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+  CMD ["python", "-c", "import os,sys,urllib.request; p=os.environ.get('PORT','8000'); sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:%s/health' % p, timeout=4).status == 200 else 1)"]
+CMD ["sh", "-c", "exec uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

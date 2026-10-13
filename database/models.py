@@ -228,6 +228,7 @@ class User(Base):
     organization_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("organizations.id"))
     token_hash: Mapped[str] = mapped_column(String(64), unique=True)  # SHA-256 do token; o token em claro NUNCA é gravado
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    expires_at: Mapped[Optional[dt.datetime]] = mapped_column(DateTime(timezone=True))  # expiração opcional do token (NULL = sem expiração)
     is_demo: Mapped[bool] = mapped_column(Boolean, default=False)  # conta de demonstração/validação (opera só sobre dados SIMULATED)
     created_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     __table_args__ = (CheckConstraint("role IN ('DONOR','ORG','ADMIN')", name="ck_user_role"),

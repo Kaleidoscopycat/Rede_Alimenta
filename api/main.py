@@ -15,7 +15,8 @@ from fastapi.responses import JSONResponse
 from api.routers import admin, admin_stats, donations, drafts, donors, matches, organizations, predictions, public_data, routes
 from api.state import STATE
 from core.logging_setup import REQUEST_ID_HEADER, RequestContextMiddleware, configure_logging
-from core.settings import SETTINGS
+from core.hardening import SecurityHeadersMiddleware, cors_origins
+from core.settings import IS_PRODUCTION, SETTINGS
 from database.session import session_scope
 from match import lifecycle
 
@@ -53,11 +54,18 @@ async def lifespan(app: FastAPI):
     task.cancel()
 
 
-app = FastAPI(title="Rede Alimenta IA — API v1 (Fase 3 Parte 1)", version="3.1.0", lifespan=lifespan,
+# production: /docs, /redoc e /openapi.json desligados (a documentação pública da API não é exposta); development: comportamento anterior
+app = FastAPI(title="Rede Alimenta IA — API v1 (Fase 3 Parte 2)", version="3.2.0", lifespan=lifespan,
+              docs_url=None if IS_PRODUCTION else "/docs", redoc_url=None if IS_PRODUCTION else "/redoc", openapi_url=None if IS_PRODUCTION else "/openapi.json",
               description=("Conecta DOADOR → ONG. **Modelos treinados em dados SIMULADOS; atributos declarados das ONGs são SIMULADOS; métricas não representam desempenho real.** "
                            "Autenticação: `Authorization: Bearer <token>` (perfis DONOR, ORG, ADMIN). Sem TLS/rate limit nesta fase."))
 
 
+if IS_PRODUCTION:
+    from fastapi.middleware.cors import CORSMiddleware
+    app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(CORSMiddleware, allow_origins=cors_origins(), allow_methods=["GET", "POST", "PATCH", "DELETE"], allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
+                       allow_credentials=False, max_age=600)
 app.add_middleware(RequestContextMiddleware)  # request_id + log de requisição + 500 genérico com request_id (a middleware captura antes do handler abaixo)
 
 

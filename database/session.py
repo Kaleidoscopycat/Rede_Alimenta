@@ -1,6 +1,7 @@
 """Engine/sessão SQLAlchemy. A URL vem de DATABASE_URL (ambiente)."""
 from __future__ import annotations
 
+import os
 from contextlib import contextmanager
 from typing import Iterator
 
@@ -17,7 +18,8 @@ _factory: sessionmaker[Session] | None = None
 def get_engine() -> Engine:
     global _engine, _factory
     if _engine is None:
-        _engine = create_engine(database_url(), pool_pre_ping=True, pool_size=10, max_overflow=10, future=True)
+        _engine = create_engine(database_url(), pool_pre_ping=True, pool_size=int(os.environ.get("DB_POOL_SIZE", 10)), max_overflow=int(os.environ.get("DB_MAX_OVERFLOW", 10)),
+                                 pool_recycle=int(os.environ.get("DB_POOL_RECYCLE_S", 300)), future=True)
         _factory = sessionmaker(bind=_engine, expire_on_commit=False, future=True)
     return _engine
 

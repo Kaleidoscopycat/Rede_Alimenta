@@ -166,23 +166,23 @@ docker compose exec api python -m scripts.create_user --role ADMIN --label admin
 Documentos: `docs/DONATION_ITEMS.md`, `docs/ROLE_VISIBILITY.md`, `security/STRIDE.md` (seção 13).
 
 
-## Fase 3 · Parte 2 — Etapa A: dashboard do ADMIN, observabilidade e defesa
+## Fase 3 · Parte 2 — dashboard do ADMIN, observabilidade, preparo de nuvem e defesa
 
 > **Aviso:** dados demonstrativos — doadores, lotes e desfechos são **SIMULADOS**; ONGs e municípios são registros públicos (licença em revisão). Uso exclusivamente acadêmico, sem fins comerciais. Hoje **"Nenhuma doação real registrada."**
 
 ### Requisitos do projeto × situação
-| Requisito | Situação (Etapa A) |
+| Requisito | Situação (Etapas A e B) |
 |---|---|
 | A) Dataset estruturado | pronto (`data/`, `docs/data/`) — reais + simulados com `data_origin` |
 | B) Modelo funcional local | pronto (`ml/artifacts`, `docs/MODEL_REPORT.md`) — métricas **sobre dados simulados** |
 | C) Matriz de riscos (STRIDE) | pronta (`security/STRIDE.md`, §14 = dashboard) |
-| D) Dockerfile + Compose | prontos; **build não validado neste ambiente** (sem Docker) — confirma o CI |
+| D) Dockerfile + Compose | prontos (porta via `PORT` para o Render); **build não validado neste ambiente** (sem Docker) — confirma o CI |
 | E) CI/CD (GitHub Actions) | pronto (`.github/workflows/ci.yml`); execução só no GitHub |
 | F) SAST (Bandit e Trivy) | Bandit/ruff/pip-audit locais em `security/reports/fase3a/`; Trivy de imagem só no CI |
-| G) URL pública | **Etapa B** (não se aplica nesta etapa) |
-| H) Banco em nuvem | **Etapa B** |
+| G) URL pública | **pendente de provisionamento** — `render.yaml` e `docs/DEPLOY.md` prontos; falta o responsável criar os serviços |
+| H) Banco em nuvem | **pendente de provisionamento** — migrations (`0004` RLS, `0005`) e `scripts/load_to_cloud.py` prontos; falta criar o projeto Supabase e carregar |
 | I) README | este arquivo (rascunho completo) |
-| J) Pitch | `docs/PITCH.md` (rascunho) |
+| J) Pitch | `docs/PITCH.md` (versão final da Etapa B) |
 
 ### Como rodar o dashboard (local)
 ```bash
@@ -193,6 +193,14 @@ streamlit run app/streamlit_app.py                               # terminal 2 �
 python -m scripts.create_user --revoke admin-defesa              # ao final da defesa: desativa o token e grava auditoria `user.revoke`
 ```
 Telas, indicadores e regras de exibição: **`docs/DASHBOARD.md`**. Em resumo: selos 🟦 PÚBLICO / 🟧 SIMULADO / 🟩 MEDIDO em todo número; refeições = kg ÷ 0,4 (premissa configurável por `MEAL_KG_PER_MEAL`, exibida na tela); métricas de IA com nomes reais (MRR, Top-1, Top-3, NDCG@3, ROC-AUC, PR-AUC, F1; "acurácia" só no parser) rotuladas como calculadas sobre dados simulados, com baselines; mapa sem serviço de terceiros; tela de logística compara ONG mais próxima × ranking híbrido × híbrido com rota (simulação reprodutível).
+
+### Publicação em nuvem (preparada, **não publicada**)
+* **Guia para iniciantes:** `docs/DEPLOY.md` (Supabase → migrations/carga → Render → tokens → smoke test → revogar). **Licenças dos dados:** `docs/LICENCAS_DEMONSTRACAO.md`.
+* `render.yaml` (Blueprint: API + frontend, plano gratuito, segredos `sync: false`), `scripts/load_to_cloud.py` (carga idempotente, exige `--confirm-cloud`, nunca imprime a URL), `scripts/smoke_cloud.py` (somente leitura, `--acordar`).
+* Em `APP_ENV=production`: `/docs` desligado, CORS restrito (`CORS_ALLOW_ORIGINS`), cabeçalhos de segurança, log JSON, SSL obrigatório em banco remoto, limite de tentativas de autenticação inválidas por IP e resposta genérica a falhas. RLS em todas as tabelas (migration `0004`). Token opcionalmente expira (`create_user --expires-in-hours`). Variáveis: `.env.example`.
+* Riscos residuais (TLS pela plataforma; rate limit global e rotação de tokens = Fase 4): `security/STRIDE.md` §15.
+
+> **Dados demonstrativos — uso exclusivamente acadêmico, sem fins comerciais.** Este aviso aparece em todas as telas.
 
 ### Observabilidade
 `APP_ENV=production` liga log JSON (uma linha por evento); em `development` o log é legível. Toda resposta traz `X-Request-ID` (aceito do cliente só em formato seguro). O log de requisição não registra token, corpo, query string nem IP. Eventos de negócio (`ingestion.import_all`, `simulation.done`, `prediction.ranker`, `match.event`) usam apenas identificadores técnicos e contagens.

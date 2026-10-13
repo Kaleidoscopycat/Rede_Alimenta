@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 # Portabilidade (Windows/Linux/Docker): o Streamlit/`python scripts/x.py` só põem a pasta do script em sys.path; a raiz do projeto
 # precisa estar lá para `from app...`/`from database...`. Sem depender de PYTHONPATH nem de `python -m`. Não duplica a entrada.
@@ -21,13 +22,14 @@ if _ROOT not in sys.path:
 import streamlit as st  # noqa: E402
 
 from app.api_client import ApiClient, ApiError  # noqa: E402
+from app.ui_common import aviso_academico  # noqa: E402
 
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://127.0.0.1:8000")
 AVISO_SIM = ("⚠️ **Dados simulados com limitações conhecidas.** Capacidade, horários e refrigeração das ONGs, doadores, lotes e desfechos são SIMULADOS (R1 – volume por banco – não passa; "
              "R6 – o simulador é pessimista). Taxas, volumes e tempos simulados **não representam o mundo real**. Entidades listadas são registros de fontes públicas (licenças em revisão) e "
              "**não são clientes** da plataforma.")
 AVISO_PARSER = "ℹ️ Parser treinado em **texto simulado**; limiar de confiança calibrado sobre texto simulado; **sem conjunto MANUALLY_LABELED** (o rascunho de IA não é rotulagem manual)."
-AVISO_AUTH = "🔐 Autenticação mínima: token estático por usuário; sem TLS nem limite de requisições nesta fase."
+AVISO_AUTH = "🔐 Autenticação mínima: token estático por usuário (expiração opcional); TLS fornecido pela plataforma; em produção há limite de tentativas inválidas por IP, mas não há rate limit global nem rotação automática de tokens (Fase 4)."
 AVISO_LICENCA = "dados públicos usados para fins acadêmicos; licença de reutilização não confirmada"
 AVISO_DEMO = ("🟧 Ambiente de demonstração: os doadores, as doações e as respostas das ONGs aqui são **simulados** e não representam o uso real. "
               "As ONGs listadas são registros de fontes públicas e **não são clientes** da plataforma.")
@@ -35,8 +37,12 @@ MENUS = {"DONOR": ["Nova doação", "Minhas doações"], "ORG": ["Propostas rece
                                                                       "Segurança e sistema", "Visão técnica (admin)"]}
 
 
-def make_client(token: str) -> ApiClient:
-    return ApiClient(API_BASE_URL, token)
+def make_client(token: str, aviso: Any = None) -> ApiClient:
+    """`aviso` (st.empty) recebe a mensagem amigável enquanto o servidor gratuito acorda (API_WAKE_MAX_S > 0)."""
+    def esperando(seg: float) -> None:
+        if aviso is not None:
+            aviso.info(f"⏳ Acordando o servidor… no plano gratuito isso leva cerca de 1 minuto ({seg:.0f} s). Aguarde, não feche a página.")
+    return ApiClient(API_BASE_URL, token, on_wait=esperando)
 
 
 def rodape() -> None:
@@ -53,6 +59,7 @@ def banner_tecnico() -> None:
 def main() -> None:
     st.set_page_config(page_title="Rede Alimenta IA", page_icon="🥕", layout="wide")
     st.title("Rede Alimenta IA")
+    aviso_academico()
     token = st.sidebar.text_input("Código de acesso (token)", type="password", help="Cole o código entregue pelo administrador. Não é gravado em arquivo.")
     st.sidebar.caption(f"Serviço: {API_BASE_URL}")
     if not token:
@@ -60,14 +67,18 @@ def main() -> None:
         st.caption(AVISO_DEMO)
         rodape()
         return
-    cli = make_client(token)
+    aviso = st.empty()
+    cli = make_client(token, aviso)
     try:
         me = cli.me()
+        aviso.empty()
     except ApiError as e:
+        aviso.empty()
         st.error(e.friendly)
         rodape()
         return
     except Exception:  # serviço fora do ar (nunca mostra traceback)
+        aviso.empty()
         st.error("Não conseguimos falar com o serviço agora. Verifique se ele está ligado e tente de novo.")
         rodape()
         return

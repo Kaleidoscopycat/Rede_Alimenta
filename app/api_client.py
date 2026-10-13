@@ -1,7 +1,9 @@
 """Cliente HTTP da API — ÚNICO caminho da interface Streamlit (a interface nunca acessa o banco)."""
 from __future__ import annotations
 
-from typing import Any
+import os
+import time
+from typing import Any, Callable
 
 import httpx
 
@@ -46,13 +48,36 @@ class ApiError(Exception):
 
 
 class ApiClient:
-    def __init__(self, base_url: str, token: str, http: httpx.Client | None = None, timeout: float = 30.0):
+    def __init__(self, base_url: str, token: str, http: httpx.Client | None = None, timeout: float = 30.0, wake_max_s: float | None = None,
+                 on_wait: Callable[[float], None] | None = None):
         self.token = token
         self.http = http or httpx.Client(base_url=base_url, timeout=timeout)
         self.base = "" if http is not None else ""
+        # Plano gratuito do Render: a API hiberna e a 1ª requisição leva ~1 min. Com `wake_max_s` > 0 (env API_WAKE_MAX_S), as CONSULTAS (GET) repetem com espera crescente
+        # enquanto a conexão falha ou o proxy responde 502/503/504, avisando a tela por `on_wait`. Padrão 0 = desligado (desenvolvimento e testes).
+        self.wake_max_s = float(os.environ.get("API_WAKE_MAX_S", "0")) if wake_max_s is None else wake_max_s
+        self.on_wait = on_wait
+
+    def _send(self, method: str, path: str, **kw: Any) -> httpx.Response:
+        headers = {"Authorization": f"Bearer {self.token}"}
+        if method != "GET" or self.wake_max_s <= 0:
+            return self.http.request(method, path, headers=headers, **kw)
+        t0, delay = time.monotonic(), 2.0
+        while True:
+            try:
+                r = self.http.request(method, path, headers=headers, **kw)
+                if r.status_code not in (502, 503, 504) or time.monotonic() - t0 + delay > self.wake_max_s:
+                    return r
+            except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout, httpx.RemoteProtocolError):
+                if time.monotonic() - t0 + delay > self.wake_max_s:
+                    raise
+            if self.on_wait:
+                self.on_wait(time.monotonic() - t0)
+            time.sleep(delay)
+            delay = min(delay * 1.6, 12.0)
 
     def _req(self, method: str, path: str, **kw: Any) -> Any:
-        r = self.http.request(method, path, headers={"Authorization": f"Bearer {self.token}"}, **kw)
+        r = self._send(method, path, **kw)
         if r.status_code >= 400:
             try:
                 detail = r.json().get("detail", r.text)

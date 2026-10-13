@@ -171,3 +171,12 @@ SELO_DASH = {"PÚBLICO": "🟦 PÚBLICO", "SIMULADO": "🟧 SIMULADO", "MEDIDO":
 def selo_dash(selo: str | None) -> str:
     """Selo de origem do dashboard do ADMIN: PÚBLICO (fonte oficial), SIMULADO (simulador documentado) ou MEDIDO (entrada real na plataforma)."""
     return SELO_DASH.get(selo or "", selo or "")
+
+
+AVISO_ACADEMICO = "Dados demonstrativos — uso exclusivamente acadêmico, sem fins comerciais"
+
+
+def aviso_academico() -> None:
+    """Aviso visível em TODAS as telas (chamado uma vez pelo ponto de entrada, antes de qualquer página): dados públicos de licença não confirmada e dados simulados, só para a apresentação acadêmica."""
+    import streamlit as st
+    st.markdown(f"<div style='border-left:4px solid #dd8a1f;padding:.35rem .75rem;margin:.25rem 0 .75rem 0;font-size:.9rem'>⚠️ <b>{AVISO_ACADEMICO}.</b></div>", unsafe_allow_html=True)
