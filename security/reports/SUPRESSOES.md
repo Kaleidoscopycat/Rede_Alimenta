@@ -34,6 +34,12 @@ Auditoria: o Bandit lista as supressões em `metrics._totals.nosec`/`skipped_tes
 | `# noqa: E402` em `ml/semantic/train_eval.py` | E402 | Import tardio intencional. |
 | `# noqa: BLE001` em `ml/semantic/validity.py` e `routing/core.py` | — | Fallback opcional: falha registrada/ignorada com comportamento seguro (campo ausente → bloqueio; aquecimento do solver → partida padrão). |
 
+## gitleaks (`.gitleaks.toml`)
+
+| Onde | Regra | Justificativa | Reavaliar se |
+|---|---|---|---|
+| `security/reports/ci/(antes\|depois)/trivy-image-*.json`, somente linhas `GPG_KEY=` + 40 hexadecimais | `generic-api-key` | Falso positivo. Os relatórios do Trivy de imagem listam o histórico de camadas da imagem-base oficial `python`, que traz `ENV GPG_KEY=<impressão digital>`: é a impressão digital **pública** da chave que assina os instaladores do Python, não um segredo. A exceção exige as **duas** condições (caminho e formato) e mantém todas as regras padrão (`useDefault = true`). Conferido em 14/10/2026: com a exceção, o histórico inteiro dá "no leaks"; a mesma linha fora desse caminho continua sendo detectada. | A imagem-base ou o formato do relatório mudar, ou se aparecer qualquer outro achado nesses arquivos. *(Registrado na Fase 4.)* |
+
 ## Alertas **não** suprimidos e pendentes
 - Varredura de vulnerabilidades do Trivy (dependências e imagens): não pôde ser executada no ambiente de desenvolvimento (banco de vulnerabilidades inacessível). Roda no CI (job `docker`/`dependencies-and-secrets`); **nenhum resultado foi presumido**.
 - Verificação de tipos (mypy 2.4.0): falha com `INTERNAL ERROR` neste código; **não adotada** (registrado no relatório final).

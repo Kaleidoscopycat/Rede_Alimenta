@@ -1,0 +1,16 @@
+# Configuração do gitleaks (lida automaticamente da raiz do repositório pelo `gitleaks detect --source .` do CI).
+title = "Rede Alimenta IA"
+
+[extend]
+useDefault = true   # mantém TODAS as regras padrão do gitleaks
+
+# Exceção ESTREITA e justificada (registrada em security/reports/SUPRESSOES.md):
+# os relatórios do Trivy de imagem (security/reports/ci/*/trivy-image-*.json) listam o histórico de camadas da imagem-base oficial `python`,
+# que contém `ENV GPG_KEY=<impressão digital de 40 hex>`. É a impressão digital PÚBLICA da chave que assina os instaladores do Python (não é segredo).
+# Só vale quando AS DUAS condições ocorrem: arquivo nesse caminho E texto no formato `GPG_KEY=` + 40 hexadecimais.
+[[allowlists]]
+description = "GPG_KEY publica da imagem-base python nos relatorios do Trivy de imagem"
+condition = "AND"
+regexTarget = "line"
+paths = ['''security/reports/ci/(antes|depois)/trivy-image-[A-Za-z0-9_.\-]+\.json''']
+regexes = ['''GPG_KEY=[A-Fa-f0-9]{40}''']
