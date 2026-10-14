@@ -27,4 +27,4 @@
 * Qualquer uso fora do ambiente acadêmico (produto, divulgação aberta de bases) **fica bloqueado** até as licenças serem confirmadas.
 
 ## Quem decide
-Decisão registrada pelo grupo na **data: 13/10/2026**).
+Decisão registrada pelo grupo na **data: 13/10/2026**.
