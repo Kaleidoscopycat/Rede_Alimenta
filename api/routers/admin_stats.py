@@ -21,6 +21,7 @@ from api.schemas_stats import (AiOut, ContagemRot, DadosPublicosOut, DoacaoBloco
                                IaResumo, LatenciaBloco, MapaOut, MatchBloco, OrganizacoesOut, OrgLinha, OverviewOut, ParadaRota, PontoMunicipio, PontoOng, Premissa, RefeicoesRegiaoOut,
                                RegiaoRow, RotaMapa, SecurityOut, SegurancaResumo, SerieMes, StrategiesIn, TempoMatchBloco, TerritorialOut, TerritorialRow, CatalogoPublico, selo)
 from api.state import STATE
+from core.hardening import RATE_LIMIT
 from core.settings import ASSUMPTIONS, IS_PRODUCTION, SETTINGS, TZ
 from database import models as m
 
@@ -478,7 +479,8 @@ def security(db: Session = Depends(get_db), user: m.User = Depends(audit_dep("se
     sistema = {"pronto": ok, "motivo": why, "ambiente": "production" if IS_PRODUCTION else "development", "model_version": STATE.ranker.meta["model_version"] if STATE.ranker else None,
                "parser_version": STATE.parser.version if STATE.parser else None, "engine_version": SETTINGS.engine_version, "orgs_ranqueaveis": len(STATE.index.orgs) if STATE.index else None,
                "auditoria_24h_por_resultado": aud, "auditoria_24h_principais_acoes": top, "usuarios_ativos_por_perfil": users,
-               "limitacoes": ["token estático por usuário; rate limit e rotação automática de tokens ficam para a Fase 4 (ver security/STRIDE.md)", "TLS é fornecido pela plataforma de hospedagem quando publicado"]}
+               "rate_limit": RATE_LIMIT.snapshot(),
+               "limitacoes": ["token estático por usuário (expiração opcional; rotação manual por `create_user --rotate`, sem rotação automática); rate limit por instância e em memória (ver security/STRIDE.md)", "TLS é fornecido pela plataforma de hospedagem quando publicado"]}
     return SecurityOut(relatorios=security_reports.compute(), sistema=sistema)
 
 

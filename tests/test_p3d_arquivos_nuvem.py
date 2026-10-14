@@ -49,7 +49,7 @@ def test_docs_de_nuvem_existem_e_sem_credenciais():
     deploy = txt("docs/DEPLOY.md")
     ordem = [deploy.index(f"## Passo {i}") for i in range(1, 10)]
     assert ordem == sorted(ordem)
-    for termo in ("Resume project", "sslmode=require", "5432", "6543", "--confirm-cloud", "smoke_cloud", "--revoke", "O que fazer se der erro", "pendente de provisionamento", "Read-Host"):
+    for termo in ("Resume project", "sslmode=require", "5432", "6543", "--confirm-cloud", "smoke_cloud", "--revoke", "O que fazer se der erro", "Pendências do responsável", "Read-Host"):
         assert termo.lower() in deploy.lower(), termo
 
 

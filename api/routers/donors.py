@@ -40,7 +40,7 @@ def create_donor(body: DonorCreate, request: Request, db: Session = Depends(get_
     return donor_out(d, loc)
 
 
-@router.get("/{donor_id}", response_model=DonorOut)
+@router.get("/{donor_id}", response_model=DonorOut, summary="Consulta um doador (DONOR: o próprio; ADMIN: qualquer)")
 def get_donor(donor_id: uuid.UUID, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("ADMIN", "DONOR"))):
     if user.role == "DONOR" and user.donor_id != donor_id:
         raise forbid(request, user, "donor", donor_id)

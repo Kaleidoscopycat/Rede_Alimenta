@@ -12,10 +12,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from api.openapi_docs import DESCRICAO, instalar
 from api.routers import admin, admin_stats, donations, drafts, donors, matches, organizations, predictions, public_data, routes
 from api.state import STATE
 from core.logging_setup import REQUEST_ID_HEADER, RequestContextMiddleware, configure_logging
-from core.hardening import SecurityHeadersMiddleware, cors_origins
+from core.hardening import RateLimitMiddleware, SecurityHeadersMiddleware, cors_origins
 from core.settings import IS_PRODUCTION, SETTINGS
 from database.session import session_scope
 from match import lifecycle
@@ -57,10 +58,13 @@ async def lifespan(app: FastAPI):
 # production: /docs, /redoc e /openapi.json desligados (a documentação pública da API não é exposta); development: comportamento anterior
 app = FastAPI(title="Rede Alimenta IA — API v1 (Fase 3 Parte 2)", version="3.2.0", lifespan=lifespan,
               docs_url=None if IS_PRODUCTION else "/docs", redoc_url=None if IS_PRODUCTION else "/redoc", openapi_url=None if IS_PRODUCTION else "/openapi.json",
-              description=("Conecta DOADOR → ONG. **Modelos treinados em dados SIMULADOS; atributos declarados das ONGs são SIMULADOS; métricas não representam desempenho real.** "
-                           "Autenticação: `Authorization: Bearer <token>` (perfis DONOR, ORG, ADMIN). Sem TLS/rate limit nesta fase."))
+              description=DESCRICAO)
+instalar(app)  # contrato OpenAPI com erros padronizados e exemplos genéricos (api/openapi_docs.py); não altera rotas nem respostas
 
 
+# Ordem das middlewares (a última adicionada é a mais externa): RequestContext → CORS → cabeçalhos de segurança → rate limit → rotas.
+# O rate limit fica por dentro para que o 429 também saia com cabeçalhos de segurança/CORS e entre no log de requisição com request_id.
+app.add_middleware(RateLimitMiddleware)  # por token/IP, desligável por RATE_LIMIT_ENABLED=false; isenta /health e /ready
 if IS_PRODUCTION:
     from fastapi.middleware.cors import CORSMiddleware
     app.add_middleware(SecurityHeadersMiddleware)

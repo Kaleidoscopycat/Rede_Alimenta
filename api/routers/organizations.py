@@ -65,7 +65,7 @@ def list_orgs(uf: str | None = Query(None, min_length=2, max_length=2), municipi
     return [visible(o, user) for o in db.scalars(q).unique()]
 
 
-@router.get("/{org_id}", response_model=OrgView)
+@router.get("/{org_id}", response_model=OrgView, summary="Consulta uma organização (registro completo só para ADMIN e para a própria ONG)")
 def get_org(org_id: uuid.UUID, db: Session = Depends(get_db), user: m.User = Depends(current_user)):
     o = db.scalar(select(m.Organization).options(joinedload(m.Organization.location), joinedload(m.Organization.profile)).where(m.Organization.id == org_id))
     if o is None:

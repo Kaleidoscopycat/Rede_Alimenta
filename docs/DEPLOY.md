@@ -2,7 +2,7 @@
 
 > **Para quem é:** quem vai publicar pela primeira vez. Cada passo diz **o que fazer**, **onde clicar** e **como saber que deu certo**.
 > **Regra de ouro:** senhas, strings de conexão e tokens são **digitados por você**, direto no painel ou no terminal. **Nunca** os cole em chat, e-mail, issue, commit ou arquivo do repositório. O repositório não contém nenhum segredo.
-> **Estado:** estes arquivos foram **preparados**, mas **nada foi publicado** — a URL pública e o banco em nuvem estão **pendentes de provisionamento** (lista no fim).
+> **Estado (14/10/2026, Fase 4 · Etapa A):** a demonstração **foi publicada pelo responsável** — API `https://rede-alimenta-api.onrender.com` e frontend `https://rede-alimenta-frontend.onrender.com` (Render, plano gratuito), banco no Supabase (Session pooler, SSL, RLS), `smoke_cloud` com tudo `[OK]`, segundo o relatório de deploy do projeto (**não verificado neste ambiente**). Os passos abaixo seguem como o procedimento de (re)publicação. Riscos residuais e o que NÃO está mitigado: `docs/SEGURANCA_FINAL.md` e `security/STRIDE.md` §16.
 
 ## Visão geral
 ```
@@ -83,6 +83,19 @@ python -m scripts.create_user --role ORG --label demo-ong --org-id <ID-LISTADO> 
 ```
 *Como saber que deu certo:* no frontend, cole o token na barra lateral e a tela do ADMIN abre; o aviso acadêmico aparece no topo.
 
+### Rotação de token (trocar o token de uma conta)
+Use quando um token foi exposto, está perto de expirar ou precisa ser renovado. Com a `DATABASE_URL` do passo 3 definida na janela:
+```powershell
+python -m scripts.create_user --rotate admin-defesa --expires-in-hours 24
+```
+* Em **uma transação**: cria um usuário novo com o **mesmo perfil, vínculo (doador/ONG) e marca `--demo`** da conta ativa com esse rótulo, **desativa a anterior** e grava a auditoria `user.rotate` (rótulo e perfil; nunca o token). O **novo token aparece uma única vez**; o antigo nunca é mostrado e passa a dar 401 na hora.
+* **Exige exatamente uma conta ativa com o rótulo.** Se não houver nenhuma, ou houver mais de uma (rótulo ambíguo), o comando falha com mensagem clara e **nada é alterado** (nesse caso use `--revoke <rótulo>` e crie as contas de novo).
+* A **validade não é herdada**: sem `--expires-in-hours` o token novo não expira. Se algo falhar no meio, a transação é desfeita e o token antigo continua valendo.
+* Depois de rotacionar, entregue o novo token a quem usa a conta e confirme no frontend. Para o ADMIN, o painel "Segurança e sistema" mostra as contas ativas por perfil.
+
+### Ajustar o rate limit (opcional)
+O limite global já vem **ligado, com padrões generosos**, sem nenhuma variável: **1.200 requisições/min por token**, **240/min por IP quando não há token válido** e **teto de 6.000/min por IP** (janela de 60 s). `/health` e `/ready` (health checks do Render) nunca são limitados. O número por token cobre mais de 30 sessões abertas com o mesmo token (as telas do doador e da ONG atualizam a cada 5 s; ≈ 36 chamadas/min por sessão é **estimativa de projeto**, não medição). Os padrões ficam no código porque esta fase não altera o `render.yaml`. Para mudar, adicione em **Environment** do serviço da API: `RATE_LIMIT_TOKEN_MAX`, `RATE_LIMIT_IP_MAX`, `RATE_LIMIT_IP_CEILING_MAX`, `RATE_LIMIT_WINDOW_SECONDS`, `RATE_LIMIT_MAX_KEYS` (inteiros) ou `RATE_LIMIT_ENABLED=false` para desligar. É **por instância e em memória** (reiniciar zera); ao escalar para várias instâncias, trocar por Redis ou por um gateway.
+
 ## Passo 8 — Teste pós-deploy (somente leitura)
 ```powershell
 python -m scripts.smoke_cloud --api https://SUA-API.onrender.com --frontend https://SEU-FRONT.onrender.com --acordar
@@ -105,6 +118,7 @@ Depois, faça o roteiro manual da defesa: entrar como ADMIN → Overview, Mapa, 
 | Serviço do Render "Deploy failed" | variável faltando ou `DATABASE_URL` inválida | veja **Logs** do serviço (as mensagens não contêm segredos) e corrija em **Environment** |
 | Tela do frontend mostra "Acordando o servidor…" | plano gratuito hiberna após 15 min sem uso | aguarde ~1 min; antes da defesa, rode `smoke_cloud --acordar` |
 | 429 "muitas tentativas" | muitas tentativas de token inválido do mesmo IP | aguarde 5 min (a janela esvazia) |
+| 429 "muitas requisições" | passou do limite global (1.200/min por token; 240/min por IP sem token) | aguarde o tempo do cabeçalho `Retry-After` (≤ 60 s); se for uso legítimo, veja "Ajustar o rate limit" no Passo 7 |
 | 401 com token certo | token expirado ou revogado | gere outro com `create_user` |
 | A carga estoura o limite | estimativa acima de 80% do plano | a carga é recusada (código 3); use uma tag menor em `--sim-tag` |
 
@@ -112,7 +126,7 @@ Depois, faça o roteiro manual da defesa: entrar como ADMIN → Overview, Mapa, 
 1. Supabase **Healthy** (retome se estiver pausado). 2. Rode `smoke_cloud --acordar`. 3. Abra o frontend, entre como ADMIN e navegue pelas telas. 4. Tenha o token ADMIN à mão (gerenciador de senhas) e confirme que ainda não expirou. 5. Se o Wi-Fi do local bloquear alguma porta, use o celular como roteador.
 
 ## Limitações conhecidas (registradas em `security/STRIDE.md`)
-TLS é da plataforma; limite de tentativas é **por instância e em memória** (reinicia → zera; não é rate limit global); sem rotação automática de tokens (só expiração opcional e revogação manual) — **Fase 4**. O plano gratuito hiberna, o banco gratuito pausa, e não há backup gerenciado.
+TLS é da plataforma; os limites (tentativas inválidas e **rate limit global por token/IP**) são **por instância e em memória** (reinicia → zera; não são distribuídos); sem rotação **automática** de tokens (há expiração opcional, revogação e **rotação manual** — Passo 7). O plano gratuito hiberna, o banco gratuito pausa, e não há backup gerenciado. O log de acesso padrão do uvicorn (IP e query string) não está desligado no `CMD` da imagem. Consolidação: `docs/SEGURANCA_FINAL.md`; privacidade: `docs/LGPD.md`.
 
 ## Fontes oficiais consultadas (2026-10-13) e o que delas foi usado
 * Supabase — conexão com o Postgres (pooler em modo sessão, IPv4, porta 5432 / transação 6543 sem *prepared statements*): <https://supabase.com/docs/guides/database/connecting-to-postgres>
@@ -122,5 +136,8 @@ TLS é da plataforma; limite de tentativas é **por instância e em memória** (
 * Render — plano gratuito (hibernação após 15 min, ~1 min para acordar, 750 h/mês) e variável `PORT`: <https://render.com/docs/free> · <https://render.com/docs/web-services>
 > Planos, limites e telas mudam. Se algo do painel estiver diferente do descrito aqui, vale a documentação oficial acima.
 
-## Pendente de provisionamento (o que só você pode fazer)
-Criar o projeto Supabase (passo 1) · rodar `load_to_cloud --confirm-cloud` (passo 3) · conferir o RLS (4) · criar os serviços via Blueprint e preencher `DATABASE_URL`, `CORS_ALLOW_ORIGINS`, `API_BASE_URL` (5–6) · gerar tokens ADMIN/demo (7) · rodar `smoke_cloud` (8) · baixar os JSONs do Trivy do CI para `security/reports/ci/antes|depois/`.
+## Pendências do responsável após a publicação
+* Gerar um novo token ADMIN na manhã da apresentação (o `admin-defesa` tem validade de 24 h) e criar as contas `--demo` da ONG que o ranking escolher (checklist da defesa no relatório de deploy do projeto).
+* Baixar os JSON do Trivy de imagem do job `docker` do CI para `security/reports/ci/antes|depois/` (o painel só conta "4 → 0" com os dois lados).
+* Fazer o push dos arquivos novos e alterados (esta fase não faz commit nem push).
+* Depois da defesa: revogar tokens (`--revoke`), aplicar a decisão de `docs/LICENCAS_DEMONSTRACAO.md`, apagar o projeto Supabase e os serviços do Render (`docs/LGPD.md` §6 e §11).

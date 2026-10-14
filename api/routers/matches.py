@@ -73,7 +73,7 @@ def list_matches(status: str | None = None, limit: int = 20, offset: int = 0, db
     return [views.match_view(db, x, user, 3 if user.role == "ADMIN" else None) for x in db.scalars(q)]
 
 
-@router.get("/matches/{match_id}", response_model=MatchView)
+@router.get("/matches/{match_id}", response_model=MatchView, summary="Consulta um match (visão conforme o perfil: DONOR situação, ORG proposta, ADMIN completo)")
 def get_match(match_id: uuid.UUID, request: Request, top_n: int | None = None, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ORG", "ADMIN", audit_admin="match"))):
     mt = db.get(m.Match, match_id)
     if mt is None:

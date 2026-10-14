@@ -9,8 +9,8 @@ from api.state import STATE
 from database import models as m
 
 router = APIRouter(prefix="/api/v1", tags=["conta e administração"])
-LIMITES = ("Autenticação mínima: token estático por usuário (sem expiração/rotação automática, sem escopos), sem TLS e sem rate limit nesta fase "
-           "(mitigações PENDENTES: Parte 2 e Fase 3; ver security/STRIDE.md).")
+LIMITES = ("Autenticação mínima: token estático por usuário (expiração opcional e revogação manual; sem rotação automática nem escopos). O TLS é terminado pela plataforma de hospedagem; "
+           "há limite de tentativas de autenticação inválidas por IP (em memória, por instância) e não há limite global de requisições (ver security/STRIDE.md e docs/SEGURANCA_FINAL.md).")
 
 
 @router.get("/me", response_model=MeOut, summary="Identidade do token (perfil e vínculo)")

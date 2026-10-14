@@ -2,7 +2,7 @@
 
 * O token é gerado com `secrets.token_urlsafe(32)` (256 bits) e mostrado UMA vez; no banco fica só o SHA-256 (token de alta entropia ⇒ hash rápido é adequado).
 * Falhas de autenticação/autorização vão para audit_logs SEM gravar o token.
-* LIMITAÇÕES (registradas em security/STRIDE.md): tokens estáticos sem expiração/rotação automática/escopos; sem TLS e sem rate limit nesta fase (Parte 2/Fase 3)."""
+* LIMITAÇÕES (registradas em security/STRIDE.md §16): tokens estáticos (expiração opcional, rotação MANUAL por `create_user --rotate`, sem rotação automática nem escopos); TLS pela plataforma; rate limit em memória por instância (core/hardening.py)."""
 from __future__ import annotations
 
 import datetime as dt

@@ -5,7 +5,7 @@ ONG    → "Propostas recebidas" (Aceitar/Recusar com confirmação, "Análise d
 ADMIN  → dashboard completo (Fase 3 Parte 2): Overview, Doações e matches, Mapa, Organizações, Doadores, Dados públicos, Indicadores territoriais, IA, Recomendações, Logística,
          Segurança/Sistema e "Visão técnica (admin)" (ranking, scores, explicações, match_events e aviso de lote misto).
 
-Autenticação: cole o TOKEN do seu usuário na barra lateral (nada é gravado no código/repositório). Limitação: token estático, sem TLS/rate limit nesta fase."""
+Autenticação: cole o TOKEN do seu usuário na barra lateral (nada é gravado no código/repositório). Limitação: token estático (rotação manual); TLS pela plataforma; rate limit em memória por instância."""
 from __future__ import annotations
 
 import os
@@ -29,7 +29,7 @@ AVISO_SIM = ("⚠️ **Dados simulados com limitações conhecidas.** Capacidade
              "R6 – o simulador é pessimista). Taxas, volumes e tempos simulados **não representam o mundo real**. Entidades listadas são registros de fontes públicas (licenças em revisão) e "
              "**não são clientes** da plataforma.")
 AVISO_PARSER = "ℹ️ Parser treinado em **texto simulado**; limiar de confiança calibrado sobre texto simulado; **sem conjunto MANUALLY_LABELED** (o rascunho de IA não é rotulagem manual)."
-AVISO_AUTH = "🔐 Autenticação mínima: token estático por usuário (expiração opcional); TLS fornecido pela plataforma; em produção há limite de tentativas inválidas por IP, mas não há rate limit global nem rotação automática de tokens (Fase 4)."
+AVISO_AUTH = "🔐 Autenticação mínima: token estático por usuário (expiração opcional); TLS fornecido pela plataforma; em produção há limite de tentativas inválidas por IP e limite global de requisições por token/IP (em memória, por instância); a troca de token é manual (rotação); não há rotação automática nem MFA."
 AVISO_LICENCA = "dados públicos usados para fins acadêmicos; licença de reutilização não confirmada"
 AVISO_DEMO = ("🟧 Ambiente de demonstração: os doadores, as doações e as respostas das ONGs aqui são **simulados** e não representam o uso real. "
               "As ONGs listadas são registros de fontes públicas e **não são clientes** da plataforma.")

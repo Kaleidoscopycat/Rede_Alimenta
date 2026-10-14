@@ -140,7 +140,7 @@ def list_donations(request: Request, limit: int = 20, offset: int = 0, status: s
     return [view(db, d, user) for d in db.scalars(q)]
 
 
-@router.get("/{donation_id}", response_model=DonationView)
+@router.get("/{donation_id}", response_model=DonationView, summary="Consulta uma doação (DONOR: a própria; ADMIN: qualquer, com detalhe técnico)")
 def get_donation(donation_id: uuid.UUID, request: Request, db: Session = Depends(get_db), user: m.User = Depends(require_roles("DONOR", "ADMIN", audit_admin="donations"))):
     return view(db, _load_owned(db, request, user, donation_id), user)
 

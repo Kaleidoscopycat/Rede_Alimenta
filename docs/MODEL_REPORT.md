@@ -11,7 +11,7 @@ Para um lote de alimento de um doador, ranquear as ONGs candidatas (as 15 mais p
 * Conjunto `main` (versão `0.2.0+477ed37e+20261003`): 60 000 lotes, 895 177 pares; taxa de `target` 19,7%.
 * **Divisão temporal por lote** (70/15/15 por data de cadastro; todos os pares de um lote ficam no mesmo conjunto): treino 41 967 lotes / validação 8 993 / teste 8 994.
 * 24% dos lotes de teste não têm nenhuma ONG com `target=1` (2 129 de 8 994); eles são **excluídos das métricas de ranking** (avaliáveis: 6 865) e permanecem nas métricas de classificação por par.
-* Features (`ml/dataset.py`): 23 numéricas, 12 booleanas, 7 categóricas; origem de cada coluna em `FEATURE_ORIGIN`. **Atributos latentes e colunas de desfecho/tempo são proibidos** (teste `test_features_sem_vazamento`).
+* Features (`ml/dataset.py`): 24 numéricas, 12 booleanas, 7 categóricas (43 no total; corrigido na Fase 4 conforme `ml/dataset.py`, que antes dizia 23); origem de cada coluna em `FEATURE_ORIGIN`. **Atributos latentes e colunas de desfecho/tempo são proibidos** (teste `test_features_sem_vazamento`).
 
 ## 3. Baselines e modelos (teste, SIMULADO)
 

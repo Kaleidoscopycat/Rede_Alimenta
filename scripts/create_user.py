@@ -5,7 +5,9 @@
   python -m scripts.create_user --role ADMIN --label admin-ci --token-env E2E_ADMIN_TOKEN   # usa o token JÁ definido nessa variável de ambiente (CI); nada é impresso
   python -m scripts.create_user --role ADMIN --label admin-defesa --expires-in-hours 12   # token que expira sozinho (401 depois do prazo); sem a opção, não expira
   python -m scripts.create_user --revoke <label>   # desativa (is_active=false) os usuários ATIVOS com esse rótulo — ex.: token ADMIN criado para a defesa; grava auditoria `user.revoke`; não imprime token
+  python -m scripts.create_user --rotate <label> [--expires-in-hours 24]   # ROTAÇÃO: em UMA transação cria um usuário novo (mesmo perfil, vínculo e --demo do ativo com esse rótulo), desativa o anterior e imprime o NOVO token UMA vez (o antigo nunca é impresso); auditoria `user.rotate`
   python -m scripts.create_user --list donors|orgs [--limit 10]   # lista ids para usar em --donor-id / --org-id (doadores SIMULATED: id do simulador; ONGs: pseudônimo público; sem dados pessoais)
+--rotate: exige EXATAMENTE um usuário ativo com o rótulo. Zero ⇒ erro ("nenhum usuário ativo"); mais de um ⇒ erro ("rótulo ambíguo": use --revoke e crie as contas de novo, ou renomeie) — nada é alterado nesses casos. A validade NÃO é herdada: sem --expires-in-hours o token novo não expira.
 Regras: contas --demo só operam sobre dados SIMULATED (doador SIMULATED / ONG sem cadastro real). O rótulo NÃO deve ser nome de pessoa física."""
 from __future__ import annotations
 
@@ -41,12 +43,40 @@ def revoke(label: str) -> int:
     return len(users)
 
 
+class RotateError(Exception):
+    """Rotação impossível (rótulo sem usuário ativo ou ambíguo). Nada foi alterado."""
+
+
+def rotate(label: str, expires_in_hours: float | None = None) -> tuple[str, str, str]:
+    """Rotação de token em UMA transação: cria o novo usuário (mesmo perfil, donor_id/organization_id e is_demo do ativo com este rótulo), desativa o anterior e grava `user.rotate`
+    (rótulo, perfil, ids dos usuários; NUNCA token). Devolve (novo_user_id, perfil, novo_token). Se qualquer passo falhar, a transação é desfeita e o token antigo continua válido."""
+    if expires_in_hours is not None and not (0 < expires_in_hours <= 720):
+        raise RotateError("--expires-in-hours deve estar entre 0 (exclusivo) e 720 (30 dias)")
+    token = new_token()
+    with session_scope() as s:
+        ativos = list(s.scalars(select(m.User).where(m.User.label == label, m.User.is_active.is_(True)).with_for_update()))
+        if not ativos:
+            raise RotateError(f"nenhum usuário ativo com o rótulo '{label}'")
+        if len(ativos) > 1:
+            raise RotateError(f"rótulo ambíguo: há {len(ativos)} usuários ativos com '{label}'; nada foi alterado (revogue com --revoke e crie as contas de novo)")
+        antigo = ativos[0]
+        novo = m.User(role=antigo.role, label=antigo.label, donor_id=antigo.donor_id, organization_id=antigo.organization_id, token_hash=hash_token(token), is_demo=antigo.is_demo,
+                      expires_at=(dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=expires_in_hours)) if expires_in_hours else None)
+        s.add(novo)
+        antigo.is_active = False
+        s.flush()
+        s.add(m.AuditLog(user_id=None, role=None, action="user.rotate", resource_type="user", resource_id=str(novo.id), outcome="OK", status_code=None, method="CLI", path=None, client_ip=None,
+                         detail={"label": label, "role": antigo.role, "anterior": str(antigo.id), "novo": str(novo.id)}))
+        return str(novo.id), antigo.role, token
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--role", choices=["DONOR", "ORG", "ADMIN"])
     ap.add_argument("--label")
     ap.add_argument("--list", choices=["donors", "orgs"], help="apenas lista ids de doadores SIMULATED ou de ONGs (pseudônimo) para usar nos comandos de criação")
     ap.add_argument("--revoke", metavar="LABEL", help="desativa os usuários ativos com este rótulo (revogação do token, p.ex. o ADMIN criado para a defesa)")
+    ap.add_argument("--rotate", metavar="LABEL", help="troca o token do usuário ativo com este rótulo (cria o novo com o mesmo perfil/vínculo/--demo e desativa o anterior; imprime o novo token uma vez)")
     ap.add_argument("--expires-in-hours", type=float, help="o token deixa de valer após N horas (0 < N <= 720); sem a opção o token não expira")
     ap.add_argument("--limit", type=int, default=10)
     ap.add_argument("--donor-id")
@@ -57,6 +87,15 @@ def main() -> None:
     if a.revoke:
         n = revoke(a.revoke)
         print(f"revogados={n}" + ("" if n else " (nenhum usuário ativo com este rótulo)"))
+        return
+    if a.rotate:
+        try:
+            uid, role, tok = rotate(a.rotate, a.expires_in_hours)
+        except RotateError as e:
+            raise SystemExit(str(e)) from None
+        print(f"user_id={uid}\nrole={role}\nTOKEN={tok}\n(guarde agora; o token anterior foi desativado e não é exibido)")
+        if a.expires_in_hours:
+            print(f"expira_em_horas={a.expires_in_hours:g}")
         return
     if a.list:
         with session_scope() as s:
